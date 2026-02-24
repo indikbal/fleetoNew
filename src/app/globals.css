@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #ffffff;
+  --color-foreground: #010101;
+  --color-fleeto-red: #AB2323;
+  --color-fleeto-red-dark: #8A1C1C;
+  --color-fleeto-red-light: #D42D2D;
+  --color-fleeto-black: #010101;
+  --color-fleeto-gray: #F5F5F5;
+  --color-fleeto-gray-dark: #1A1A1A;
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-anton);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans), system-ui, sans-serif;
+    overflow-x: hidden;
+  }
+}
+
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display), sans-serif;
+  }
+
+  .geometric-accent {
+    clip-path: polygon(0 0, 100% 0, 85% 100%, 15% 100%);
+  }
+
+  .geometric-diagonal {
+    clip-path: polygon(0 0, 100% 0, 100% 80%, 0 100%);
+  }
+
+  .text-stroke {
+    -webkit-text-stroke: 2px rgba(171, 35, 35, 0.15);
+    color: transparent;
+  }
+
+  /* Red button inner shadow — synced with styles.redButtonShadow in theme.ts */
+  .btn-red-inner-shadow {
+    box-shadow: inset 0px 4px 4px rgba(0, 0, 0, 0.25);
+  }
+
+  /* ── Apple-style glass button ──────────────────────────────────────────── */
+  /* Principle: restraint. High saturate, low opacity, hairline top highlight */
+  .glass-btn {
+    position: relative;
+    cursor: pointer;
+    border-radius: 9999px;
+
+    /* Very low opacity white fill — barely-there, like real glass */
+    background: rgba(255, 255, 255, 0.12);
+
+    /* The real magic: high saturation pulls background colors through cleanly */
+    backdrop-filter: blur(24px) saturate(1.8);
+    -webkit-backdrop-filter: blur(24px) saturate(1.8);
+
+    /* Hairline border — brighter on top (catches light), softer on sides */
+    border-top: 1px solid rgba(255, 255, 255, 0.45);
+    border-left: 1px solid rgba(255, 255, 255, 0.22);
+    border-right: 1px solid rgba(255, 255, 255, 0.22);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+
+    /* Single inset top highlight — like light hitting the glass edge */
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+
+    transition: background 280ms ease, box-shadow 280ms ease, transform 200ms ease;
+  }
+
+  .glass-btn:hover {
+    background: rgba(255, 255, 255, 0.20);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    transform: translateY(-1px);
+  }
+
+  .glass-btn:active {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(0px) scale(0.98);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15);
+  }
+
+
+}

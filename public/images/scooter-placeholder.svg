@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none">
+  <rect width="400" height="300" fill="#F5F5F5"/>
+  <g transform="translate(100, 60)">
+    <!-- Scooter body -->
+    <ellipse cx="100" cy="170" rx="70" ry="8" fill="#E0E0E0"/>
+    <!-- Back wheel -->
+    <circle cx="50" cy="160" r="30" stroke="#AB2323" stroke-width="4" fill="none"/>
+    <circle cx="50" cy="160" r="5" fill="#AB2323"/>
+    <!-- Front wheel -->
+    <circle cx="170" cy="160" r="30" stroke="#AB2323" stroke-width="4" fill="none"/>
+    <circle cx="170" cy="160" r="5" fill="#AB2323"/>
+    <!-- Frame -->
+    <path d="M50 160 L80 80 L140 80 L170 160" stroke="#333" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Seat -->
+    <rect x="65" y="72" width="50" height="10" rx="5" fill="#333"/>
+    <!-- Handlebar stem -->
+    <line x1="140" y1="80" x2="155" y2="40" stroke="#333" stroke-width="4" stroke-linecap="round"/>
+    <!-- Handlebars -->
+    <line x1="140" y1="40" x2="170" y2="40" stroke="#333" stroke-width="4" stroke-linecap="round"/>
+    <!-- Headlight -->
+    <circle cx="160" cy="85" r="4" fill="#AB2323"/>
+    <!-- Floor board -->
+    <rect x="70" y="128" width="80" height="6" rx="3" fill="#555"/>
+  </g>
+  <text x="200" y="240" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#999">Fleeto Scooter</text>
+</svg>
