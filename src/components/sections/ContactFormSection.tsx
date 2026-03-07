@@ -8,7 +8,6 @@ import { colors, fonts, styles } from "@/config/theme";
 const infoItems = [
   {
     icon: MapPin,
-    label: "Address",
     lines: [
       "Plot No 2, 3rd Floor, Block FA",
       "East Kolkata Development Project",
@@ -18,13 +17,11 @@ const infoItems = [
   },
   {
     icon: Mail,
-    label: "Mail Us",
     lines: ["reach_fleeto@fleetoev.in"],
     isLink: true,
   },
   {
     icon: Phone,
-    label: "Telephone",
     lines: ["Sales: 08064521248", "Service: 08064521248"],
   },
 ];
@@ -32,7 +29,25 @@ const infoItems = [
 const inputClass =
   "w-full border-b border-gray-200 pb-2.5 text-sm outline-none bg-transparent text-gray-700 placeholder-gray-300 transition-colors focus:border-[#AB2323]";
 
-export default function ContactFormSection() {
+interface Props {
+  bannerTitle: string;
+  formTitle: string;
+  formSubTitle: string;
+  addressTitle: string;
+  mailTitle: string;
+  telephoneTitle: string;
+  workingHoursTitle: string;
+}
+
+export default function ContactFormSection({
+  bannerTitle,
+  formTitle,
+  formSubTitle,
+  addressTitle,
+  mailTitle,
+  telephoneTitle,
+  workingHoursTitle,
+}: Props) {
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -43,6 +58,9 @@ export default function ContactFormSection() {
 
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
+
+  // Map dynamic labels to info items
+  const labels = [addressTitle, mailTitle, telephoneTitle];
 
   return (
     <section
@@ -80,7 +98,7 @@ export default function ContactFormSection() {
             fontSize="120"
             style={{ fontFamily: fonts.display }}
           >
-            Contact Us
+            {bannerTitle}
           </text>
         </svg>
       </motion.div>
@@ -98,13 +116,13 @@ export default function ContactFormSection() {
               className="text-xs font-semibold tracking-widest uppercase mb-2"
               style={{ color: colors.primary, fontFamily: fonts.body }}
             >
-              Let&apos;s Connect
+              {formTitle}
             </p>
             <h2
               className="text-3xl md:text-4xl"
               style={{ ...styles.headingFont, color: colors.black }}
             >
-              Send Your Message
+              {formSubTitle}
             </h2>
           </div>
 
@@ -169,8 +187,8 @@ export default function ContactFormSection() {
             {/* ── Right: info cards ── */}
             <div className="flex flex-col gap-5">
 
-              {infoItems.map(({ icon: Icon, label, lines, isLink }) => (
-                <div key={label} className="flex gap-4 items-start">
+              {infoItems.map(({ icon: Icon, lines, isLink }, idx) => (
+                <div key={idx} className="flex gap-4 items-start">
                   <div
                     className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
                     style={{ backgroundColor: `${colors.primary}18` }}
@@ -182,7 +200,7 @@ export default function ContactFormSection() {
                       className="font-semibold text-gray-800 mb-1 text-sm"
                       style={{ fontFamily: fonts.body }}
                     >
-                      {label}
+                      {labels[idx]}
                     </p>
                     {lines.map((line, i) => (
                       <p
@@ -213,13 +231,12 @@ export default function ContactFormSection() {
                 </div>
                 <div>
                   <p className="font-semibold text-gray-800 mb-1.5 text-sm" style={{ fontFamily: fonts.body }}>
-                    Working Hours
+                    {workingHoursTitle}
                   </p>
                   <p className="text-sm text-gray-500" style={{ fontFamily: fonts.body }}>Mon – Sat &nbsp;&nbsp; 10:00 am – 7:00 pm</p>
                   <p className="text-sm text-gray-400" style={{ fontFamily: fonts.body }}>Sunday &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Closed</p>
                 </div>
               </div>
-
 
             </div>
           </div>

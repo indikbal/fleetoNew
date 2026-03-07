@@ -25,52 +25,6 @@ export const colors = {
   aboutAccent:  "#E05555",   // heading highlights + border bar
 } as const;
 
-// ── Hero slider — one entry per slide ────────────────────────────────────────
-// svgColor  : fill of the diagonal SVG shape
-// bgColor   : section background
-// accentColor: headline highlight word + CTA button + dots + social hover
-export const heroSlides = [
-  {
-    tag:         "Feel the thrill of silent power",
-    lines: [
-      { black: "GO GREEN.",   red: "" },
-      { black: "GO ",         red: "ELECTRIC." },
-      { black: "GO FLEETO.",  red: "" },
-    ],
-    watermark:    ["FLEETO", "UDAAN"],
-    cta:          "Explore Models",
-    svgColor:     "#EB4A4A",
-    bgColor:      "#FFE4E4",
-    accentColor:  "#EB4A4A",
-  },
-  {
-    tag:         "The future of urban mobility",
-    lines: [
-      { black: "RIDE CLEAN.",  red: "" },
-      { black: "RIDE ",        red: "SMART." },
-      { black: "RIDE FLEETO.", red: "" },
-    ],
-    watermark:    ["FLEETO", "SPRINT"],
-    cta:          "Explore Models",
-    svgColor:     "#4A7FEB",
-    bgColor:      "#E4ECFF",
-    accentColor:  "#4A7FEB",
-  },
-  {
-    tag:         "Zero emissions, maximum thrills",
-    lines: [
-      { black: "THINK GREEN.", red: "" },
-      { black: "ACT ",         red: "ELECTRIC." },
-      { black: "BE FLEETO.",   red: "" },
-    ],
-    watermark:    ["FLEETO", "POWER"],
-    cta:          "Explore Models",
-    svgColor:     "#4AAB5E",
-    bgColor:      "#E4F5EA",
-    accentColor:  "#4AAB5E",
-  },
-] as const;
-
 // ── Reusable style objects ────────────────────────────────────────────────────
 export const styles = {
   // Glass button — Apple-style. Just add className="glass-btn" to the element.

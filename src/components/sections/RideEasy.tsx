@@ -3,24 +3,14 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { colors, fonts } from "@/config/theme";
+import { stripHtml } from "@/lib/api";
+import type { ExploreRideEasyItem } from "@/lib/api";
 
-const features = [
-  {
-    image: "/images/ride2.jpg",
-    title: "Frunk",
-    desc: "Eco mode for days you want longer range. Zip mode for days you want peppy rides.",
-  },
-  {
-    image: "/images/ride3.jpg",
-    title: "Rear Monoshock Suspension",
-    desc: "Eco mode for days you want longer range. Zip mode for days you want peppy rides.",
-  },
-  {
-    image: "/images/ride4.jpg",
-    title: "Brakes",
-    desc: "Eco mode for days you want longer range. Zip mode for days you want peppy rides.",
-  },
-];
+interface Props {
+  title: string;
+  mainImage: string;
+  features: ExploreRideEasyItem[];
+}
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -29,7 +19,7 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.55, ease: "easeOut" as const, delay },
 });
 
-export default function RideEasy() {
+export default function RideEasy({ title, mainImage, features }: Props) {
   return (
     <section className="bg-white pt-8 pb-16 md:pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -37,7 +27,7 @@ export default function RideEasy() {
         {/* ── Title + main image overlap ── */}
         <div className="relative">
 
-          {/* "Ride Easy" — sunrise: starts hidden behind card, rises up slowly */}
+          {/* Sunrise watermark */}
           <motion.div
             className="absolute top-0 inset-x-0 pointer-events-none select-none flex justify-center"
             style={{ zIndex: 0 }}
@@ -68,12 +58,12 @@ export default function RideEasy() {
                 fontSize="120"
                 style={{ fontFamily: fonts.display }}
               >
-                Ride Easy
+                {title}
               </text>
             </svg>
           </motion.div>
 
-          {/* Main banner image — sits on top, allowing title to peek above */}
+          {/* Main banner image */}
           <motion.div
             {...fadeUp(0.1)}
             className="relative z-10"
@@ -81,8 +71,8 @@ export default function RideEasy() {
           >
             <div className="relative w-full overflow-hidden rounded-2xl" style={{ aspectRatio: "16/7" }}>
               <Image
-                src="/images/ride1.jpg"
-                alt="Ride Easy — Fleeto Electric Scooter"
+                src={mainImage}
+                alt={`${title} — Fleeto Electric Scooter`}
                 fill
                 className="object-cover object-center"
               />
@@ -95,7 +85,6 @@ export default function RideEasy() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mt-5">
           {features.map((f, i) => (
             <motion.div key={i} {...fadeUp(0.1 + i * 0.08)}>
-              {/* Image */}
               <div className="relative w-full overflow-hidden rounded-2xl mb-4" style={{ aspectRatio: "4/3" }}>
                 <Image
                   src={f.image}
@@ -104,7 +93,6 @@ export default function RideEasy() {
                   className="object-cover object-center"
                 />
               </div>
-              {/* Label */}
               <h3
                 className="font-bold mb-1.5"
                 style={{ fontFamily: fonts.body, fontSize: "16px", color: colors.black }}
@@ -115,7 +103,7 @@ export default function RideEasy() {
                 className="text-gray-500 text-sm leading-relaxed"
                 style={{ fontFamily: fonts.body }}
               >
-                {f.desc}
+                {stripHtml(f.details)}
               </p>
             </motion.div>
           ))}

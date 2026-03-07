@@ -25,25 +25,41 @@ function fmt(n: number) {
   return `₹ ${n.toLocaleString("en-IN")}`;
 }
 
-// ─── Icon circle wrapper ──────────────────────────────────────────────────────
 function IconCircle({ src, alt }: { src: string; alt: string }) {
   return (
-    <div
-      className="rounded-full flex items-center justify-center flex-shrink-0"
-    >
+    <div className="rounded-full flex items-center justify-center flex-shrink-0">
       <Image src={src} alt={alt} width={44} height={44} className="object-contain" />
     </div>
   );
 }
 
-// ─── Main section ─────────────────────────────────────────────────────────────
-export default function SavingsCalculator() {
+interface Props {
+  title1: string;
+  title2: string;
+  title3: string;
+  title4: string;
+  description: string;
+  shortTitle: string;
+  longTitle: string;
+  longDescription: string;
+}
+
+export default function SavingsCalculator({
+  title1,
+  title2,
+  title3,
+  title4,
+  description,
+  shortTitle,
+  longTitle,
+  longDescription,
+}: Props) {
   const [km, setKm] = useState(60);
   const { petrol, electric, savings, annual } = calc(km);
 
   const MIN = 10;
   const MAX = 150;
-  const pct = ((km - MIN) / (MAX - MIN)) * 100; // 0–100
+  const pct = ((km - MIN) / (MAX - MIN)) * 100;
 
   return (
     <section className="relative overflow-hidden" style={{ minHeight: "580px" }}>
@@ -57,7 +73,7 @@ export default function SavingsCalculator() {
         priority
       />
 
-      {/* Overlay: bottom red → top transparent */}
+      {/* Overlay */}
       <div
         className="absolute inset-0"
         style={{
@@ -66,7 +82,6 @@ export default function SavingsCalculator() {
         }}
       />
 
-
       {/* Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-start">
@@ -74,39 +89,33 @@ export default function SavingsCalculator() {
           {/* ── Left ── */}
           <div className="pb-32 sm:pb-40 lg:pb-0">
 
-            {/* Heading */}
+            {/* Heading — API order: title1 title2 title4 title3 */}
             <h2
               className="text-4xl md:text-5xl leading-tight mb-5"
               style={styles.headingFont}
             >
-              <span className="text-white">Save </span>
-              <span style={{ color: colors.primaryLight }}>More. </span>
-              <span className="text-white">Ride </span>
-              <span style={{ color: colors.primaryLight }}>Smarter.</span>
+              <span className="text-white">{title1} </span>
+              <span style={{ color: colors.primaryLight }}>{title2} </span>
+              <span className="text-white">{title4} </span>
+              <span style={{ color: colors.primaryLight }}>{title3}</span>
             </h2>
 
-            {/* Description */}
             <p
               className="text-white/65 text-sm leading-relaxed mb-10 max-w-sm"
               style={{ fontFamily: fonts.body }}
             >
-              Fleeto isn&apos;t just an electric scooter — it&apos;s a smarter
-              way to move. Discover how your everyday rides translate into
-              substantial cost savings over time.
+              {description}
             </p>
 
-            {/* Daily usage label */}
             <p
               className="text-white text-base font-semibold mb-4"
               style={{ fontFamily: fonts.body }}
             >
-              Daily usage
+              {shortTitle}
             </p>
 
             {/* Custom slider */}
             <div className="relative max-w-md">
-              {/* Track */}
-              {/* overflow-hidden clips thumb to track's rounded shape cleanly */}
               <div
                 className="relative w-full h-12 rounded-full overflow-hidden"
                 style={{
@@ -114,7 +123,6 @@ export default function SavingsCalculator() {
                   border: "1px solid rgba(255,255,255,0.08)",
                 }}
               >
-                {/* Fill — flat right edge, no radius gap */}
                 <div
                   className="absolute inset-y-0 left-0"
                   style={{
@@ -123,8 +131,6 @@ export default function SavingsCalculator() {
                     transition: "width 50ms linear",
                   }}
                 />
-
-                {/* Thumb — full track height, sits flush after fill */}
                 <div
                   className="absolute inset-y-0 rounded-full flex items-center justify-center pointer-events-none"
                   style={{
@@ -143,8 +149,6 @@ export default function SavingsCalculator() {
                   </span>
                 </div>
               </div>
-
-              {/* Invisible range input — sits over everything for interaction */}
               <input
                 type="range"
                 min={MIN}
@@ -162,16 +166,13 @@ export default function SavingsCalculator() {
                 className="text-white/55 text-xs font-semibold mb-1.5"
                 style={{ fontFamily: fonts.body }}
               >
-                Assumptions*
+                {longTitle}
               </p>
               <p
                 className="text-white/35 text-xs leading-relaxed max-w-xs"
                 style={{ fontFamily: fonts.body }}
               >
-                Calculation based on 25 days of usage in a month. Mileage of
-                40&nbsp;km/l and petrol cost of ₹&nbsp;100/litre for the petrol
-                scooter. Electricity cost of ₹&nbsp;10/unit and distance of
-                35&nbsp;km/unit with Fleeto.
+                {longDescription}
               </p>
             </div>
           </div>
@@ -190,50 +191,37 @@ export default function SavingsCalculator() {
               boxShadow: "inset 0 1px 0 rgba(255,255,255,0.12), 0 8px 32px rgba(0,0,0,0.4)",
             }}
           >
-            {/* Monthly petrol cost */}
             <div className="flex items-center gap-4 mb-4">
               <IconCircle src="/images/petrol-icon.png" alt="Petrol" />
               <div className="flex-1">
-                <p className="text-white/55 text-sm leading-none mb-0.5"
-                  style={{ fontFamily: fonts.body }}>Monthly</p>
-                <p className="text-white text-sm font-semibold"
-                  style={{ fontFamily: fonts.body }}>petrol cost</p>
+                <p className="text-white/55 text-sm leading-none mb-0.5" style={{ fontFamily: fonts.body }}>Monthly</p>
+                <p className="text-white text-sm font-semibold" style={{ fontFamily: fonts.body }}>petrol cost</p>
               </div>
-              <p className="text-white text-xl font-bold tabular-nums"
-                style={{ fontFamily: fonts.body }}>
+              <p className="text-white text-xl font-bold tabular-nums" style={{ fontFamily: fonts.body }}>
                 {fmt(petrol)}
               </p>
             </div>
 
-            {/* Monthly electricity cost */}
             <div className="flex items-center gap-4">
               <IconCircle src="/images/electric-icon.png" alt="Electric" />
               <div className="flex-1">
-                <p className="text-white/55 text-sm leading-none mb-0.5"
-                  style={{ fontFamily: fonts.body }}>Monthly</p>
-                <p className="text-white text-sm font-semibold"
-                  style={{ fontFamily: fonts.body }}>electricity cost *</p>
+                <p className="text-white/55 text-sm leading-none mb-0.5" style={{ fontFamily: fonts.body }}>Monthly</p>
+                <p className="text-white text-sm font-semibold" style={{ fontFamily: fonts.body }}>electricity cost *</p>
               </div>
-              <p className="text-white text-xl font-bold tabular-nums"
-                style={{ fontFamily: fonts.body }}>
+              <p className="text-white text-xl font-bold tabular-nums" style={{ fontFamily: fonts.body }}>
                 {fmt(electric)}
               </p>
             </div>
 
-            {/* Divider */}
             <div className="h-px bg-white/10" />
 
-            {/* Monthly savings */}
             <div className="flex items-center justify-between">
-              <p className="text-white font-semibold"
-                style={{ fontFamily: fonts.body }}>Monthly Savings</p>
-              <p className="text-white text-xl font-bold tabular-nums"
-                style={{ fontFamily: fonts.body }}>
+              <p className="text-white font-semibold" style={{ fontFamily: fonts.body }}>Monthly Savings</p>
+              <p className="text-white text-xl font-bold tabular-nums" style={{ fontFamily: fonts.body }}>
                 {fmt(savings)}
               </p>
             </div>
 
-            {/* Annual savings — highlighted box */}
             <div
               className="flex items-center justify-between rounded-xl px-5 py-4 mb-5"
               style={{
@@ -243,15 +231,12 @@ export default function SavingsCalculator() {
                 WebkitBackdropFilter: "blur(4px) saturate(1.8)",
               }}
             >
-              <p className="text-white font-semibold"
-                style={{ fontFamily: fonts.body }}>Annual Savings</p>
-              <p className="text-white text-2xl font-bold tabular-nums"
-                style={{ fontFamily: fonts.body }}>
+              <p className="text-white font-semibold" style={{ fontFamily: fonts.body }}>Annual Savings</p>
+              <p className="text-white text-2xl font-bold tabular-nums" style={{ fontFamily: fonts.body }}>
                 {fmt(annual)}
               </p>
             </div>
 
-            {/* CTA */}
             <a
               href="#contact"
               className="self-center inline-flex items-center gap-2 px-6 py-3 text-white text-sm font-semibold rounded-full transition-colors btn-red-inner-shadow"

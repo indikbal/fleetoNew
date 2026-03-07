@@ -3,8 +3,15 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { colors, fonts, styles } from "@/config/theme";
+import { stripHtml } from "@/lib/api";
 
-export default function AlwaysInSync() {
+interface Props {
+  title: string;
+  description: string;
+  videoUrl: string;
+}
+
+export default function AlwaysInSync({ title, description, videoUrl }: Props) {
   const sectionRef = useRef<HTMLElement>(null);
 
   const { scrollYProgress } = useScroll({
@@ -12,7 +19,6 @@ export default function AlwaysInSync() {
     offset: ["start end", "end start"],
   });
 
-  // Starts very small, expands to 100% of max-w-7xl container
   const videoWidth  = useTransform(scrollYProgress, [0, 0.5], ["30%", "100%"]);
   const videoRadius = useTransform(scrollYProgress, [0, 0.5], [16, 12]);
 
@@ -25,15 +31,13 @@ export default function AlwaysInSync() {
           className="text-4xl md:text-5xl mb-5"
           style={{ ...styles.headingFont, color: colors.black }}
         >
-          Always in sync
+          {title}
         </h2>
         <p
           className="text-gray-500 text-base leading-relaxed"
           style={{ fontFamily: fonts.body }}
         >
-          Stay connected to your Fleeto with the Fleeto app. Track your rides, view
-          detailed stats, locate your scooter, or lock it remotely using your phone.
-          Smart ownership that stays with you.
+          {stripHtml(description)}
         </p>
       </div>
 
@@ -54,10 +58,7 @@ export default function AlwaysInSync() {
             className="w-full block"
             style={{ aspectRatio: "16/9", objectFit: "cover" }}
           >
-            <source
-              src="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
-              type="video/mp4"
-            />
+            <source src={videoUrl} type="video/mp4" />
           </video>
         </motion.div>
       </div>

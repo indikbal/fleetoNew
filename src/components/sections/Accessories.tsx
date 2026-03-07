@@ -3,14 +3,22 @@
 import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 import { colors, fonts, styles } from "@/config/theme";
+import { stripHtml } from "@/lib/api";
 
-export default function Accessories() {
+interface Props {
+  title: string;
+  details: string;
+  buttonUrl: string;
+  image: string;
+}
+
+export default function Accessories({ title, details, buttonUrl, image }: Props) {
   return (
     <section className="relative overflow-hidden" style={{ minHeight: "580px" }}>
 
       {/* Background image */}
       <Image
-        src="/images/scooty-with-accessories.jpg"
+        src={image}
         alt="Fleeto with accessories"
         fill
         className="object-cover object-center"
@@ -43,28 +51,23 @@ export default function Accessories() {
             boxShadow: "inset 0 1px 0 rgba(255,255,255,0.12), 0 8px 40px rgba(0,0,0,0.3)",
           }}
         >
-          {/* Heading */}
           <h2
             className="text-white text-3xl md:text-4xl leading-tight text-center"
             style={styles.headingFont}
           >
-            Accessories your Fleeto
+            {title}
           </h2>
 
-          {/* Description */}
           <p
             className="text-white/70 text-sm leading-relaxed text-center"
             style={{ fontFamily: fonts.body }}
           >
-            Get the accessories you and your family want for your newest family
-            member. More storage, a touch of style, a better ride experience.
-            We&apos;ve got it all.
+            {stripHtml(details)}
           </p>
 
-          {/* CTA */}
           <div className="flex justify-center">
             <a
-              href="#contact"
+              href={buttonUrl || "#contact"}
               className="glass-btn inline-flex items-center gap-3 px-6 py-3 text-white text-sm font-semibold"
             >
               Shop Now

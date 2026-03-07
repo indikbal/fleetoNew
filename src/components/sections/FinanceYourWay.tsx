@@ -4,39 +4,41 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 import { colors, fonts } from "@/config/theme";
+import type { ExploreFinanceLogo, ExploreFinanceFeature } from "@/lib/api";
 
-// ─── Finance logos marquee ────────────────────────────────────────────────────
-const baseLogos = [
-  "/images/f1.jpg",
-  "/images/f2.jpg",
-  "/images/f3.jpg",
-  "/images/f4.jpg",
-  "/images/f5.jpg",
-  "/images/f6.jpg",
-];
-const logos = [...baseLogos, ...baseLogos];
+interface Props {
+  sectionTitle: string;
+  shortTitle: string;
+  icon: string;
+  logos: ExploreFinanceLogo[];
+  features: ExploreFinanceFeature[];
+  emisTitle: string;
+  emisPrice: string;
+  emisButtonUrl: string;
+}
 
-const LOGO_W      = 130;
-const LOGO_GAP    = 24;
-const TRACK_WIDTH = logos.length * (LOGO_W + LOGO_GAP);
-const HALF        = TRACK_WIDTH / 2;
+const LOGO_W   = 130;
+const LOGO_GAP = 24;
 
-// ─── Feature list ─────────────────────────────────────────────────────────────
-const features = [
-  "Zero down payment",
-  "Interest rates as low as 3.99%",
-  "Simplified approval process",
-  "Tenure as long as 5 years",
-];
+export default function FinanceYourWay({
+  sectionTitle,
+  shortTitle,
+  icon,
+  logos,
+  features,
+  emisTitle,
+  emisPrice,
+  emisButtonUrl,
+}: Props) {
+  const TRACK_WIDTH = logos.length * (LOGO_W + LOGO_GAP);
+  const HALF        = TRACK_WIDTH / 2;
 
-// ─── Section ──────────────────────────────────────────────────────────────────
-export default function FinanceYourWay() {
   return (
     <section
       className="relative overflow-hidden pb-16 md:pb-20"
       style={{ backgroundColor: "#FFF5F5" }}
     >
-      {/* ── "Finance Your Way" — sunrise animation ── */}
+      {/* ── Sunrise watermark ── */}
       <motion.div
         className="absolute top-0 inset-x-0 pointer-events-none select-none"
         style={{ zIndex: 0 }}
@@ -67,12 +69,12 @@ export default function FinanceYourWay() {
             fontSize="120"
             style={{ fontFamily: fonts.display }}
           >
-            Finance Your Way
+            {sectionTitle}
           </text>
         </svg>
       </motion.div>
 
-      {/* ── White card — pushed down so title peeks above ── */}
+      {/* ── White card ── */}
       <div
         className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
         style={{ paddingTop: "11%" }}
@@ -84,10 +86,9 @@ export default function FinanceYourWay() {
 
             {/* Left */}
             <div className="flex-1">
-              {/* Brand */}
               <div className="mb-4">
                 <Image
-                  src="/images/flexipay.png"
+                  src={icon}
                   alt="FlexiPay"
                   width={140}
                   height={40}
@@ -99,7 +100,7 @@ export default function FinanceYourWay() {
                 className="text-lg font-semibold text-gray-800 mb-6"
                 style={{ fontFamily: fonts.body }}
               >
-                Take your Rizta home with easy loans
+                {shortTitle}
               </h3>
 
               <ul className="space-y-3">
@@ -113,7 +114,7 @@ export default function FinanceYourWay() {
                       className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                       style={{ backgroundColor: colors.primary }}
                     />
-                    {f}
+                    {f.title}
                   </li>
                 ))}
               </ul>
@@ -129,7 +130,7 @@ export default function FinanceYourWay() {
                   className="text-white/75 text-sm mb-2"
                   style={{ fontFamily: fonts.body }}
                 >
-                  EMIs as low as
+                  {emisTitle}
                 </p>
                 <p
                   className="text-white font-bold mb-6 leading-tight"
@@ -138,11 +139,11 @@ export default function FinanceYourWay() {
                     fontSize: "clamp(26px, 3vw, 36px)",
                   }}
                 >
-                  ₹ 2235 / month
+                  {emisPrice}
                 </p>
               </div>
               <a
-                href="#contact"
+                href={emisButtonUrl || "#contact"}
                 className="glass-btn self-start inline-flex items-center gap-2 px-5 py-2.5 text-white text-sm font-semibold"
               >
                 Learn More
@@ -169,7 +170,7 @@ export default function FinanceYourWay() {
                 },
               }}
             >
-              {logos.map((src, i) => (
+              {logos.map((logo, i) => (
                 <div
                   key={i}
                   className="flex-shrink-0 flex items-center justify-center"
@@ -180,8 +181,8 @@ export default function FinanceYourWay() {
                   }}
                 >
                   <Image
-                    src={src}
-                    alt={`Finance partner ${(i % baseLogos.length) + 1}`}
+                    src={logo.image}
+                    alt={`Finance partner ${(i % (logos.length / 2)) + 1}`}
                     width={LOGO_W}
                     height={56}
                     className="object-contain w-full h-full"

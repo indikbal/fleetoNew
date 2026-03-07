@@ -4,12 +4,15 @@ import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import Image from "next/image";
 
-export default function ScootyReveal() {
+interface Props {
+  image: string;
+}
+
+export default function ScootyReveal({ image }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true });
 
   return (
-    /* Outer div: pure CSS positioning — no transforms, so useInView detects it correctly */
     <div
       ref={ref}
       className="absolute left-0 pointer-events-none select-none hidden sm:block"
@@ -19,14 +22,13 @@ export default function ScootyReveal() {
         width: "clamp(120px, 11vw, 180px)",
       }}
     >
-      {/* Inner motion.div: only handles the slide-in x animation */}
       <motion.div
         initial={{ x: -220 }}
         animate={{ x: isInView ? 0 : -220 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
       >
         <Image
-          src="/images/calculator-scooty.png"
+          src={image}
           alt="Fleeto scooter"
           width={200}
           height={200}

@@ -9,7 +9,7 @@ export const navLinks: NavLink[] = [
 ];
 
 export const heroContent = {
-  headline: ["GO GREEN.", "GO ELECTRIC.", "GO FLEETO."],
+  headline: ["GO GREEN1.", "GO ELECTRIC1.", "GO FLEETO1."],
   highlightWord: "ELECTRIC.",
   subtitle:
     "Experience the future of urban mobility with Fleeto's premium electric scooters. Zero emissions, maximum performance.",

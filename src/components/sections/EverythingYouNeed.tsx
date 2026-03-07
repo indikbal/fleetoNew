@@ -4,42 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Minus } from "lucide-react";
 import { colors, styles } from "@/config/theme";
-
-// ─── FAQ data ─────────────────────────────────────────────────────────────────
-const faqs = [
-  {
-    q: "Can I use an electric scooter if I live in an apartment?",
-    a: "Yes. You just need a 5 amp socket at your parking slot. You can conveniently charge your Fleeto EV with the portable charger at all apartments with a basic electricity connection in the parking area.",
-  },
-  {
-    q: "Do I need a Drivers' License, Helmet and Registration to use an electric scooter?",
-    a: "For electric scooters exceeding 25 km/h or 250W motor output, a valid driving license, registration, and helmet are mandatory as per government regulations.",
-  },
-  {
-    q: "Why do Electric Scooters have riding modes?",
-    a: "Riding modes let you balance speed and battery range. Eco mode extends range, while Sport mode unlocks full performance — giving you control depending on your journey.",
-  },
-  {
-    q: "What is the cost of charging an electric scooter?",
-    a: "Charging a Fleeto scooter costs roughly ₹8–₹15 for a full charge depending on your electricity tariff, compared to ₹100–₹200 for a petrol equivalent.",
-  },
-  {
-    q: "Do I ever need to replace an electric scooter's battery?",
-    a: "Fleeto lithium-ion batteries are designed to last 1,000+ charge cycles. Under normal use, replacement is rarely needed within 5–7 years of ownership.",
-  },
-  {
-    q: "Can electric scooters be used in the rain?",
-    a: "Yes. Fleeto scooters carry an IP67 rating, making them safe to ride in rain. Avoid riding through deep waterlogged areas as with any vehicle.",
-  },
-  {
-    q: "What is the price of electric scooter?",
-    a: "Fleeto scooters start from ₹57,106 onwards. Prices vary by model and configuration. Check our Collection section for full pricing details.",
-  },
-  {
-    q: "Which electric scooter is best in India with price?",
-    a: "Fleeto's Aayan-SMART offers the best value — 150 km range, smart features, and starting price of ₹57,106, making it one of the most competitive EVs in its segment.",
-  },
-];
+import type { FAQ } from "@/lib/api";
 
 // ─── Glass accordion card style ───────────────────────────────────────────────
 const cardStyle: React.CSSProperties = {
@@ -59,8 +24,28 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.45, ease: "easeOut" as const, delay },
 });
 
-// ─── Section ──────────────────────────────────────────────────────────────────
-export default function EverythingYouNeed() {
+const DEFAULT_FAQS: FAQ[] = [
+  { title: "Can I use an electric scooter if I live in an apartment?", details: "Yes. You just need a 5 amp socket at your parking slot. You can conveniently charge your Fleeto EV with the portable charger at all apartments with a basic electricity connection in the parking area." },
+  { title: "Do I need a Drivers' License, Helmet and Registration to use an electric scooter?", details: "For electric scooters exceeding 25 km/h or 250W motor output, a valid driving license, registration, and helmet are mandatory as per government regulations." },
+  { title: "Why do Electric Scooters have riding modes?", details: "Riding modes let you balance speed and battery range. Eco mode extends range, while Sport mode unlocks full performance — giving you control depending on your journey." },
+  { title: "What is the cost of charging an electric scooter?", details: "Charging a Fleeto scooter costs roughly ₹8–₹15 for a full charge depending on your electricity tariff, compared to ₹100–₹200 for a petrol equivalent." },
+  { title: "Do I ever need to replace an electric scooter's battery?", details: "Fleeto lithium-ion batteries are designed to last 1,000+ charge cycles. Under normal use, replacement is rarely needed within 5–7 years of ownership." },
+  { title: "Can electric scooters be used in the rain?", details: "Yes. Fleeto scooters carry an IP67 rating, making them safe to ride in rain. Avoid riding through deep waterlogged areas as with any vehicle." },
+  { title: "What is the price of electric scooter?", details: "Fleeto scooters start from ₹57,106 onwards. Prices vary by model and configuration. Check our Collection section for full pricing details." },
+  { title: "Which electric scooter is best in India with price? 1", details: "Fleeto's Aayan-SMART offers the best value — 150 km range, smart features, and starting price of ₹57,106, making it one of the most competitive EVs in its segment." },
+];
+
+interface Props {
+  title1?: string;
+  title2?: string;
+  faqs?: FAQ[];
+}
+
+export default function EverythingYouNeed({
+  title1 = "Everything You Need To Know",
+  title2 = "FLEETO",
+  faqs = DEFAULT_FAQS,
+}: Props) {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   const toggle = (i: number) =>
@@ -76,10 +61,10 @@ export default function EverythingYouNeed() {
           className="text-center text-4xl md:text-5xl leading-tight text-[#010101] mb-14"
           style={styles.headingFont}
         >
-          Everything You Need To Know
+          {title1}
           <br />
           About{" "}
-          <span style={{ color: colors.primary }}>FLEETO</span>
+          <span style={{ color: colors.primary }}>{title2}</span>
         </motion.h2>
 
         {/* Accordion */}
@@ -98,14 +83,12 @@ export default function EverythingYouNeed() {
                     className="text-sm md:text-base text-[#1a1a1a] leading-snug"
                     style={{ fontFamily: "var(--font-inter), sans-serif", fontWeight: 500 }}
                   >
-                    {faq.q}
+                    {faq.title}
                   </span>
 
                   <span
                     className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-full transition-colors duration-200"
-                    style={{
-                      color: isOpen ? colors.primary : "#555",
-                    }}
+                    style={{ color: isOpen ? colors.primary : "#555" }}
                   >
                     {isOpen
                       ? <Minus size={17} strokeWidth={2.5} />
@@ -129,7 +112,7 @@ export default function EverythingYouNeed() {
                         className="px-6 pb-5 text-sm text-gray-500 leading-relaxed"
                         style={{ fontFamily: "var(--font-inter), sans-serif" }}
                       >
-                        {faq.a}
+                        {faq.details}
                       </p>
                     </motion.div>
                   )}

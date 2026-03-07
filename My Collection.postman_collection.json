@@ -1,0 +1,326 @@
+{
+  "info": {
+    "_postman_id": "fcc49b59-b7bf-432e-b9b8-be43b2086683",
+    "name": "My Collection",
+    "description": "### Welcome to Postman! This is your first collection. \n\nCollections are your starting point for building and testing APIs. You can use this one to:\n\n• Group related requests\n• Test your API in real-world scenarios\n• Document and share your requests\n\nUpdate the name and overview whenever you’re ready to make it yours.\n\n[Learn more about Postman Collections.](https://learning.postman.com/docs/collections/collections-overview/)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "52867159",
+    "_collection_link": "https://go.postman.co/collection/52867159-fcc49b59-b7bf-432e-b9b8-be43b2086683?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Post data",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Successful POST request\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              ""
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n\t\"name\": \"Add your name in the body\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "postman-echo.com/post",
+          "host": [
+            "postman-echo",
+            "com"
+          ],
+          "path": [
+            "post"
+          ]
+        },
+        "description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+      },
+      "response": []
+    },
+    {
+      "name": "about",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"page_slug\": \"about\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://fleetowebapi.codingcloud.in/wp-admin/admin-ajax.php?action=About_Page",
+          "protocol": "https",
+          "host": [
+            "fleetowebapi",
+            "codingcloud",
+            "in"
+          ],
+          "path": [
+            "wp-admin",
+            "admin-ajax.php"
+          ],
+          "query": [
+            {
+              "key": "action",
+              "value": "About_Page"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Common",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://fleetowebapi.codingcloud.in/wp-admin/admin-ajax.php?action=Common",
+          "protocol": "https",
+          "host": [
+            "fleetowebapi",
+            "codingcloud",
+            "in"
+          ],
+          "path": [
+            "wp-admin",
+            "admin-ajax.php"
+          ],
+          "query": [
+            {
+              "key": "action",
+              "value": "Common"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Home",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"page_slug\": \"home\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://fleetowebapi.codingcloud.in/wp-admin/admin-ajax.php?action=Home_Page",
+          "protocol": "https",
+          "host": [
+            "fleetowebapi",
+            "codingcloud",
+            "in"
+          ],
+          "path": [
+            "wp-admin",
+            "admin-ajax.php"
+          ],
+          "query": [
+            {
+              "key": "action",
+              "value": "Home_Page"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Product Page",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"page_slug\": \"shop\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://fleetowebapi.codingcloud.in/wp-admin/admin-ajax.php?action=Shop_Page",
+          "protocol": "https",
+          "host": [
+            "fleetowebapi",
+            "codingcloud",
+            "in"
+          ],
+          "path": [
+            "wp-admin",
+            "admin-ajax.php"
+          ],
+          "query": [
+            {
+              "key": "action",
+              "value": "Shop_Page"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Contact Page",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"page_slug\": \"contact\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://fleetowebapi.codingcloud.in/wp-admin/admin-ajax.php?action=Contact_Page",
+          "protocol": "https",
+          "host": [
+            "fleetowebapi",
+            "codingcloud",
+            "in"
+          ],
+          "path": [
+            "wp-admin",
+            "admin-ajax.php"
+          ],
+          "query": [
+            {
+              "key": "action",
+              "value": "Contact_Page"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Explore Page",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"page_slug\": \"explore\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://fleetowebapi.codingcloud.in/wp-admin/admin-ajax.php?action=Explore_Page",
+          "protocol": "https",
+          "host": [
+            "fleetowebapi",
+            "codingcloud",
+            "in"
+          ],
+          "path": [
+            "wp-admin",
+            "admin-ajax.php"
+          ],
+          "query": [
+            {
+              "key": "action",
+              "value": "Explore_Page"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Product",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://fleetowebapi.codingcloud.in/wp-json/wc/v3/products?consumer_key=ck_2a65d51ecd3d108e3e810dac3e03ba492cafe3bd&consumer_secret=cs_bebf42f0e9337f689dc4e88c2989c531c8aad6d9",
+          "protocol": "https",
+          "host": [
+            "fleetowebapi",
+            "codingcloud",
+            "in"
+          ],
+          "path": [
+            "wp-json",
+            "wc",
+            "v3",
+            "products"
+          ],
+          "query": [
+            {
+              "key": "consumer_key",
+              "value": "ck_2a65d51ecd3d108e3e810dac3e03ba492cafe3bd"
+            },
+            {
+              "key": "consumer_secret",
+              "value": "cs_bebf42f0e9337f689dc4e88c2989c531c8aad6d9"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Cart",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "https://fleetowebapi.codingcloud.in/wp-json/custom/v1/add-to-cart/",
+          "protocol": "https",
+          "host": [
+            "fleetowebapi",
+            "codingcloud",
+            "in"
+          ],
+          "path": [
+            "wp-json",
+            "custom",
+            "v1",
+            "add-to-cart",
+            ""
+          ],
+          "query": [
+            {
+              "key": "user_id",
+              "value": "1",
+              "type": "text",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

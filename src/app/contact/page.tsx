@@ -2,6 +2,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ContactFormSection from "@/components/sections/ContactFormSection";
 import QuickConnect from "@/components/sections/QuickConnect";
+import { fetchContactPage, extractMapSrc } from "@/lib/api";
 
 export const metadata = {
   title: "Contact Us — Fleeto",
@@ -9,26 +10,44 @@ export const metadata = {
     "Get in touch with Fleeto for customer enquiries, dealership opportunities, and more.",
 };
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const data = await fetchContactPage();
+  const mapSrc = extractMapSrc(data.map);
+
   return (
     <>
       <Navbar />
       <main>
-        <ContactFormSection />
-        <QuickConnect />
+        <ContactFormSection
+          bannerTitle={data.banner__title}
+          formTitle={data.contact_form_title}
+          formSubTitle={data.contact_form_sub_title}
+          addressTitle={data.address_title}
+          mailTitle={data.mail_us_title}
+          telephoneTitle={data.telephone_title}
+          workingHoursTitle={data.working_hours_title}
+        />
+        <QuickConnect
+          sectionLabel={data.quick_connect_title}
+          sectionTitle={data.quick_connect_sub_title}
+          sectionHours={data.quick_connect_short_title}
+          items={data.quick_connect}
+        />
 
         {/* ── Full-width map ── */}
-        <div style={{ height: "420px" }}>
-          <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3686.7!2d88.3985!3d22.5094!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a0275bb1234abcd%3A0xef01234567890abc!2sRajdanga+Main+Rd%2C+Kolkata%2C+West+Bengal+700107!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
-            width="100%"
-            height="100%"
-            style={{ border: 0, display: "block" }}
-            allowFullScreen
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          />
-        </div>
+        {mapSrc && (
+          <div style={{ height: "420px" }}>
+            <iframe
+              src={mapSrc}
+              width="100%"
+              height="100%"
+              style={{ border: 0, display: "block" }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+        )}
       </main>
       <Footer />
     </>
