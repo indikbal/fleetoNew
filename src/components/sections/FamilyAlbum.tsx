@@ -4,21 +4,16 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { colors, fonts } from "@/config/theme";
+import type { ExploreAlbumItem } from "@/lib/api";
 
-const base = [
-  "/images/album1.jpg",
-  "/images/album2.jpg",
-  "/images/album1.jpg",
-  "/images/album2.jpg",
-  "/images/album1.jpg",
-  "/images/album2.jpg",
-];
+interface Props {
+  title: string;
+  items: ExploreAlbumItem[];
+}
 
-// Duplicate for seamless loop — animate -50% = exactly first half width
-const images = [...base, ...base];
 const GAP = 14;
 
-export default function FamilyAlbum() {
+export default function FamilyAlbum({ title, items }: Props) {
   const [imgW, setImgW] = useState(420);
 
   useEffect(() => {
@@ -28,6 +23,8 @@ export default function FamilyAlbum() {
     return () => window.removeEventListener("resize", update);
   }, []);
 
+  // Duplicate for seamless loop
+  const images = [...items, ...items];
   const trackWidth = images.length * (imgW + GAP);
   const half       = trackWidth / 2;
 
@@ -35,7 +32,7 @@ export default function FamilyAlbum() {
     <section className="bg-white pt-8 pb-16 overflow-hidden">
       <div className="relative">
 
-        {/* ── "The Family Album" — sunrise animation ── */}
+        {/* ── Sunrise watermark ── */}
         <motion.div
           className="absolute top-0 inset-x-0 pointer-events-none select-none"
           style={{ zIndex: 0 }}
@@ -66,7 +63,7 @@ export default function FamilyAlbum() {
               fontSize="120"
               style={{ fontFamily: fonts.display }}
             >
-              The Family Album
+              {title}
             </text>
           </svg>
         </motion.div>
@@ -87,7 +84,7 @@ export default function FamilyAlbum() {
                 },
               }}
             >
-              {images.map((src, i) => (
+              {images.map((item, i) => (
                 <div
                   key={i}
                   className="relative flex-shrink-0 rounded-2xl overflow-hidden h-[180px] sm:h-[300px]"
@@ -97,8 +94,8 @@ export default function FamilyAlbum() {
                   }}
                 >
                   <Image
-                    src={src}
-                    alt={`Family album photo ${(i % base.length) + 1}`}
+                    src={item.image}
+                    alt={`Family album photo ${(i % items.length) + 1}`}
                     fill
                     className="object-cover"
                   />

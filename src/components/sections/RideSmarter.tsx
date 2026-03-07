@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 import { colors, styles } from "@/config/theme";
+import { stripHtml } from "@/lib/api";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 24 },
@@ -12,20 +13,29 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.55, ease: "easeOut" as const, delay },
 });
 
-export default function RideSmarter() {
+interface Props {
+  title1: string;
+  title2: string;
+  title3: string;
+  description: string;
+  image: string;
+  buttonUrl: string;
+}
+
+export default function RideSmarter({ title1, title2, title3, description, image, buttonUrl }: Props) {
   return (
     <section className="relative overflow-hidden min-h-[420px] md:min-h-[500px] flex items-center">
 
       {/* Background image */}
       <Image
-        src="/images/cta-scooty-bg.jpg"
+        src={image}
         alt="Fleeto Electric Scooters on the road"
         fill
         className="object-cover object-center"
         priority
       />
 
-      {/* Gradient overlay — solid red left → transparent right */}
+      {/* Gradient overlay */}
       <div
         className="absolute inset-0"
         style={{
@@ -44,10 +54,10 @@ export default function RideSmarter() {
             className="text-4xl md:text-5xl leading-tight text-white mb-5"
             style={styles.headingFont}
           >
-            Ride Smarter with{" "}
-            <span style={{ color: colors.primaryLight }}>Fleeto</span>
+            {title1}{" "}
+            <span style={{ color: colors.primaryLight }}>{title2}</span>
             <br />
-            Electric Scooters
+            {title3}
           </motion.h2>
 
           {/* Description */}
@@ -55,15 +65,13 @@ export default function RideSmarter() {
             {...fadeUp(0.15)}
             className="text-white/80 text-sm leading-relaxed mb-8 max-w-[360px]"
           >
-            Lorem Ipsum is simply dummy text of the printing and typesetting
-            industry. Lorem Ipsum has been the industry&apos;s standard dummy text
-            ever since the 1500s,
+            {stripHtml(description)}
           </motion.p>
 
           {/* Glass CTA button */}
           <motion.div {...fadeUp(0.28)}>
             <a
-              href="#contact"
+              href={buttonUrl || "#contact"}
               className="glass-btn inline-flex items-center gap-2 px-6 py-3 text-white text-sm font-semibold rounded-full"
             >
               Book Your Test Ride

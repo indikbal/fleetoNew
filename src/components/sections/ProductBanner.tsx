@@ -4,12 +4,14 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 import { colors, fonts } from "@/config/theme";
+import type { ExploreBannerStat } from "@/lib/api";
 
-const stats = [
-  { value: "3-4 Hours", label: "Charging Time" },
-  { value: "100 Kms",   label: "Upto Range" },
-  { value: "60 Volts",  label: "Battery Capacity" },
-];
+interface Props {
+  stats: ExploreBannerStat[];
+  image: string;
+  pricingUrl: string;
+  testRideUrl: string;
+}
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 24 },
@@ -17,13 +19,13 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.6, ease: "easeOut" as const, delay },
 });
 
-export default function ProductBanner() {
+export default function ProductBanner({ stats, image, pricingUrl, testRideUrl }: Props) {
   return (
     <section className="relative w-full h-[70vh] md:h-screen min-h-[400px] md:min-h-[560px] max-h-[900px] flex flex-col">
 
       {/* Background image */}
       <Image
-        src="/images/product_banner.jpg"
+        src={image}
         alt="Fleeto Electric Scooter"
         fill
         className="object-cover object-center"
@@ -57,7 +59,7 @@ export default function ProductBanner() {
                     fontSize: "clamp(26px, 4.5vw, 40px)",
                   }}
                 >
-                  {stat.value}
+                  {stat.title}
                 </span>
                 <span
                   className="text-white/60 mt-1.5"
@@ -66,7 +68,7 @@ export default function ProductBanner() {
                     fontSize: "clamp(11px, 1.4vw, 16px)",
                   }}
                 >
-                  {stat.label}
+                  {stat.sub_title}
                 </span>
               </div>
             ))}
@@ -76,7 +78,7 @@ export default function ProductBanner() {
           <motion.div {...fadeUp(0.22)} className="flex items-center gap-3 sm:gap-4">
             {/* Glass pill */}
             <a
-              href="#pricing"
+              href={pricingUrl || "#pricing"}
               className="glass-btn inline-flex items-center justify-center px-6 py-3 text-white text-sm font-semibold w-44 sm:w-52"
             >
               Pricing
@@ -84,7 +86,7 @@ export default function ProductBanner() {
 
             {/* Solid red pill */}
             <a
-              href="#contact"
+              href={testRideUrl || "#contact"}
               className="inline-flex items-center justify-center gap-2 px-6 py-3 text-white text-sm font-semibold rounded-full transition-colors btn-red-inner-shadow w-44 sm:w-52"
               style={{ backgroundColor: colors.primary }}
               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = colors.primaryDark)}

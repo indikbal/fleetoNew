@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 import { colors, styles } from "@/config/theme";
+import { stripHtml } from "@/lib/api";
+import type { WhyFeature } from "@/lib/api";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 24 },
@@ -11,48 +13,6 @@ const fadeUp = (delay = 0) => ({
   viewport: { once: true },
   transition: { duration: 0.5, ease: "easeOut" as const, delay },
 });
-
-const leftFeatures = [
-  {
-    title: (
-      <>
-        ZERO <span style={{ color: colors.primary }}>EMISSIONS</span>
-        <br />ZERO NOISE
-      </>
-    ),
-    desc: "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
-  },
-  {
-    title: (
-      <>
-        ULTRA <span style={{ color: colors.primary }}>FAST</span> CHARGING
-        <br />CONVENIENCE
-      </>
-    ),
-    desc: "Lorem Ipsum is simply dummy text of the printing and",
-  },
-];
-
-const rightFeatures = [
-  {
-    title: (
-      <>
-        SMART TECHNOLOGY &
-        <br /><span style={{ color: colors.primary }}>AI DASHBOARD</span>
-      </>
-    ),
-    desc: "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
-  },
-  {
-    title: (
-      <>
-        THE MOST <span style={{ color: colors.primary }}>ECONOMICAL</span>
-        <br />WAY TO RIDE
-      </>
-    ),
-    desc: "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
-  },
-];
 
 // Desktop ring dots — NW / NE / SE / SW at 45° on 300px circle
 const ringDots: React.CSSProperties[] = [
@@ -62,26 +22,63 @@ const ringDots: React.CSSProperties[] = [
   { top: "250px", left: "40px"  },
 ];
 
-// ─── Circle image (reused on both layouts) ────────────────────────────────────
-function CircleImage({ size, ringSize }: { size: number; ringSize: number }) {
+function FeatureTitle({ feature }: { feature: WhyFeature }) {
+  return (
+    <>
+      {feature.title_1}{" "}
+      <span style={{ color: colors.primary }}>{feature.title_2}</span>
+      {feature.title_3 && (
+        <>
+          <br />
+          {feature.title_3}
+        </>
+      )}
+    </>
+  );
+}
+
+function CircleImage({ size, ringSize, image }: { size: number; ringSize: number; image: string }) {
   return (
     <div className="relative flex-shrink-0" style={{ width: ringSize, height: ringSize }}>
       <div
         className="absolute inset-0 rounded-full border-2 border-dashed"
         style={{ borderColor: `${colors.primary}55` }}
       />
-      {/* Image */}
       <div
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full overflow-hidden"
         style={{ width: size, height: size }}
       >
-        <Image src="/images/why-img.png" alt="Fleeto scooter lineup" fill className="object-cover" />
+        <Image src={image} alt="Fleeto scooter lineup" fill className="object-cover" />
       </div>
     </div>
   );
 }
 
-export default function WhyRidersChoose() {
+interface Props {
+  title1: string;
+  title2: string;
+  description: string;
+  image: string;
+  features: WhyFeature[];
+  ctaTitle: string;
+  ctaNumber: string;
+  ctaButtonUrl: string;
+}
+
+export default function WhyRidersChoose({
+  title1,
+  title2,
+  description,
+  image,
+  features,
+  ctaTitle,
+  ctaNumber,
+  ctaButtonUrl,
+}: Props) {
+  // split features: odd indices (0,2) → left, even (1,3) → right
+  const leftFeatures = features.filter((_, i) => i % 2 === 0);
+  const rightFeatures = features.filter((_, i) => i % 2 === 1);
+
   return (
     <>
       <section className="pt-16 md:pt-20 lg:pt-28 pb-12 bg-white">
@@ -93,8 +90,8 @@ export default function WhyRidersChoose() {
             className="text-center text-3xl sm:text-4xl md:text-5xl text-[#010101] mb-4"
             style={styles.headingFont}
           >
-            Why Riders Choose{" "}
-            <span style={{ color: colors.primary }}>FLEETO</span>
+            {title1}{" "}
+            <span style={{ color: colors.primary }}>{title2}</span>
           </motion.h2>
 
           {/* Subtitle */}
@@ -102,30 +99,24 @@ export default function WhyRidersChoose() {
             {...fadeUp(0.1)}
             className="text-center text-gray-500 text-sm max-w-lg mx-auto mb-12 md:mb-16 leading-relaxed"
           >
-            Lorem Ipsum is simply dummy text of the printing and typesetting
-            industry. Lorem Ipsum has been the industry&apos;s standard dummy
-            text ever since the 1500s,
+            {stripHtml(description)}
           </motion.p>
 
           {/* ── Mobile / Tablet layout (< lg) ── */}
           <div className="lg:hidden flex flex-col items-center gap-10">
-
-            {/* Circle — smaller on mobile */}
             <motion.div {...fadeUp(0.1)}>
-              <CircleImage size={200} ringSize={230} />
+              <CircleImage size={200} ringSize={230} image={image} />
             </motion.div>
-
-            {/* Features — 2×2 grid */}
             <div className="grid grid-cols-2 gap-6 w-full">
-              {[...leftFeatures, ...rightFeatures].map((f, i) => (
+              {features.map((f, i) => (
                 <motion.div key={i} {...fadeUp(0.1 + i * 0.08)}>
                   <h3
                     className="leading-snug text-[#010101] mb-2"
                     style={{ ...styles.headingFont, fontSize: "clamp(14px, 3vw, 20px)" }}
                   >
-                    {f.title}
+                    <FeatureTitle feature={f} />
                   </h3>
-                  <p className="text-gray-500 text-xs leading-relaxed">{f.desc}</p>
+                  <p className="text-gray-500 text-xs leading-relaxed">{stripHtml(f.details)}</p>
                 </motion.div>
               ))}
             </div>
@@ -142,9 +133,9 @@ export default function WhyRidersChoose() {
                     className="leading-snug text-[#010101] mb-2"
                     style={{ ...styles.headingFont, fontSize: "25px" }}
                   >
-                    {f.title}
+                    <FeatureTitle feature={f} />
                   </h3>
-                  <p className="text-gray-500 text-sm leading-relaxed">{f.desc}</p>
+                  <p className="text-gray-500 text-sm leading-relaxed">{stripHtml(f.details)}</p>
                 </motion.div>
               ))}
             </div>
@@ -170,7 +161,7 @@ export default function WhyRidersChoose() {
                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full overflow-hidden"
                 style={{ width: "262px", height: "262px" }}
               >
-                <Image src="/images/why-img.png" alt="Fleeto scooter lineup" fill className="object-cover" />
+                <Image src={image} alt="Fleeto scooter lineup" fill className="object-cover" />
               </div>
             </motion.div>
 
@@ -182,9 +173,9 @@ export default function WhyRidersChoose() {
                     className="leading-snug text-[#010101] mb-2"
                     style={{ ...styles.headingFont, fontSize: "25px" }}
                   >
-                    {f.title}
+                    <FeatureTitle feature={f} />
                   </h3>
-                  <p className="text-gray-500 text-sm leading-relaxed">{f.desc}</p>
+                  <p className="text-gray-500 text-sm leading-relaxed">{stripHtml(f.details)}</p>
                 </motion.div>
               ))}
             </div>
@@ -208,12 +199,12 @@ export default function WhyRidersChoose() {
           {/* Mobile: stacked */}
           <div className="relative sm:hidden flex flex-col items-center gap-4 px-6 py-8 text-center">
             <div>
-              <p className="text-white/50 text-xs mb-1 tracking-wide">Call us or Book Your Ride Instantly</p>
+              <p className="text-white/50 text-xs mb-1 tracking-wide">{ctaTitle}</p>
               <p className="text-white font-bold text-2xl tracking-wide" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
-                +91 97658 6545
+                {ctaNumber}
               </p>
             </div>
-            <a href="#contact" className="glass-btn inline-flex items-center gap-2 px-5 py-3 text-white text-sm font-semibold rounded-full">
+            <a href={ctaButtonUrl || "#contact"} className="glass-btn inline-flex items-center gap-2 px-5 py-3 text-white text-sm font-semibold rounded-full">
               Book Your Test Ride <ArrowUpRight size={15} />
             </a>
           </div>
@@ -221,9 +212,9 @@ export default function WhyRidersChoose() {
           {/* sm+: horizontal */}
           <div className="relative hidden sm:flex items-center px-8 md:px-12 py-8 gap-4">
             <div className="flex-1">
-              <p className="text-white/50 text-sm mb-1.5 tracking-wide">Call us or Book Your Ride Instantly</p>
+              <p className="text-white/50 text-sm mb-1.5 tracking-wide">{ctaTitle}</p>
               <p className="text-white font-bold text-xl md:text-3xl tracking-wide" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
-                +91 97658 6545
+                {ctaNumber}
               </p>
             </div>
             <div className="flex flex-col items-center self-stretch justify-center flex-shrink-0">
@@ -234,7 +225,7 @@ export default function WhyRidersChoose() {
               <div className="flex-1 w-px bg-white/15" />
             </div>
             <div className="flex-1 flex justify-end">
-              <a href="#contact" className="glass-btn inline-flex items-center gap-2 px-5 py-3 text-white text-sm font-semibold rounded-full flex-shrink-0">
+              <a href={ctaButtonUrl || "#contact"} className="glass-btn inline-flex items-center gap-2 px-5 py-3 text-white text-sm font-semibold rounded-full flex-shrink-0">
                 Book Your Test Ride <ArrowUpRight size={15} />
               </a>
             </div>

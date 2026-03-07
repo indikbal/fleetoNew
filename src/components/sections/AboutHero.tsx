@@ -2,21 +2,10 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { ArrowUpRight, ThumbsUp, Package } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { colors, fonts, styles } from "@/config/theme";
-
-const pills = [
-  {
-    icon: ThumbsUp,
-    label: "Satisfied Customer",
-    desc: "Our satisfied customers love the smooth ride, great mileage, and stylish design.",
-  },
-  {
-    icon: Package,
-    label: "Standard Product",
-    desc: "Our standard product ensures reliable performance, quality materials, and durability every time.",
-  },
-];
+import { stripHtml } from "@/lib/api";
+import type { AboutPill } from "@/lib/api";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -25,7 +14,31 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.55, ease: "easeOut" as const, delay },
 });
 
-export default function AboutHero() {
+interface Props {
+  bannerTitle: string;
+  subTitle: string;
+  title: string;
+  description: string;
+  image: string;
+  buttonUrl: string;
+  pills: AboutPill[];
+  yearsExperience: string;
+  happyCustomersNumber: string;
+  happyCustomersTitle: string;
+}
+
+export default function AboutHero({
+  bannerTitle,
+  subTitle,
+  title,
+  description,
+  image,
+  buttonUrl,
+  pills,
+  yearsExperience,
+  happyCustomersNumber,
+  happyCustomersTitle,
+}: Props) {
   return (
     <section
       className="relative overflow-hidden pt-20 md:pt-24 pb-16 md:pb-24"
@@ -61,7 +74,7 @@ export default function AboutHero() {
             fontSize="120"
             style={{ fontFamily: fonts.display }}
           >
-            About Us
+            {bannerTitle}
           </text>
         </svg>
       </motion.div>
@@ -81,7 +94,7 @@ export default function AboutHero() {
                 className="text-xs font-semibold tracking-widest uppercase mb-3"
                 style={{ color: colors.primary, fontFamily: fonts.body }}
               >
-                About Us
+                {subTitle}
               </motion.p>
 
               <motion.h2
@@ -89,7 +102,7 @@ export default function AboutHero() {
                 className="text-4xl md:text-5xl leading-tight mb-5"
                 style={{ ...styles.headingFont, color: colors.black }}
               >
-                Premium Quality<br />Delivered
+                {title}
               </motion.h2>
 
               <motion.p
@@ -97,15 +110,12 @@ export default function AboutHero() {
                 className="text-gray-500 text-sm leading-relaxed mb-8"
                 style={{ fontFamily: fonts.body }}
               >
-                At Fleeto, we are committed to redefining urban mobility with
-                eco-friendly, stylish, and affordable electric scooters that deliver
-                performance, convenience, and sustainability for the modern Indian
-                commuter.
+                {stripHtml(description)}
               </motion.p>
 
               {/* Feature pills */}
               <div className="flex flex-col gap-4 mb-8">
-                {pills.map(({ icon: Icon, label, desc }, i) => (
+                {pills.map(({ image_svg, title: label, details }, i) => (
                   <motion.div
                     key={label}
                     {...fadeUp(0.35 + i * 0.1)}
@@ -115,9 +125,8 @@ export default function AboutHero() {
                     <div
                       className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
                       style={{ backgroundColor: colors.primary }}
-                    >
-                      <Icon size={17} color="white" />
-                    </div>
+                      dangerouslySetInnerHTML={{ __html: image_svg }}
+                    />
                     <div>
                       <p
                         className="font-semibold text-sm mb-1"
@@ -126,7 +135,7 @@ export default function AboutHero() {
                         {label}
                       </p>
                       <p className="text-gray-500 text-sm" style={{ fontFamily: fonts.body }}>
-                        {desc}
+                        {details}
                       </p>
                     </div>
                   </motion.div>
@@ -135,7 +144,7 @@ export default function AboutHero() {
 
               <motion.a
                 {...fadeUp(0.55)}
-                href="/book-test-ride"
+                href={buttonUrl || "/book-test-ride"}
                 className="inline-flex items-center gap-2 px-6 py-3 text-white text-sm font-semibold rounded-full btn-red-inner-shadow transition-colors"
                 style={{ backgroundColor: colors.primary, fontFamily: fonts.body }}
                 onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = colors.primaryDark)}
@@ -163,7 +172,7 @@ export default function AboutHero() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: 0.6 }}
               >
-                8+ Years Experience
+                {yearsExperience}
               </motion.div>
 
               <div
@@ -171,7 +180,7 @@ export default function AboutHero() {
                 style={{ aspectRatio: "4/3" }}
               >
                 <Image
-                  src="/images/abt-scootys.png"
+                  src={image}
                   alt="Fleeto electric scooters"
                   fill
                   className="object-cover object-center"
@@ -194,13 +203,13 @@ export default function AboutHero() {
                   className="text-white text-2xl font-bold leading-none"
                   style={{ fontFamily: fonts.display }}
                 >
-                  10K+
+                  {happyCustomersNumber}
                 </p>
                 <p
                   className="text-white/75 text-xs mt-1"
                   style={{ fontFamily: fonts.body }}
                 >
-                  Happy Customers
+                  {happyCustomersTitle}
                 </p>
               </motion.div>
             </motion.div>

@@ -3,34 +3,7 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { colors, styles } from "@/config/theme";
-
-// ─── Bento cards data ─────────────────────────────────────────────────────────
-const cards = [
-  {
-    id: "battery",
-    title: "Battery Safety and Management",
-    image: "/images/cta-scooty-bg.jpg",
-    wide: true,
-  },
-  {
-    id: "smart",
-    title: "Smart Features Integration",
-    image: "/images/hero-scooty.png",
-    wide: false,
-  },
-  {
-    id: "aftersales",
-    title: "Best After-Sales Support",
-    image: "/images/cta-scooty-bg.jpg",
-    wide: false,
-  },
-  {
-    id: "manufacturing",
-    title: "Sustainable Manufacturing",
-    image: "/images/abt-scootys.png",
-    wide: false,
-  },
-];
+import type { EffortlessCard } from "@/lib/api";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 24 },
@@ -40,13 +13,7 @@ const fadeUp = (delay = 0) => ({
 });
 
 // ─── Single card ──────────────────────────────────────────────────────────────
-function BentoCard({
-  card,
-  delay = 0,
-}: {
-  card: (typeof cards)[0];
-  delay?: number;
-}) {
+function BentoCard({ card, delay = 0 }: { card: EffortlessCard; delay?: number }) {
   return (
     <motion.div
       {...fadeUp(delay)}
@@ -63,10 +30,10 @@ function BentoCard({
         />
       </div>
 
-      {/* Overlay — darkens slightly on hover */}
+      {/* Overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/30 transition-opacity duration-500 group-hover:opacity-80" />
 
-      {/* Title — slides up on hover */}
+      {/* Title */}
       <div className="absolute bottom-4 left-4 right-4 translate-y-1 group-hover:translate-y-0 transition-transform duration-300 ease-out">
         <h3
           className="text-white text-base md:text-lg leading-snug"
@@ -79,8 +46,15 @@ function BentoCard({
   );
 }
 
+interface Props {
+  title1: string;
+  title2: string;
+  title3: string;
+  cards: EffortlessCard[];
+}
+
 // ─── Section ──────────────────────────────────────────────────────────────────
-export default function EffortlessRiding() {
+export default function EffortlessRiding({ title1, title2, title3, cards }: Props) {
   return (
     <section className="py-20 md:py-28 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -91,17 +65,16 @@ export default function EffortlessRiding() {
           className="text-center text-4xl md:text-5xl leading-tight mb-12"
           style={styles.headingFont}
         >
-          Effortless{" "}
-          <span style={{ color: colors.primary }}>Riding</span>.
+          {title1}{" "}
+          <span style={{ color: colors.primary }}>{title2}</span>.
           <br />
-          <span style={{ color: colors.primary }}>Worry-free</span>{" "}
-          Ownership.
+          <span style={{ color: colors.primary }}>{title3}</span>
         </motion.h2>
 
         {/* Bento grid */}
         <div className="flex flex-col gap-4">
 
-          {/* Row 1 — stacks on mobile, wide+narrow on md+ */}
+          {/* Row 1 — wide + narrow */}
           <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-4">
             <div className="h-[220px] sm:h-[260px] md:h-[320px]">
               <BentoCard card={cards[0]} delay={0.1} />
@@ -111,7 +84,7 @@ export default function EffortlessRiding() {
             </div>
           </div>
 
-          {/* Row 2 — two equal (stays 2-col, just shorter on mobile) */}
+          {/* Row 2 — two equal */}
           <div className="grid grid-cols-2 gap-4">
             <div className="h-[180px] sm:h-[220px] md:h-[300px]">
               <BentoCard card={cards[2]} delay={0.3} />

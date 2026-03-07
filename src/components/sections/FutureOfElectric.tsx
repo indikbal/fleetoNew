@@ -4,13 +4,8 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 import { colors, styles } from "@/config/theme";
-
-const buttons = [
-  { label: "Test Ride",            href: "#contact" },
-  { label: "Compare Model",        href: "#products" },
-  { label: "Check Finance Option", href: "#contact" },
-  { label: "Find a Dealer",        href: "#contact" },
-];
+import { stripHtml } from "@/lib/api";
+import type { FutureButton } from "@/lib/api";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 28 },
@@ -19,7 +14,16 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.55, ease: "easeOut" as const, delay },
 });
 
-export default function FutureOfElectric() {
+interface Props {
+  title1: string;
+  title2: string;
+  title3: string;
+  description: string;
+  image: string;
+  buttons: FutureButton[];
+}
+
+export default function FutureOfElectric({ title1, title2, title3, description, image, buttons }: Props) {
   return (
     <section
       id="about"
@@ -35,7 +39,7 @@ export default function FutureOfElectric() {
         className="absolute right-0 top-1/2 -translate-y-1/2 w-[40%] hidden lg:block pointer-events-none"
       >
         <Image
-          src="/images/abt-scootys.png"
+          src={image}
           alt="Fleeto Electric Scooters"
           width={800}
           height={500}
@@ -54,11 +58,10 @@ export default function FutureOfElectric() {
             className="text-3xl sm:text-4xl md:text-5xl leading-tight text-white"
             style={styles.headingFont}
           >
-            The Future of{" "}
-            <span style={{ color: colors.aboutAccent }}>Electric</span>
+            {title1}
+            <span style={{ color: colors.aboutAccent }}>{title2}</span>
             <br />
-            <span style={{ color: colors.aboutAccent }}>Riding</span>{" "}
-            Start Here
+            <span style={{ color: colors.aboutAccent }}>{title3}</span>
           </motion.h2>
 
           {/* Description with left accent border */}
@@ -68,9 +71,7 @@ export default function FutureOfElectric() {
               style={{ backgroundColor: colors.aboutAccent }}
             />
             <p className="text-white/75 text-sm leading-relaxed">
-              Lorem Ipsum is simply dummy text of the printing and typesetting
-              industry. Lorem Ipsum has been the industry&apos;s standard dummy
-              text ever since the 1500s,
+              {stripHtml(description)}
             </p>
           </motion.div>
 
@@ -78,11 +79,11 @@ export default function FutureOfElectric() {
           <motion.div {...fadeUp(0.28)} className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
             {buttons.map((btn) => (
               <a
-                key={btn.label}
-                href={btn.href}
+                key={btn.title}
+                href={btn.url || "#"}
                 className="glass-btn group flex items-center justify-between gap-2 px-4 sm:px-5 py-3 sm:py-3.5 text-white text-sm font-semibold"
               >
-                <span>{btn.label}</span>
+                <span>{btn.title}</span>
                 <ArrowUpRight size={16} className="opacity-60 group-hover:opacity-100 transition-opacity flex-shrink-0" />
               </a>
             ))}
