@@ -75,13 +75,13 @@ Requires Phase 2 (auth) to be complete.
 Requires Phase 2 (auth) to be complete.
 
 ### 5.1 API Functions
-- [ ] Add `fetchMyCart(user_id)` to `src/lib/api.ts` → `POST /wp-json/custom/v1/get-cart/` with `{user_id}`
-- [ ] Add `fetchMyOrders(user_id)` to `src/lib/api.ts` → `GET /wp-json/custom-api/v1/orders-by-user/{user_id}`
+- [x] Add `fetchMyCart(user_id)` to `src/lib/api.ts` → `POST /wp-json/custom/v1/get-cart/` with `{user_id}`
+- [x] Add `fetchMyOrders(user_id)` to `src/lib/api.ts` → `GET /wp-json/custom-api/v1/orders-by-user/{user_id}`
 
 ### 5.2 UI
-- [ ] Create `src/app/cart/page.tsx` — display cart items for logged-in user
-- [ ] Create `src/app/orders/page.tsx` — display order history for logged-in user
-- [ ] Protect both routes: redirect to `/login` if not authenticated
+- [x] Create `src/app/cart/page.tsx` — display cart items for logged-in user
+- [x] Create `src/app/orders/page.tsx` — display order history for logged-in user
+- [x] Protect both routes: redirect to `/login` if not authenticated
 
 ---
 
@@ -93,7 +93,7 @@ Requires Phase 2 (auth) to be complete.
 | Phase 2 | Auth System | `[x] Done` |
 | Phase 3 | Forgot Password Flow | `[x] Done` |
 | Phase 4 | User Profile | `[x] Done` |
-| Phase 5 | My Cart & My Orders | `[ ] Pending` |
+| Phase 5 | My Cart & My Orders | `[x] Done` |
 
 ---
 

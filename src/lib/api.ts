@@ -447,6 +447,52 @@ export interface UserProfile {
   display_name: string;
 }
 
+// ─── Cart ──────────────────────────────────────────────────────────────────────
+export interface CartItem {
+  product_id: number;
+  product_name: string;
+  quantity: number;
+  price: string;
+  total: string;
+  image: string;
+}
+
+export async function fetchMyCart(user_id: number): Promise<CartItem[]> {
+  const res = await fetch("/api/user/cart", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id }),
+  });
+  if (!res.ok) throw new Error("Failed to fetch cart");
+  const data = await res.json();
+  // Handle both array response and { items: [] } shape
+  return Array.isArray(data) ? data : (data.items ?? data.cart ?? []);
+}
+
+// ─── Orders ───────────────────────────────────────────────────────────────────
+export interface OrderItem {
+  product_id: number;
+  name: string;
+  quantity: number;
+  total: string;
+}
+
+export interface Order {
+  id: number;
+  status: string;
+  date_created: string;
+  total: string;
+  currency: string;
+  line_items: OrderItem[];
+}
+
+export async function fetchMyOrders(user_id: number): Promise<Order[]> {
+  const res = await fetch(`/api/user/orders?user_id=${user_id}`);
+  if (!res.ok) throw new Error("Failed to fetch orders");
+  const data = await res.json();
+  return Array.isArray(data) ? data : (data.orders ?? []);
+}
+
 export async function fetchMyProfile(user_id: number): Promise<UserProfile> {
   const res = await fetch(`/api/user/profile?user_id=${user_id}`);
   if (!res.ok) throw new Error("Failed to fetch profile");
