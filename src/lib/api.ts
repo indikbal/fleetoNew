@@ -287,6 +287,85 @@ export async function fetchShopPage(): Promise<ShopPageData> {
   return res.json();
 }
 
+// ─── Header Menu ──────────────────────────────────────────────────────────────
+const CUSTOM_BASE = "https://fleetowebapi.codingcloud.in/wp-json/custom/v1";
+const WP_BASE = "https://fleetowebapi.codingcloud.in";
+
+export interface HeaderMenuItem {
+  id: number;
+  title: string;
+  href: string;
+  parent: string;
+}
+
+// Map WP page paths → Next.js routes
+function wpUrlToHref(url: string): string {
+  const path = url.replace(WP_BASE, "").replace(/\/$/, "") || "/";
+  const map: Record<string, string> = {
+    "/shop": "/products",
+    "/book-a-test-ride": "/book-test-ride",
+  };
+  // WooCommerce single product pages → products listing
+  if (path.startsWith("/product/")) return "/products";
+  return map[path] ?? path;
+}
+
+export async function fetchHeaderMenu(): Promise<HeaderMenuItem[]> {
+  const res = await fetch(`${CUSTOM_BASE}/header-menu`, {
+    next: { revalidate: 3600 },
+  });
+  if (!res.ok) throw new Error("Failed to fetch header menu");
+  const data: { id: number; title: string; url: string; parent: string }[] =
+    await res.json();
+  return data.map((item) => ({
+    id: item.id,
+    title: item.title,
+    href: wpUrlToHref(item.url),
+    parent: item.parent,
+  }));
+}
+
+// ─── Footer Menus ─────────────────────────────────────────────────────────────
+export interface FooterMenuItem {
+  id: number;
+  title: string;
+  href: string;
+}
+
+export interface FooterMenuColumn {
+  title: string;
+  items: FooterMenuItem[];
+}
+
+async function fetchMenuColumn(endpoint: string): Promise<FooterMenuItem[]> {
+  const res = await fetch(`${CUSTOM_BASE}/${endpoint}`, {
+    next: { revalidate: 3600 },
+  });
+  if (!res.ok) throw new Error(`Failed to fetch ${endpoint}`);
+  const data: { id: number; title: string; url: string; parent: string }[] =
+    await res.json();
+  return data.map((item) => ({
+    id: item.id,
+    title: item.title,
+    href: wpUrlToHref(item.url),
+  }));
+}
+
+export async function fetchFooterMenus(): Promise<FooterMenuColumn[]> {
+  const [products, quickLinks, aboutUs, support] = await Promise.all([
+    fetchMenuColumn("our-product-menu"),
+    fetchMenuColumn("quick-link-menu"),
+    fetchMenuColumn("about-us-menu"),
+    fetchMenuColumn("footer-menu"),
+  ]);
+  return [
+    { title: "Our Products", items: products },
+    { title: "Quick Links", items: quickLinks },
+    { title: "About us", items: aboutUs },
+    { title: "Support", items: support },
+  ];
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 // Parse "10K+", "513+" etc. → { value, suffix } for animated counters
