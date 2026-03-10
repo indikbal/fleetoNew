@@ -61,12 +61,12 @@ Build full authentication flow (no dependency on any other phase).
 Requires Phase 2 (auth) to be complete.
 
 ### 4.1 API Functions
-- [ ] Add `fetchMyProfile(user_id)` to `src/lib/api.ts` → `GET /wp-json/custom/v1/my-profile?user_id=X`
-- [ ] Add `updateProfile(user_id, first_name, last_name, email)` to `src/lib/api.ts` → `POST /wp-json/custom/v1/update-profile`
+- [x] Add `fetchMyProfile(user_id)` to `src/lib/api.ts` → `GET /wp-json/custom/v1/my-profile?user_id=X`
+- [x] Add `updateProfile(user_id, first_name, last_name, email)` to `src/lib/api.ts` → `POST /wp-json/custom/v1/update-profile`
 
 ### 4.2 UI
-- [ ] Create `src/app/profile/page.tsx` — show profile info + edit form
-- [ ] Protect route: redirect to `/login` if not authenticated
+- [x] Create `src/app/profile/page.tsx` — show profile info + edit form
+- [x] Protect route: redirect to `/login` if not authenticated
 
 ---
 
@@ -92,7 +92,7 @@ Requires Phase 2 (auth) to be complete.
 | Phase 1 | Navigation & Menu APIs | `[x] Done` |
 | Phase 2 | Auth System | `[x] Done` |
 | Phase 3 | Forgot Password Flow | `[x] Done` |
-| Phase 4 | User Profile | `[ ] Pending` |
+| Phase 4 | User Profile | `[x] Done` |
 | Phase 5 | My Cart & My Orders | `[ ] Pending` |
 
 ---

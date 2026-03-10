@@ -434,6 +434,36 @@ export async function verifyOtp(
   return res.json();
 }
 
+// ─── User Profile ─────────────────────────────────────────────────────────────
+export interface UserProfile {
+  user_id: number;
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  display_name: string;
+}
+
+export async function fetchMyProfile(user_id: number): Promise<UserProfile> {
+  const res = await fetch(`/api/user/profile?user_id=${user_id}`);
+  if (!res.ok) throw new Error("Failed to fetch profile");
+  return res.json();
+}
+
+export async function updateProfile(
+  user_id: number,
+  first_name: string,
+  last_name: string,
+  email: string
+): Promise<{ success: boolean; message: string }> {
+  const res = await fetch("/api/user/profile", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id, first_name, last_name, email }),
+  });
+  return res.json();
+}
+
 export async function resetPassword(
   email: string,
   otp: string,
