@@ -27,18 +27,18 @@ Replace all hardcoded nav/footer data with live API data.
 Build full authentication flow (no dependency on any other phase).
 
 ### 2.1 API Functions
-- [ ] Add `registerUser(username, email, password)` to `src/lib/api.ts` → `POST ?action=register_user`
-- [ ] Add `loginUser(username, password)` to `src/lib/api.ts` → `POST ?action=login_user`
-- [ ] Add `logoutUser()` to `src/lib/api.ts` → `POST ?action=logout_user`
+- [x] Add `registerUser(username, email, password)` to `src/lib/api.ts` → `POST ?action=register_user`
+- [x] Add `loginUser(username, password)` to `src/lib/api.ts` → `POST ?action=login_user`
+- [x] Add `logoutUser()` to `src/lib/api.ts` → `POST ?action=logout_user`
 
 ### 2.2 Auth State Management
-- [ ] Create `src/context/AuthContext.tsx` — store `user_id`, `username`, login state
-- [ ] Wrap app in `AuthProvider` inside `src/app/layout.tsx`
+- [x] Create `src/context/AuthContext.tsx` — store `user_id`, `username`, login state
+- [x] Wrap app in `AuthProvider` inside `src/app/layout.tsx`
 
 ### 2.3 UI — Login / Register Pages
-- [ ] Create `src/app/login/page.tsx` — Login form
-- [ ] Create `src/app/register/page.tsx` — Register form
-- [ ] Add login/logout toggle to `Navbar.tsx` based on auth state
+- [x] Create `src/app/login/page.tsx` — Login form
+- [x] Create `src/app/register/page.tsx` — Register form
+- [x] Add login/logout toggle to `Navbar.tsx` based on auth state
 
 ---
 
@@ -90,7 +90,7 @@ Requires Phase 2 (auth) to be complete.
 | Phase | Description | Status |
 |-------|-------------|--------|
 | Phase 1 | Navigation & Menu APIs | `[x] Done` |
-| Phase 2 | Auth System | `[ ] Pending` |
+| Phase 2 | Auth System | `[x] Done` |
 | Phase 3 | Forgot Password Flow | `[ ] Pending` |
 | Phase 4 | User Profile | `[ ] Pending` |
 | Phase 5 | My Cart & My Orders | `[ ] Pending` |

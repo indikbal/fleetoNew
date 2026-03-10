@@ -366,6 +366,53 @@ export async function fetchFooterMenus(): Promise<FooterMenuColumn[]> {
   ];
 }
 
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+export interface AuthUser {
+  user_id: number;
+  username: string;
+  email: string;
+  display_name: string;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  message: string;
+  user?: AuthUser;
+}
+
+export async function loginUser(
+  username: string,
+  password: string
+): Promise<AuthResponse> {
+  const res = await fetch(`${API_BASE}?action=login_user`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+  });
+  return res.json();
+}
+
+export async function registerUser(
+  username: string,
+  email: string,
+  password: string
+): Promise<AuthResponse> {
+  const res = await fetch(`${API_BASE}?action=register_user`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, email, password }),
+  });
+  return res.json();
+}
+
+export async function logoutUser(): Promise<{ success: boolean }> {
+  const res = await fetch(`${API_BASE}?action=logout_user`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+  return res.json();
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 // Parse "10K+", "513+" etc. → { value, suffix } for animated counters

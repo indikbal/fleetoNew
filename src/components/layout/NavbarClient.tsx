@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ArrowUpRight } from "lucide-react";
+import { Menu, X, ArrowUpRight, User, LogOut } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { colors, fonts, styles } from "@/config/theme";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
 import type { HeaderMenuItem } from "@/lib/api";
 
 interface NavbarClientProps {
@@ -18,6 +19,13 @@ export default function NavbarClient({ links }: NavbarClientProps) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const { isLoggedIn, user, logout, isLoading } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/");
+  };
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -77,7 +85,43 @@ export default function NavbarClient({ links }: NavbarClientProps) {
         </ul>
 
         {/* Desktop CTA */}
-        <div className="hidden md:block">
+        <div className="hidden md:flex items-center gap-3">
+          {!isLoading && (
+            isLoggedIn ? (
+              <>
+                <Link
+                  href="/profile"
+                  className="inline-flex items-center gap-2 text-sm font-medium transition-colors"
+                  style={{ color: colors.black, fontFamily: fonts.body }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = colors.primary)}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = colors.black)}
+                >
+                  <User size={16} />
+                  {user?.display_name || user?.username}
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="inline-flex items-center gap-1.5 text-sm font-medium transition-colors"
+                  style={{ color: colors.black, fontFamily: fonts.body }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = colors.primary)}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = colors.black)}
+                >
+                  <LogOut size={15} />
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className="text-sm font-medium transition-colors"
+                style={{ color: colors.black, fontFamily: fonts.body }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = colors.primary)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = colors.black)}
+              >
+                Login
+              </Link>
+            )
+          )}
           <Link
             href="/book-test-ride"
             className="inline-flex items-center gap-2 px-5 py-2.5 text-white text-sm font-semibold rounded-full transition-colors btn-red-inner-shadow"
@@ -131,6 +175,39 @@ export default function NavbarClient({ links }: NavbarClientProps) {
                   </Link>
                 );
               })}
+
+              {!isLoading && (
+                isLoggedIn ? (
+                  <div className="flex flex-col gap-3 pt-2 border-t border-gray-100">
+                    <Link
+                      href="/profile"
+                      className="flex items-center gap-2 text-base font-medium"
+                      style={{ color: colors.black, fontFamily: fonts.body }}
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      <User size={16} />
+                      {user?.display_name || user?.username}
+                    </Link>
+                    <button
+                      onClick={() => { setMobileOpen(false); handleLogout(); }}
+                      className="flex items-center gap-2 text-base font-medium"
+                      style={{ color: colors.black, fontFamily: fonts.body }}
+                    >
+                      <LogOut size={16} />
+                      Logout
+                    </button>
+                  </div>
+                ) : (
+                  <Link
+                    href="/login"
+                    className="block text-lg font-medium border-t border-gray-100 pt-3"
+                    style={{ color: colors.black, fontFamily: fonts.body }}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Login
+                  </Link>
+                )
+              )}
 
               <Link
                 href="/book-test-ride"
