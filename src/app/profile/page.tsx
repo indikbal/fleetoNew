@@ -4,8 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowUpRight, User, ShoppingBag, LogOut, Pencil, X, Check } from "lucide-react";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import { useAuth } from "@/context/AuthContext";
 import { fetchMyProfile, updateProfile, type UserProfile } from "@/lib/api";
 import { colors, fonts, styles } from "@/config/theme";
@@ -79,7 +77,6 @@ export default function ProfilePage() {
 
   return (
     <>
-      <Navbar />
       <main className="min-h-screen pt-24 pb-16 px-4" style={{ backgroundColor: "#F7F7F7" }}>
         <div className="max-w-4xl mx-auto">
 
@@ -295,7 +292,6 @@ export default function ProfilePage() {
 
         </div>
       </main>
-      <Footer />
     </>
   );
 }
