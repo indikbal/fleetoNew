@@ -45,7 +45,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (username: string, password: string) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const res: any = await loginUser(username, password);
-    console.log("[AuthContext login res]", res);
 
     const success = res.success === true || res.success === 1 || res.success === "true";
 
