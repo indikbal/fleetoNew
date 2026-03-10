@@ -1,40 +1,45 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
+import { useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { ShoppingCart, ArrowUpRight, PackageOpen } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
-import { fetchMyCart, formatPrice, type CartItem } from "@/lib/api";
+import Link from "next/link";
+import { Minus, Plus, Trash2, ShoppingCart, ArrowUpRight, PackageOpen, Loader2 } from "lucide-react";
+import { useCart } from "@/context/CartContext";
+import { formatPrice } from "@/lib/api";
 import { colors, fonts, styles } from "@/config/theme";
 
+const WP_CHECKOUT = "https://fleetowebapi.codingcloud.in/checkout/";
+
 export default function CartPage() {
-  const router = useRouter();
-  const { user, isLoggedIn, isLoading } = useAuth();
+  const { items, totalCount, totalPrice, removeItem, updateQty, clearCart } = useCart();
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
-  const [items, setItems] = useState<CartItem[]>([]);
-  const [isFetching, setIsFetching] = useState(true);
-  const [error, setError] = useState("");
+  const handleCheckout = async () => {
+    if (items.length === 0) return;
+    setIsCheckingOut(true);
 
-  useEffect(() => {
-    if (!isLoading && !isLoggedIn) router.replace("/login");
-  }, [isLoading, isLoggedIn, router]);
+    try {
+      // Add each item to WP WooCommerce cart, then redirect to WP checkout
+      await Promise.all(
+        items.map((item) =>
+          fetch("/api/cart", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              product_id:   item.product_id,
+              variation_id: item.variation_id,
+              quantity:     item.quantity,
+            }),
+          })
+        )
+      );
+    } catch {
+      // Even if WP cart sync fails, redirect anyway — WP side can handle
+    }
 
-  useEffect(() => {
-    if (!user) return;
-    fetchMyCart(user.user_id)
-      .then(setItems)
-      .catch(() => setError("Could not load your cart. Please try again."))
-      .finally(() => setIsFetching(false));
-  }, [user]);
-
-  const cartTotal = items.reduce((sum, item) => {
-    const num = parseInt(item.total ?? item.price, 10);
-    return sum + (isNaN(num) ? 0 : num);
-  }, 0);
-
-  if (isLoading || (!isLoggedIn && !isFetching)) return null;
+    clearCart();
+    window.location.href = WP_CHECKOUT;
+  };
 
   return (
     <main className="min-h-screen pt-24 pb-16 px-4" style={{ backgroundColor: "#F7F7F7" }}>
@@ -50,29 +55,18 @@ export default function CartPage() {
           </div>
           <h1 className="text-2xl" style={{ ...styles.headingFont, color: "#010101" }}>
             My Cart
+            {totalCount > 0 && (
+              <span className="ml-2 text-base font-normal text-gray-400" style={{ fontFamily: fonts.body }}>
+                ({totalCount} {totalCount === 1 ? "item" : "items"})
+              </span>
+            )}
           </h1>
         </div>
 
-        {/* Loading skeleton */}
-        {isFetching && (
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-24 rounded-2xl bg-white animate-pulse" />
-            ))}
-          </div>
-        )}
-
-        {/* Error */}
-        {!isFetching && error && (
-          <div className="bg-red-50 text-red-600 px-5 py-4 rounded-2xl text-sm" style={{ fontFamily: fonts.body }}>
-            {error}
-          </div>
-        )}
-
         {/* Empty state */}
-        {!isFetching && !error && items.length === 0 && (
-          <div className="bg-white rounded-2xl p-12 text-center">
-            <PackageOpen size={48} className="mx-auto mb-4 text-gray-300" />
+        {items.length === 0 && (
+          <div className="bg-white rounded-2xl p-14 text-center">
+            <PackageOpen size={52} className="mx-auto mb-4 text-gray-300" />
             <p className="text-gray-500 text-sm mb-6" style={{ fontFamily: fonts.body }}>
               Your cart is empty.
             </p>
@@ -87,52 +81,108 @@ export default function CartPage() {
         )}
 
         {/* Cart items */}
-        {!isFetching && !error && items.length > 0 && (
+        {items.length > 0 && (
           <>
-            <div className="space-y-4 mb-6">
-              {items.map((item, i) => (
-                <div key={item.product_id ?? i} className="bg-white rounded-2xl p-4 flex items-center gap-4">
-                  {/* Product image */}
-                  {item.image ? (
-                    <div className="relative w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100">
-                      <Image src={item.image} alt={item.product_name} fill className="object-cover" />
-                    </div>
-                  ) : (
-                    <div className="w-16 h-16 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
-                      <ShoppingCart size={20} className="text-gray-300" />
-                    </div>
-                  )}
+            <div className="space-y-3 mb-5">
+              {items.map((item) => (
+                <div key={item.key} className="bg-white rounded-2xl p-4 flex items-center gap-4">
 
-                  {/* Info */}
+                  {/* Image */}
+                  <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-gray-50 flex-shrink-0">
+                    {item.image ? (
+                      <Image src={item.image} alt={item.name} fill className="object-contain p-1" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <ShoppingCart size={20} className="text-gray-300" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Name + color */}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-gray-900 truncate" style={{ fontFamily: fonts.body }}>
-                      {item.product_name}
+                      {item.name}
                     </p>
-                    <p className="text-xs text-gray-500 mt-0.5" style={{ fontFamily: fonts.body }}>
-                      Qty: {item.quantity}
+                    {item.color && (
+                      <p className="text-xs text-gray-400 mt-0.5 capitalize" style={{ fontFamily: fonts.body }}>
+                        {item.color}
+                      </p>
+                    )}
+                    <p className="text-sm font-bold mt-1" style={{ color: colors.primary, fontFamily: fonts.body }}>
+                      {formatPrice(String(parseInt(item.price, 10) * item.quantity))}
                     </p>
                   </div>
 
-                  {/* Price */}
-                  <p className="text-sm font-semibold flex-shrink-0" style={{ color: colors.primary, fontFamily: fonts.body }}>
-                    {formatPrice(item.total ?? item.price)}
-                  </p>
+                  {/* Qty controls */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => updateQty(item.key, item.quantity - 1)}
+                      disabled={item.quantity <= 1}
+                      className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 disabled:opacity-30 hover:border-gray-400 transition-colors"
+                    >
+                      <Minus size={13} />
+                    </button>
+                    <span className="w-5 text-center text-sm font-semibold" style={{ fontFamily: fonts.body }}>
+                      {item.quantity}
+                    </span>
+                    <button
+                      onClick={() => updateQty(item.key, item.quantity + 1)}
+                      className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:border-gray-400 transition-colors"
+                    >
+                      <Plus size={13} />
+                    </button>
+                  </div>
+
+                  {/* Remove */}
+                  <button
+                    onClick={() => removeItem(item.key)}
+                    className="p-2 text-gray-300 hover:text-red-500 transition-colors flex-shrink-0"
+                    aria-label="Remove"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               ))}
             </div>
 
-            {/* Total */}
-            <div className="bg-white rounded-2xl p-5 flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700" style={{ fontFamily: fonts.body }}>
-                Total
-              </span>
-              <span className="text-lg font-bold" style={{ color: "#010101", fontFamily: fonts.body }}>
-                {formatPrice(String(cartTotal))}
-              </span>
+            {/* Summary card */}
+            <div className="bg-white rounded-2xl p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-500" style={{ fontFamily: fonts.body }}>Subtotal</span>
+                <span className="text-base font-bold" style={{ color: "#010101", fontFamily: fonts.body }}>
+                  {totalPrice}
+                </span>
+              </div>
+
+              <div className="text-xs text-gray-400" style={{ fontFamily: fonts.body }}>
+                Taxes and shipping calculated at checkout.
+              </div>
+
+              <div className="h-px bg-gray-100" />
+
+              <button
+                onClick={handleCheckout}
+                disabled={isCheckingOut}
+                className="w-full inline-flex items-center justify-center gap-2 py-4 text-white text-sm font-semibold rounded-full disabled:opacity-60 transition-colors"
+                style={{ backgroundColor: colors.primary, fontFamily: fonts.body, ...styles.redButtonShadow }}
+              >
+                {isCheckingOut ? (
+                  <><Loader2 size={16} className="animate-spin" /> Redirecting…</>
+                ) : (
+                  <>Proceed to Payment <ArrowUpRight size={16} /></>
+                )}
+              </button>
+
+              <Link
+                href="/products"
+                className="block text-center text-sm text-gray-400 hover:text-gray-600 transition-colors"
+                style={{ fontFamily: fonts.body }}
+              >
+                Continue Shopping
+              </Link>
             </div>
           </>
         )}
-
       </div>
     </main>
   );

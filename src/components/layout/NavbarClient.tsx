@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ArrowUpRight, User, LogOut } from "lucide-react";
+import { Menu, X, ArrowUpRight, User, LogOut, ShoppingCart } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { colors, fonts, styles } from "@/config/theme";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartContext";
 import type { HeaderMenuItem } from "@/lib/api";
 
 interface NavbarClientProps {
@@ -21,6 +22,7 @@ export default function NavbarClient({ links }: NavbarClientProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { isLoggedIn, user, logout, isLoading } = useAuth();
+  const { totalCount } = useCart();
 
   const handleLogout = async () => {
     await logout();
@@ -122,6 +124,19 @@ export default function NavbarClient({ links }: NavbarClientProps) {
               </Link>
             )
           )}
+          {/* Cart icon */}
+          <Link href="/cart" className="relative p-2 transition-opacity hover:opacity-70" aria-label="Cart">
+            <ShoppingCart size={22} style={{ color: colors.black }} />
+            {totalCount > 0 && (
+              <span
+                className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-white"
+                style={{ backgroundColor: colors.primary, fontSize: "10px", fontFamily: fonts.body, fontWeight: 700 }}
+              >
+                {totalCount > 9 ? "9+" : totalCount}
+              </span>
+            )}
+          </Link>
+
           <Link
             href="/book-test-ride"
             className="inline-flex items-center gap-2 px-5 py-2.5 text-white text-sm font-semibold rounded-full transition-colors btn-red-inner-shadow"
@@ -138,14 +153,27 @@ export default function NavbarClient({ links }: NavbarClientProps) {
           </Link>
         </div>
 
-        {/* Mobile hamburger */}
-        <button
-          className="md:hidden p-2"
-          onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label="Toggle menu"
-        >
-          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        {/* Mobile: cart icon + hamburger */}
+        <div className="md:hidden flex items-center gap-2">
+          <Link href="/cart" className="relative p-2" aria-label="Cart">
+            <ShoppingCart size={22} style={{ color: colors.black }} />
+            {totalCount > 0 && (
+              <span
+                className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-white"
+                style={{ backgroundColor: colors.primary, fontSize: "10px", fontFamily: fonts.body, fontWeight: 700 }}
+              >
+                {totalCount > 9 ? "9+" : totalCount}
+              </span>
+            )}
+          </Link>
+          <button
+            className="p-2"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label="Toggle menu"
+          >
+            {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </nav>
 
       {/* Mobile drawer */}
