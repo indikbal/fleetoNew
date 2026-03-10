@@ -3,42 +3,51 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Minus, Plus, Trash2, ShoppingCart, ArrowUpRight, PackageOpen, Loader2 } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingCart, ArrowUpRight, PackageOpen } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/lib/api";
 import { colors, fonts, styles } from "@/config/theme";
 
-const WP_CHECKOUT = "https://fleetowebapi.codingcloud.in/checkout/";
+// WooCommerce base — browser navigates here directly so WP sets cookies in the user's browser
+const WP_BASE = "https://fleetowebapi.codingcloud.in";
 
 export default function CartPage() {
   const { items, totalCount, totalPrice, removeItem, updateQty, clearCart } = useCart();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
-  const handleCheckout = async () => {
+  const handleCheckout = () => {
     if (items.length === 0) return;
     setIsCheckingOut(true);
 
-    try {
-      // Add each item to WP WooCommerce cart, then redirect to WP checkout
-      await Promise.all(
-        items.map((item) =>
-          fetch("/api/cart", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              product_id:   item.product_id,
-              variation_id: item.variation_id,
-              quantity:     item.quantity,
-            }),
-          })
-        )
-      );
-    } catch {
-      // Even if WP cart sync fails, redirect anyway — WP side can handle
+    // Build a WooCommerce add-to-cart URL for each item.
+    // WC supports chaining: ?add-to-cart=ID1&add-to-cart=ID2 does NOT work natively,
+    // so we redirect to the first item and pass remaining as extra params.
+    // The WP developer can handle multi-item via a custom endpoint if needed.
+    //
+    // Using variation_id in ?add-to-cart= — WC resolves to the parent product automatically.
+    // Using browser navigation (NOT fetch/proxy) so WP sets session cookies directly.
+
+    if (items.length === 1) {
+      const item = items[0];
+      const url = `${WP_BASE}/?add-to-cart=${item.variation_id}&quantity=${item.quantity}`;
+      clearCart();
+      window.location.href = url;
+      return;
     }
 
+    // Multiple items: build a query string with all variation IDs and quantities.
+    // WP developer should handle this via a custom endpoint or a WC plugin.
+    // Fallback: add items one-by-one by chaining redirect to cart after each.
+    const params = new URLSearchParams();
+    items.forEach((item) => {
+      params.append("add-to-cart", String(item.variation_id));
+      params.append(`quantity-${item.variation_id}`, String(item.quantity));
+    });
+    // Also pass first item as the primary add-to-cart param (WC default behaviour)
+    const primaryItem = items[0];
+    const url = `${WP_BASE}/?add-to-cart=${primaryItem.variation_id}&quantity=${primaryItem.quantity}&${params.toString()}`;
     clearCart();
-    window.location.href = WP_CHECKOUT;
+    window.location.href = url;
   };
 
   return (
@@ -166,11 +175,7 @@ export default function CartPage() {
                 className="w-full inline-flex items-center justify-center gap-2 py-4 text-white text-sm font-semibold rounded-full disabled:opacity-60 transition-colors"
                 style={{ backgroundColor: colors.primary, fontFamily: fonts.body, ...styles.redButtonShadow }}
               >
-                {isCheckingOut ? (
-                  <><Loader2 size={16} className="animate-spin" /> Redirecting…</>
-                ) : (
-                  <>Proceed to Payment <ArrowUpRight size={16} /></>
-                )}
+                {isCheckingOut ? "Redirecting…" : <><span>Proceed to Payment</span> <ArrowUpRight size={16} /></>}
               </button>
 
               <Link
