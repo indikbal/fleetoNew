@@ -47,12 +47,12 @@ Build full authentication flow (no dependency on any other phase).
 3-step flow: Send OTP → Verify OTP → Reset Password
 
 ### 3.1 API Functions
-- [ ] Add `sendOtp(email)` to `src/lib/api.ts` → `POST /wp-json/custom/v1/forgot-password/send-otp`
-- [ ] Add `verifyOtp(email, otp)` to `src/lib/api.ts` → `POST /wp-json/custom/v1/forgot-password/verify-otp`
-- [ ] Add `resetPassword(email, otp, new_password)` to `src/lib/api.ts` → `POST /wp-json/custom/v1/forgot-password/reset`
+- [x] Add `sendOtp(email)` to `src/lib/api.ts` → `POST /wp-json/custom/v1/forgot-password/send-otp`
+- [x] Add `verifyOtp(email, otp)` to `src/lib/api.ts` → `POST /wp-json/custom/v1/forgot-password/verify-otp`
+- [x] Add `resetPassword(email, otp, new_password)` to `src/lib/api.ts` → `POST /wp-json/custom/v1/forgot-password/reset`
 
 ### 3.2 UI
-- [ ] Create `src/app/forgot-password/page.tsx` — multi-step form (Send OTP → Verify → Reset)
+- [x] Create `src/app/forgot-password/page.tsx` — multi-step form (Send OTP → Verify → Reset)
 
 ---
 
@@ -91,7 +91,7 @@ Requires Phase 2 (auth) to be complete.
 |-------|-------------|--------|
 | Phase 1 | Navigation & Menu APIs | `[x] Done` |
 | Phase 2 | Auth System | `[x] Done` |
-| Phase 3 | Forgot Password Flow | `[ ] Pending` |
+| Phase 3 | Forgot Password Flow | `[x] Done` |
 | Phase 4 | User Profile | `[ ] Pending` |
 | Phase 5 | My Cart & My Orders | `[ ] Pending` |
 

@@ -413,6 +413,40 @@ export async function logoutUser(): Promise<{ success: boolean }> {
   return res.json();
 }
 
+export async function sendOtp(email: string): Promise<{ success: boolean; message: string }> {
+  const res = await fetch("/api/auth/send-otp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  return res.json();
+}
+
+export async function verifyOtp(
+  email: string,
+  otp: string
+): Promise<{ success: boolean; message: string }> {
+  const res = await fetch("/api/auth/verify-otp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, otp }),
+  });
+  return res.json();
+}
+
+export async function resetPassword(
+  email: string,
+  otp: string,
+  new_password: string
+): Promise<{ success: boolean; message: string }> {
+  const res = await fetch("/api/auth/reset-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, otp, new_password }),
+  });
+  return res.json();
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 // Parse "10K+", "513+" etc. → { value, suffix } for animated counters
