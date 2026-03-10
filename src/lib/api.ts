@@ -384,7 +384,7 @@ export async function loginUser(
   username: string,
   password: string
 ): Promise<AuthResponse> {
-  const res = await fetch(`${API_BASE}?action=login_user`, {
+  const res = await fetch("/api/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, password }),
@@ -397,7 +397,7 @@ export async function registerUser(
   email: string,
   password: string
 ): Promise<AuthResponse> {
-  const res = await fetch(`${API_BASE}?action=register_user`, {
+  const res = await fetch("/api/auth/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, email, password }),
@@ -406,7 +406,7 @@ export async function registerUser(
 }
 
 export async function logoutUser(): Promise<{ success: boolean }> {
-  const res = await fetch(`${API_BASE}?action=logout_user`, {
+  const res = await fetch("/api/auth/logout", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
   });
