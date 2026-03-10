@@ -375,9 +375,12 @@ export interface AuthUser {
 }
 
 export interface AuthResponse {
-  success: boolean;
-  message: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+  success: boolean | number | string;
+  message?: string;
   user?: AuthUser;
+  data?: AuthUser & Record<string, unknown>;
 }
 
 export async function loginUser(

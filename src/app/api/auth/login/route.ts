@@ -10,5 +10,6 @@ export async function POST(req: NextRequest) {
     body: JSON.stringify(body),
   });
   const data = await res.json();
+  console.log("[WP login response]", JSON.stringify(data));
   return NextResponse.json(data, { status: res.status });
 }

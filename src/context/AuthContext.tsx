@@ -18,7 +18,7 @@ interface AuthState {
 
 interface AuthContextValue extends AuthState {
   login: (username: string, password: string) => Promise<{ success: boolean; message: string }>;
-  register: (username: string, email: string, password: string) => Promise<{ success: boolean; message: string }>;
+  register: (username: string, email: string, password: string) => Promise<{ success: boolean; message: string }>;  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   logout: () => Promise<void>;
 }
 
@@ -43,18 +43,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(async (username: string, password: string) => {
-    const res = await loginUser(username, password);
-    if (res.success && res.user) {
-      setUser(res.user);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(res.user));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const res: any = await loginUser(username, password);
+    console.log("[AuthContext login res]", res);
+
+    const success = res.success === true || res.success === 1 || res.success === "true";
+
+    if (success) {
+      // Handle multiple WP response shapes:
+      // 1. { success, user: { user_id, ... } }
+      // 2. { success, data: { user_id, ... } }
+      // 3. { success, user_id, username, email, ... } (flat)
+      const raw = res.user ?? res.data ?? (res.user_id ? res : null);
+
+      if (raw) {
+        const normalizedUser: AuthUser = {
+          user_id: Number(raw.user_id),
+          username: raw.username ?? "",
+          email: raw.email ?? "",
+          display_name: raw.display_name ?? raw.username ?? "",
+        };
+        setUser(normalizedUser);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedUser));
+      }
     }
-    return { success: res.success, message: res.message };
+
+    return {
+      success: Boolean(success),
+      message: String(res.message ?? res.data?.message ?? (success ? "Login successful" : "Login failed")),
+    };
   }, []);
 
   const register = useCallback(
     async (username: string, email: string, password: string) => {
-      const res = await registerUser(username, email, password);
-      return { success: res.success, message: res.message };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const res: any = await registerUser(username, email, password);
+      const success = res.success === true || res.success === 1 || res.success === "true";
+      return {
+        success: Boolean(success),
+        message: String(res.message ?? res.data?.message ?? (success ? "Registered successfully" : "Registration failed")),
+      };
     },
     []
   );
