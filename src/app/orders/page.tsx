@@ -2,22 +2,24 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ShoppingBag, PackageOpen, ChevronDown, ChevronUp } from "lucide-react";
+import { ShoppingBag, PackageOpen, ChevronDown, ChevronUp, ArrowUpRight } from "lucide-react";
+import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { fetchMyOrders, formatPrice, type Order } from "@/lib/api";
 import { colors, fonts, styles } from "@/config/theme";
+import InnerPageBanner from "@/components/ui/InnerPageBanner";
 
-const STATUS_STYLES: Record<string, { bg: string; text: string }> = {
-  completed:  { bg: "#F0FDF4", text: "#15803D" },
-  processing: { bg: "#EFF6FF", text: "#1D4ED8" },
-  pending:    { bg: "#FFFBEB", text: "#B45309" },
-  cancelled:  { bg: "#FEF2F2", text: "#DC2626" },
-  refunded:   { bg: "#F5F3FF", text: "#7C3AED" },
-  "on-hold":  { bg: "#F9FAFB", text: "#6B7280" },
+const STATUS_STYLES: Record<string, { bg: string; text: string; dot: string }> = {
+  completed:  { bg: "#F0FDF4", text: "#15803D", dot: "#22C55E" },
+  processing: { bg: "#EFF6FF", text: "#1D4ED8", dot: "#3B82F6" },
+  pending:    { bg: "#FFFBEB", text: "#B45309", dot: "#F59E0B" },
+  cancelled:  { bg: "#FEF2F2", text: "#DC2626", dot: "#EF4444" },
+  refunded:   { bg: "#F5F3FF", text: "#7C3AED", dot: "#A855F7" },
+  "on-hold":  { bg: "#F9FAFB", text: "#6B7280", dot: "#9CA3AF" },
 };
 
 function statusStyle(status: string) {
-  return STATUS_STYLES[status.toLowerCase()] ?? { bg: "#F3F4F6", text: "#374151" };
+  return STATUS_STYLES[status.toLowerCase()] ?? { bg: "#F3F4F6", text: "#374151", dot: "#9CA3AF" };
 }
 
 function formatDate(dateStr: string) {
@@ -52,112 +54,159 @@ export default function OrdersPage() {
   if (isLoading || (!isLoggedIn && !isFetching)) return null;
 
   return (
-    <main className="min-h-screen pt-24 pb-16 px-4" style={{ backgroundColor: "#F7F7F7" }}>
-      <div className="max-w-3xl mx-auto">
+    <>
+      <InnerPageBanner
+        title="My Orders"
+        subtitle="Track and view your order history"
+        breadcrumbs={[{ label: "Home", href: "/" }, { label: "My Orders" }]}
+        icon={<ShoppingBag size={22} style={{ color: colors.primary }} />}
+      />
 
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
-          <div
-            className="w-10 h-10 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: `${colors.primary}15` }}
-          >
-            <ShoppingBag size={18} style={{ color: colors.primary }} />
-          </div>
-          <h1 className="text-2xl" style={{ ...styles.headingFont, color: "#010101" }}>
-            My Orders
-          </h1>
-        </div>
+      <main className="pb-16 px-4 pt-8" style={{ backgroundColor: "#F7F7F7" }}>
 
-        {/* Loading skeleton */}
-        {isFetching && (
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-20 rounded-2xl bg-white animate-pulse" />
-            ))}
-          </div>
-        )}
+        <div className="max-w-3xl mx-auto">
 
-        {/* Error */}
-        {!isFetching && error && (
-          <div className="bg-red-50 text-red-600 px-5 py-4 rounded-2xl text-sm" style={{ fontFamily: fonts.body }}>
-            {error}
-          </div>
-        )}
+          {/* Loading skeleton */}
+          {isFetching && (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-20 rounded-2xl bg-white animate-pulse" />
+              ))}
+            </div>
+          )}
 
-        {/* Empty state */}
-        {!isFetching && !error && orders.length === 0 && (
-          <div className="bg-white rounded-2xl p-12 text-center">
-            <PackageOpen size={48} className="mx-auto mb-4 text-gray-300" />
-            <p className="text-gray-500 text-sm" style={{ fontFamily: fonts.body }}>
-              You haven&apos;t placed any orders yet.
-            </p>
-          </div>
-        )}
+          {/* Error */}
+          {!isFetching && error && (
+            <div className="bg-red-50 border border-red-100 text-red-600 px-5 py-4 rounded-2xl text-sm" style={{ fontFamily: fonts.body }}>
+              {error}
+            </div>
+          )}
 
-        {/* Orders list */}
-        {!isFetching && !error && orders.length > 0 && (
-          <div className="space-y-4">
-            {orders.map((order) => {
-              const { bg, text } = statusStyle(order.status);
-              const isOpen = expanded === order.id;
-              return (
-                <div key={order.id} className="bg-white rounded-2xl overflow-hidden">
+          {/* Empty state */}
+          {!isFetching && !error && orders.length === 0 && (
+            <div className="bg-white rounded-2xl p-14 text-center">
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5"
+                style={{ backgroundColor: `${colors.primary}10` }}
+              >
+                <PackageOpen size={28} style={{ color: colors.primary }} />
+              </div>
+              <h3 className="text-lg mb-2" style={{ ...styles.headingFont, color: "#010101" }}>
+                No Orders Yet
+              </h3>
+              <p className="text-gray-400 text-sm mb-6" style={{ fontFamily: fonts.body }}>
+                You haven&apos;t placed any orders yet. Start shopping!
+              </p>
+              <Link
+                href="/products"
+                className="inline-flex items-center gap-2 px-6 py-3 text-white text-sm font-semibold rounded-full"
+                style={{ backgroundColor: colors.primary, fontFamily: fonts.body, ...styles.redButtonShadow }}
+              >
+                Browse Products <ArrowUpRight size={15} />
+              </Link>
+            </div>
+          )}
 
-                  {/* Order row */}
-                  <button
-                    onClick={() => setExpanded(isOpen ? null : order.id)}
-                    className="w-full flex items-center gap-4 p-5 text-left hover:bg-gray-50 transition-colors"
+          {/* Orders list */}
+          {!isFetching && !error && orders.length > 0 && (
+            <div className="space-y-3">
+              {orders.map((order) => {
+                const { bg, text, dot } = statusStyle(order.status);
+                const isOpen = expanded === order.id;
+                return (
+                  <div
+                    key={order.id}
+                    className="bg-white rounded-2xl overflow-hidden border border-transparent hover:border-gray-100 transition-colors"
+                    style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
                   >
-                    {/* Order # */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900" style={{ fontFamily: fonts.body }}>
-                        Order #{order.id}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-0.5" style={{ fontFamily: fonts.body }}>
-                        {formatDate(order.date_created)}
-                      </p>
-                    </div>
-
-                    {/* Status badge */}
-                    <span
-                      className="text-xs font-medium px-3 py-1 rounded-full capitalize flex-shrink-0"
-                      style={{ backgroundColor: bg, color: text, fontFamily: fonts.body }}
+                    {/* Order row */}
+                    <button
+                      onClick={() => setExpanded(isOpen ? null : order.id)}
+                      className="w-full flex items-center gap-4 p-5 text-left hover:bg-gray-50/60 transition-colors"
                     >
-                      {order.status}
-                    </span>
+                      {/* Order icon */}
+                      <div
+                        className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                        style={{ backgroundColor: `${colors.primary}12` }}
+                      >
+                        <ShoppingBag size={15} style={{ color: colors.primary }} />
+                      </div>
 
-                    {/* Total */}
-                    <span className="text-sm font-bold flex-shrink-0" style={{ color: "#010101", fontFamily: fonts.body }}>
-                      {formatPrice(order.total)} <span className="text-xs font-normal text-gray-400">{order.currency}</span>
-                    </span>
+                      {/* Order # + date */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-900" style={{ fontFamily: fonts.body }}>
+                          Order #{order.id}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5" style={{ fontFamily: fonts.body }}>
+                          {formatDate(order.date_created)}
+                        </p>
+                      </div>
 
-                    {/* Chevron */}
-                    {isOpen ? <ChevronUp size={16} className="text-gray-400 flex-shrink-0" /> : <ChevronDown size={16} className="text-gray-400 flex-shrink-0" />}
-                  </button>
+                      {/* Status badge */}
+                      <span
+                        className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full capitalize flex-shrink-0 hidden sm:flex"
+                        style={{ backgroundColor: bg, color: text, fontFamily: fonts.body }}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: dot }} />
+                        {order.status}
+                      </span>
 
-                  {/* Expanded line items */}
-                  {isOpen && (
-                    <div className="border-t border-gray-100 px-5 pb-5 pt-4 space-y-3">
-                      {(order.line_items ?? []).map((item, i) => (
-                        <div key={item.product_id ?? i} className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm text-gray-800" style={{ fontFamily: fonts.body }}>{item.name}</p>
-                            <p className="text-xs text-gray-400" style={{ fontFamily: fonts.body }}>Qty: {item.quantity}</p>
-                          </div>
-                          <p className="text-sm font-medium" style={{ color: colors.primary, fontFamily: fonts.body }}>
-                            {formatPrice(item.total)}
-                          </p>
-                        </div>
-                      ))}
+                      {/* Total */}
+                      <span className="text-sm font-bold flex-shrink-0" style={{ color: "#010101", fontFamily: fonts.body }}>
+                        {formatPrice(order.total)}
+                      </span>
+
+                      {/* Chevron */}
+                      <span className="text-gray-300 flex-shrink-0">
+                        {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      </span>
+                    </button>
+
+                    {/* Mobile status */}
+                    <div className="px-5 pb-2 sm:hidden">
+                      <span
+                        className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full capitalize"
+                        style={{ backgroundColor: bg, color: text, fontFamily: fonts.body }}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: dot }} />
+                        {order.status}
+                      </span>
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
 
-      </div>
-    </main>
+                    {/* Expanded line items */}
+                    {isOpen && (
+                      <div className="border-t border-gray-100 px-5 pb-5 pt-4">
+                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3" style={{ fontFamily: fonts.body }}>
+                          Items
+                        </p>
+                        <div className="space-y-3">
+                          {(order.line_items ?? []).map((item, i) => (
+                            <div key={item.product_id ?? i} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                              <div>
+                                <p className="text-sm font-medium text-gray-800" style={{ fontFamily: fonts.body }}>{item.name}</p>
+                                <p className="text-xs text-gray-400 mt-0.5" style={{ fontFamily: fonts.body }}>Qty: {item.quantity}</p>
+                              </div>
+                              <p className="text-sm font-semibold" style={{ color: colors.primary, fontFamily: fonts.body }}>
+                                {formatPrice(item.total)}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                        {/* Order total row */}
+                        <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+                          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider" style={{ fontFamily: fonts.body }}>Order Total</span>
+                          <span className="text-base font-bold" style={{ color: "#010101", fontFamily: fonts.body }}>{formatPrice(order.total)}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+        </div>
+      </main>
+    </>
   );
 }

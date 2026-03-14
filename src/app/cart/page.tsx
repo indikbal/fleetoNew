@@ -7,6 +7,7 @@ import { Minus, Plus, Trash2, ShoppingCart, ArrowUpRight, PackageOpen } from "lu
 import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/lib/api";
 import { colors, fonts, styles } from "@/config/theme";
+import InnerPageBanner from "@/components/ui/InnerPageBanner";
 
 // WooCommerce base — browser navigates here directly so WP sets cookies in the user's browser
 const WP_BASE = "https://fleetowebapi.codingcloud.in";
@@ -51,26 +52,16 @@ export default function CartPage() {
   };
 
   return (
-    <main className="min-h-screen pt-24 pb-16 px-4" style={{ backgroundColor: "#F7F7F7" }}>
-      <div className="max-w-3xl mx-auto">
+    <>
+      <InnerPageBanner
+        title="My Cart"
+        subtitle={totalCount > 0 ? `${totalCount} ${totalCount === 1 ? "item" : "items"} in your cart` : "Your shopping cart"}
+        breadcrumbs={[{ label: "Home", href: "/" }, { label: "My Cart" }]}
+        icon={<ShoppingCart size={22} style={{ color: colors.primary }} />}
+      />
 
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
-          <div
-            className="w-10 h-10 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: `${colors.primary}15` }}
-          >
-            <ShoppingCart size={18} style={{ color: colors.primary }} />
-          </div>
-          <h1 className="text-2xl" style={{ ...styles.headingFont, color: "#010101" }}>
-            My Cart
-            {totalCount > 0 && (
-              <span className="ml-2 text-base font-normal text-gray-400" style={{ fontFamily: fonts.body }}>
-                ({totalCount} {totalCount === 1 ? "item" : "items"})
-              </span>
-            )}
-          </h1>
-        </div>
+      <main className="pb-16 px-4 pt-8" style={{ backgroundColor: "#F7F7F7" }}>
+      <div className="max-w-3xl mx-auto">
 
         {/* Empty state */}
         {items.length === 0 && (
@@ -190,5 +181,6 @@ export default function CartPage() {
         )}
       </div>
     </main>
+    </>
   );
 }

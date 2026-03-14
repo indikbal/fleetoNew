@@ -488,15 +488,43 @@ export interface Order {
 
 export async function fetchMyOrders(user_id: number): Promise<Order[]> {
   const res = await fetch(`/api/user/orders?user_id=${user_id}`);
-  if (!res.ok) throw new Error("Failed to fetch orders");
   const data = await res.json();
-  return Array.isArray(data) ? data : (data.orders ?? []);
+  // WP returns 404 + { error: true } when user has no orders — treat as empty
+  if (!res.ok || data?.error) return [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const raw: any[] = Array.isArray(data) ? data : (data.orders ?? []);
+  return raw.map((o) => ({
+    id: o.order_id ?? o.id,
+    status: o.status,
+    date_created: o.date ?? o.date_created ?? "",
+    total: o.total,
+    currency: o.currency ?? "INR",
+    line_items: (o.products ?? o.line_items ?? []).map(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (p: any) => ({
+        product_id: p.product_id,
+        name: p.product_name ?? p.name,
+        quantity: p.quantity,
+        total: p.subtotal ?? p.total ?? "0",
+      })
+    ),
+  }));
 }
 
 export async function fetchMyProfile(user_id: number): Promise<UserProfile> {
   const res = await fetch(`/api/user/profile?user_id=${user_id}`);
   if (!res.ok) throw new Error("Failed to fetch profile");
-  return res.json();
+  const json = await res.json();
+  // WP returns { success: true, data: { id, username, email, first_name, last_name } }
+  const d = json.data ?? json;
+  return {
+    user_id: d.id ?? d.user_id,
+    username: d.username,
+    email: d.email,
+    first_name: d.first_name ?? "",
+    last_name: d.last_name ?? "",
+    display_name: d.display_name ?? d.username ?? "",
+  };
 }
 
 export async function updateProfile(

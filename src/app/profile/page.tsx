@@ -7,6 +7,7 @@ import { ArrowUpRight, User, ShoppingBag, LogOut, Pencil, X, Check } from "lucid
 import { useAuth } from "@/context/AuthContext";
 import { fetchMyProfile, updateProfile, type UserProfile } from "@/lib/api";
 import { colors, fonts, styles } from "@/config/theme";
+import InnerPageBanner from "@/components/ui/InnerPageBanner";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -18,17 +19,14 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
-  // Editable fields
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
 
-  // Auth guard
   useEffect(() => {
     if (!isLoading && !isLoggedIn) router.replace("/login");
   }, [isLoading, isLoggedIn, router]);
 
-  // Fetch profile
   useEffect(() => {
     if (!user) return;
     fetchMyProfile(user.user_id)
@@ -38,7 +36,7 @@ export default function ProfilePage() {
         setLastName(p.last_name);
         setEmail(p.email);
       })
-      .catch(() => {/* profile still loads from auth user fallback */})
+      .catch(() => {})
       .finally(() => setIsFetching(false));
   }, [user]);
 
@@ -67,8 +65,7 @@ export default function ProfilePage() {
     router.push("/");
   };
 
-  const inputClass =
-    "w-full px-4 py-3 rounded-xl border bg-white text-sm outline-none transition-all";
+  const inputClass = "w-full px-4 py-3 rounded-xl border bg-white text-sm outline-none transition-all";
 
   if (isLoading || (!isLoggedIn && !isFetching)) return null;
 
@@ -77,10 +74,18 @@ export default function ProfilePage() {
 
   return (
     <>
-      <main className="min-h-screen pt-24 pb-16 px-4" style={{ backgroundColor: "#F7F7F7" }}>
+      <InnerPageBanner
+        title="My Profile"
+        subtitle="Manage your account details and preferences"
+        breadcrumbs={[{ label: "Home", href: "/" }, { label: "My Profile" }]}
+        icon={<User size={22} style={{ color: colors.primary }} />}
+      />
+
+      <main className="pb-16 px-4 pt-8" style={{ backgroundColor: "#F7F7F7" }}>
+
         <div className="max-w-4xl mx-auto">
 
-          {/* ── Header card ── */}
+          {/* ── User card ── */}
           <div
             className="rounded-2xl p-6 sm:p-8 mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-6"
             style={{ backgroundColor: "#010101" }}
@@ -94,9 +99,9 @@ export default function ProfilePage() {
             </div>
 
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl text-white mb-1" style={styles.headingFont}>
+              <h2 className="text-2xl text-white mb-1" style={styles.headingFont}>
                 {displayName}
-              </h1>
+              </h2>
               <p className="text-gray-400 text-sm truncate" style={{ fontFamily: fonts.body }}>
                 {profile?.email || user?.email || ""}
               </p>
@@ -115,24 +120,24 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
             <Link
               href="/orders"
-              className="flex items-center gap-4 p-5 rounded-2xl bg-white hover:shadow-md transition-shadow"
+              className="flex items-center gap-4 p-5 rounded-2xl bg-white hover:shadow-md transition-shadow group"
             >
               <div
-                className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
                 style={{ backgroundColor: `${colors.primary}15` }}
               >
                 <ShoppingBag size={18} style={{ color: colors.primary }} />
               </div>
-              <div>
+              <div className="flex-1">
                 <p className="text-sm font-semibold text-gray-900" style={{ fontFamily: fonts.body }}>My Orders</p>
-                <p className="text-xs text-gray-500" style={{ fontFamily: fonts.body }}>View your order history</p>
+                <p className="text-xs text-gray-400 mt-0.5" style={{ fontFamily: fonts.body }}>View your order history</p>
               </div>
-              <ArrowUpRight size={16} className="ml-auto text-gray-400" />
+              <ArrowUpRight size={16} className="text-gray-300 group-hover:text-gray-500 transition-colors" />
             </Link>
 
             <Link
               href="/cart"
-              className="flex items-center gap-4 p-5 rounded-2xl bg-white hover:shadow-md transition-shadow"
+              className="flex items-center gap-4 p-5 rounded-2xl bg-white hover:shadow-md transition-shadow group"
             >
               <div
                 className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
@@ -140,20 +145,25 @@ export default function ProfilePage() {
               >
                 <User size={18} style={{ color: colors.primary }} />
               </div>
-              <div>
+              <div className="flex-1">
                 <p className="text-sm font-semibold text-gray-900" style={{ fontFamily: fonts.body }}>My Cart</p>
-                <p className="text-xs text-gray-500" style={{ fontFamily: fonts.body }}>View your saved cart</p>
+                <p className="text-xs text-gray-400 mt-0.5" style={{ fontFamily: fonts.body }}>View your saved cart</p>
               </div>
-              <ArrowUpRight size={16} className="ml-auto text-gray-400" />
+              <ArrowUpRight size={16} className="text-gray-300 group-hover:text-gray-500 transition-colors" />
             </Link>
           </div>
 
           {/* ── Profile details card ── */}
           <div className="bg-white rounded-2xl p-6 sm:p-8">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-gray-900" style={{ fontFamily: fonts.body }}>
-                Profile Details
-              </h2>
+              <div>
+                <h3 className="text-base font-semibold text-gray-900" style={{ fontFamily: fonts.body }}>
+                  Profile Details
+                </h3>
+                <p className="text-xs text-gray-400 mt-0.5" style={{ fontFamily: fonts.body }}>
+                  Update your personal information
+                </p>
+              </div>
               {!isEditing ? (
                 <button
                   onClick={() => { setIsEditing(true); setSaveMsg(null); }}
@@ -189,17 +199,20 @@ export default function ProfilePage() {
               )}
             </div>
 
+            {/* Divider */}
+            <div className="h-px bg-gray-100 mb-6" />
+
             {isFetching ? (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-12 rounded-xl bg-gray-100 animate-pulse" />
+                  <div key={i} className="h-14 rounded-xl bg-gray-100 animate-pulse" />
                 ))}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 {/* First Name */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide" style={{ fontFamily: fonts.body }}>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-widest" style={{ fontFamily: fonts.body }}>
                     First Name
                   </label>
                   {isEditing ? (
@@ -213,15 +226,15 @@ export default function ProfilePage() {
                       onBlur={(e) => (e.currentTarget.style.borderColor = "#E5E7EB")}
                     />
                   ) : (
-                    <p className="text-sm text-gray-900 px-4 py-3 rounded-xl bg-gray-50" style={{ fontFamily: fonts.body }}>
-                      {profile?.first_name || "—"}
+                    <p className="text-sm text-gray-800 px-4 py-3 rounded-xl bg-gray-50 font-medium" style={{ fontFamily: fonts.body }}>
+                      {profile?.first_name || <span className="text-gray-300">—</span>}
                     </p>
                   )}
                 </div>
 
                 {/* Last Name */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide" style={{ fontFamily: fonts.body }}>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-widest" style={{ fontFamily: fonts.body }}>
                     Last Name
                   </label>
                   {isEditing ? (
@@ -235,25 +248,26 @@ export default function ProfilePage() {
                       onBlur={(e) => (e.currentTarget.style.borderColor = "#E5E7EB")}
                     />
                   ) : (
-                    <p className="text-sm text-gray-900 px-4 py-3 rounded-xl bg-gray-50" style={{ fontFamily: fonts.body }}>
-                      {profile?.last_name || "—"}
+                    <p className="text-sm text-gray-800 px-4 py-3 rounded-xl bg-gray-50 font-medium" style={{ fontFamily: fonts.body }}>
+                      {profile?.last_name || <span className="text-gray-300">—</span>}
                     </p>
                   )}
                 </div>
 
-                {/* Username (read-only) */}
+                {/* Username */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide" style={{ fontFamily: fonts.body }}>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-widest" style={{ fontFamily: fonts.body }}>
                     Username
                   </label>
-                  <p className="text-sm text-gray-900 px-4 py-3 rounded-xl bg-gray-50" style={{ fontFamily: fonts.body }}>
+                  <p className="text-sm text-gray-500 px-4 py-3 rounded-xl bg-gray-50 flex items-center gap-2" style={{ fontFamily: fonts.body }}>
                     {profile?.username || user?.username || "—"}
+                    <span className="text-[10px] text-gray-300 border border-gray-200 rounded-full px-2 py-0.5 ml-auto">read-only</span>
                   </p>
                 </div>
 
                 {/* Email */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide" style={{ fontFamily: fonts.body }}>
+                  <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-widest" style={{ fontFamily: fonts.body }}>
                     Email
                   </label>
                   {isEditing ? (
@@ -267,18 +281,17 @@ export default function ProfilePage() {
                       onBlur={(e) => (e.currentTarget.style.borderColor = "#E5E7EB")}
                     />
                   ) : (
-                    <p className="text-sm text-gray-900 px-4 py-3 rounded-xl bg-gray-50 truncate" style={{ fontFamily: fonts.body }}>
-                      {profile?.email || user?.email || "—"}
+                    <p className="text-sm text-gray-800 px-4 py-3 rounded-xl bg-gray-50 font-medium truncate" style={{ fontFamily: fonts.body }}>
+                      {profile?.email || user?.email || <span className="text-gray-300">—</span>}
                     </p>
                   )}
                 </div>
               </div>
             )}
 
-            {/* Save message */}
             {saveMsg && (
               <p
-                className="mt-4 text-sm px-4 py-3 rounded-xl"
+                className="mt-5 text-sm px-4 py-3 rounded-xl"
                 style={{
                   fontFamily: fonts.body,
                   color: saveMsg.ok ? "#15803D" : "#DC2626",
