@@ -10,17 +10,19 @@ import { useAuth } from "@/context/AuthContext";
 import { formatPrice } from "@/lib/api";
 import { colors, fonts, styles } from "@/config/theme";
 import InnerPageBanner from "@/components/ui/InnerPageBanner";
+import LoginModal from "@/components/ui/LoginModal";
 
 export default function CartPage() {
   const { items, totalCount, totalPrice, removeItem, updateQty } = useCart();
   const { isLoggedIn } = useAuth();
   const router = useRouter();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const handleCheckout = () => {
     if (items.length === 0) return;
     if (!isLoggedIn) {
-      router.push("/login?redirect=/checkout");
+      setShowLoginModal(true);
       return;
     }
     setIsCheckingOut(true);
@@ -29,6 +31,16 @@ export default function CartPage() {
 
   return (
     <>
+      {showLoginModal && (
+        <LoginModal
+          onSuccess={() => {
+            setShowLoginModal(false);
+            router.push("/checkout");
+          }}
+          onClose={() => setShowLoginModal(false)}
+        />
+      )}
+
       <InnerPageBanner
         title="My Cart"
         subtitle={totalCount > 0 ? `${totalCount} ${totalCount === 1 ? "item" : "items"} in your cart` : "Your shopping cart"}
