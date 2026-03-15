@@ -17,6 +17,7 @@ import { useAuth } from "@/context/AuthContext";
 import { formatPrice } from "@/lib/api";
 import { colors, fonts, styles } from "@/config/theme";
 import InnerPageBanner from "@/components/ui/InnerPageBanner";
+import LoginModal from "@/components/ui/LoginModal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Address {
@@ -63,13 +64,14 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [orderId, setOrderId] = useState<number | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   // Guard: require login to access checkout
   useEffect(() => {
     if (!isLoading && !isLoggedIn) {
-      router.replace("/login?redirect=/checkout");
+      setShowLoginModal(true);
     }
-  }, [isLoading, isLoggedIn, router]);
+  }, [isLoading, isLoggedIn]);
 
   // Pre-fill email from logged-in user
   useEffect(() => {
@@ -241,6 +243,13 @@ export default function CheckoutPage() {
   // ─── Checkout form ──────────────────────────────────────────────────────────
   return (
     <>
+      {showLoginModal && (
+        <LoginModal
+          onSuccess={() => setShowLoginModal(false)}
+          onClose={() => router.replace("/cart")}
+        />
+      )}
+
       <InnerPageBanner
         title="Checkout"
         subtitle="Complete your order"
