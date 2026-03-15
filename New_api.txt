@@ -1,0 +1,112 @@
+My Order(Get)
+
+https://fleetowebapi.codingcloud.in/wp-json/custom-api/v1/orders-by-user/1
+
+My Cart(Post)
+
+https://fleetowebapi.codingcloud.in/wp-json/custom/v1/get-cart/
+
+Body:
+{
+    "user_id": 1
+}
+
+
+Register User(Post)
+
+https://fleetowebapi.codingcloud.in/wp-admin/admin-ajax.php?action=register_user
+
+Body:
+{
+    "username": "test10",
+    "email": "test10@gmail.com",
+    "password": "admin123455"
+}
+
+
+Login User(Post)
+
+https://fleetowebapi.codingcloud.in/wp-admin/admin-ajax.php?action=login_user
+{
+    "username": "admin",
+    "password": "admin@12345#"
+}
+
+
+Logout(Post)
+
+https://fleetowebapi.codingcloud.in/wp-admin/admin-ajax.php?action=logout_user
+
+
+My Pfofile(Get)
+
+https://fleetowebapi.codingcloud.in/wp-json/custom/v1/my-profile?user_id=1
+
+
+Update Profile(Post)
+
+https://fleetowebapi.codingcloud.in/wp-json/custom/v1/update-profile
+
+{
+  "user_id": 1,
+  "first_name": "John",
+  "last_name": "Doe",
+  "email": "tanmoypaul465x@gmail.com"
+}
+
+
+Send OTP(Post)
+
+https://fleetowebapi.codingcloud.in/wp-json/custom/v1/forgot-password/send-otp
+
+Body:
+{
+  "email": "tanmoypaul465x@gmail.com"
+}
+
+
+
+Verify OTP(Post)
+
+https://fleetowebapi.codingcloud.in/wp-json/custom/v1/forgot-password/verify-otp
+
+Body:
+{
+  "email": "tanmoypaul465x@gmail.com",
+  "otp": "003541"
+}
+
+
+Reset (Post)
+
+https://fleetowebapi.codingcloud.in/wp-json/custom/v1/forgot-password/reset
+
+Body:
+{
+  "email": "tanmoypaul465x@gmail.com",
+  "otp": "003541",
+  "new_password": "admin@1234567#"
+}
+
+Header Menu(Get)
+
+https://fleetowebapi.codingcloud.in/wp-json/custom/v1/header-menu
+
+
+Our Products Menu(Get)
+
+https://fleetowebapi.codingcloud.in/wp-json/custom/v1/our-product-menu
+
+
+Quick Links Menu(Get)
+
+https://fleetowebapi.codingcloud.in/wp-json/custom/v1/quick-link-menu
+
+
+About us(Get)
+
+https://fleetowebapi.codingcloud.in/wp-json/custom/v1/about-us-menu
+
+Support Menu(Get)
+
+https://fleetowebapi.codingcloud.in/wp-json/custom/v1/footer-menu

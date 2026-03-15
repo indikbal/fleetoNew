@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { colors, fonts, styles } from "@/config/theme";
 import { colorNameToHex, formatPrice } from "@/lib/api";
 import type { WCProduct, WCVariation } from "@/lib/api";
+import { useCart } from "@/context/CartContext";
 import Link from "next/link";
 
 interface Props {
@@ -20,6 +21,7 @@ export default function SelectOptionModal({ product, onClose }: Props) {
   const [variations, setVariations] = useState<WCVariation[]>([]);
   const [selected, setSelected]     = useState<WCVariation | null>(null);
   const [status, setStatus]         = useState<Status>("loading-vars");
+  const { addItem } = useCart();
 
   // Close on Escape
   useEffect(() => {
@@ -42,28 +44,20 @@ export default function SelectOptionModal({ product, onClose }: Props) {
       });
   }, [product.id]);
 
-  const handleAddToCart = useCallback(async () => {
+  const handleAddToCart = useCallback(() => {
     if (!selected) return;
-    setStatus("submitting");
-
-    try {
-      const res  = await fetch("/api/cart", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ product_id: product.id, variation_id: selected.id, quantity: 1 }),
-      });
-      const data = await res.json() as { error?: string };
-
-      if (!data.error) {
-        setStatus("success");
-      } else {
-        // API not ready yet — redirect user to WooCommerce product page with colour pre-selected
-        setStatus("error");
-      }
-    } catch {
-      setStatus("error");
-    }
-  }, [product.id, selected]);
+    const colorName = selected.attributes[0]?.option ?? "";
+    addItem({
+      product_id:   product.id,
+      variation_id: selected.id,
+      name:         product.name,
+      color:        colorName,
+      price:        selected.price || product.price,
+      image:        selected.image?.src || product.images[0]?.src || "",
+      permalink:    selected.permalink,
+    });
+    setStatus("success");
+  }, [product, selected, addItem]);
 
   const imageUrl  = product.images[0]?.src ?? "/images/hero-scooty.png";
   const isLoading = status === "loading-vars" || status === "submitting";

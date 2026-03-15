@@ -5,13 +5,18 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { ArrowUpRight, Clock, ShieldCheck, ThumbsUp, CheckCircle2 } from "lucide-react";
 import { colors, fonts, styles } from "@/config/theme";
+import type { BookTestRidePageData } from "@/lib/api";
 
-// ─── Perks shown on the left panel ───────────────────────────────────────────
-const perks = [
+const DEFAULT_PERKS = [
   { icon: Clock,       text: "15-minute hands-on experience" },
   { icon: ShieldCheck, text: "Expert guidance from our team"  },
   { icon: ThumbsUp,    text: "Zero commitment, 100% free"     },
 ];
+
+// ─── Props ────────────────────────────────────────────────────────────────────
+interface Props {
+  pageData?: BookTestRidePageData;
+}
 
 // ─── Form fields config ───────────────────────────────────────────────────────
 type FormKey = "name" | "email" | "phone" | "address";
@@ -41,18 +46,49 @@ const slideIn = (dir: "left" | "right", delay = 0) => ({
 });
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function BookTestRideSection() {
+export default function BookTestRideSection({ pageData = {} }: Props) {
   const [form, setForm] = useState<Record<FormKey, string>>({
     name: "", email: "", phone: "", address: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const perks = [
+    { icon: Clock,       text: pageData.perk_1 ?? DEFAULT_PERKS[0].text },
+    { icon: ShieldCheck, text: pageData.perk_2 ?? DEFAULT_PERKS[1].text },
+    { icon: ThumbsUp,    text: pageData.perk_3 ?? DEFAULT_PERKS[2].text },
+  ];
 
   const set = (key: FormKey) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/book-test-ride", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          full_name: form.name,
+          email: form.email,
+          phone: form.phone,
+          address: form.address,
+        }),
+      });
+      const data = await res.json();
+      if (data?.error) {
+        setError(data.error);
+      } else {
+        setSubmitted(true);
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -255,17 +291,29 @@ export default function BookTestRideSection() {
                     </motion.div>
                   ))}
 
+                  {/* Error */}
+                  {error && (
+                    <motion.p
+                      {...fadeUp(0)}
+                      className="text-sm text-red-500 text-center -mb-3"
+                      style={{ fontFamily: fonts.body }}
+                    >
+                      {error}
+                    </motion.p>
+                  )}
+
                   {/* Submit */}
                   <motion.button
                     {...fadeUp(0.75)}
                     type="submit"
-                    className="w-full py-4 text-white text-sm font-semibold rounded-xl transition-colors btn-red-inner-shadow flex items-center justify-center gap-2 mt-2"
+                    disabled={loading}
+                    className="w-full py-4 text-white text-sm font-semibold rounded-xl transition-colors btn-red-inner-shadow flex items-center justify-center gap-2 mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
                     style={{ backgroundColor: colors.primary, fontFamily: fonts.body }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = colors.primaryDark)}
+                    onMouseEnter={(e) => !loading && (e.currentTarget.style.backgroundColor = colors.primaryDark)}
                     onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = colors.primary)}
                   >
-                    Book My Test Ride
-                    <ArrowUpRight size={16} />
+                    {loading ? "Booking…" : "Book My Test Ride"}
+                    {!loading && <ArrowUpRight size={16} />}
                   </motion.button>
 
                   {/* Fine print */}

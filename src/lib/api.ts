@@ -287,6 +287,300 @@ export async function fetchShopPage(): Promise<ShopPageData> {
   return res.json();
 }
 
+// ─── Header Menu ──────────────────────────────────────────────────────────────
+const CUSTOM_BASE = "https://fleetowebapi.codingcloud.in/wp-json/custom/v1";
+const WP_BASE = "https://fleetowebapi.codingcloud.in";
+
+export interface HeaderMenuItem {
+  id: number;
+  title: string;
+  href: string;
+  parent: string;
+}
+
+// Map WP page paths → Next.js routes
+function wpUrlToHref(url: string): string {
+  const path = url.replace(WP_BASE, "").replace(/\/$/, "") || "/";
+  const map: Record<string, string> = {
+    "/shop": "/products",
+    "/book-a-test-ride": "/book-test-ride",
+  };
+  // WooCommerce single product pages → products listing
+  if (path.startsWith("/product/")) return "/products";
+  return map[path] ?? path;
+}
+
+export async function fetchHeaderMenu(): Promise<HeaderMenuItem[]> {
+  const res = await fetch(`${CUSTOM_BASE}/header-menu`, {
+    next: { revalidate: 3600 },
+  });
+  if (!res.ok) throw new Error("Failed to fetch header menu");
+  const data: { id: number; title: string; url: string; parent: string }[] =
+    await res.json();
+  return data.map((item) => ({
+    id: item.id,
+    title: item.title,
+    href: wpUrlToHref(item.url),
+    parent: item.parent,
+  }));
+}
+
+// ─── Footer Menus ─────────────────────────────────────────────────────────────
+export interface FooterMenuItem {
+  id: number;
+  title: string;
+  href: string;
+}
+
+export interface FooterMenuColumn {
+  title: string;
+  items: FooterMenuItem[];
+}
+
+async function fetchMenuColumn(endpoint: string): Promise<FooterMenuItem[]> {
+  const res = await fetch(`${CUSTOM_BASE}/${endpoint}`, {
+    next: { revalidate: 3600 },
+  });
+  if (!res.ok) throw new Error(`Failed to fetch ${endpoint}`);
+  const data: { id: number; title: string; url: string; parent: string }[] =
+    await res.json();
+  return data.map((item) => ({
+    id: item.id,
+    title: item.title,
+    href: wpUrlToHref(item.url),
+  }));
+}
+
+export async function fetchFooterMenus(): Promise<FooterMenuColumn[]> {
+  const [products, quickLinks, aboutUs, support] = await Promise.all([
+    fetchMenuColumn("our-product-menu"),
+    fetchMenuColumn("quick-link-menu"),
+    fetchMenuColumn("about-us-menu"),
+    fetchMenuColumn("footer-menu"),
+  ]);
+  return [
+    { title: "Our Products", items: products },
+    { title: "Quick Links", items: quickLinks },
+    { title: "About us", items: aboutUs },
+    { title: "Support", items: support },
+  ];
+}
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+export interface AuthUser {
+  user_id: number;
+  username: string;
+  email: string;
+  display_name: string;
+}
+
+export interface AuthResponse {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+  success: boolean | number | string;
+  message?: string;
+  user?: AuthUser;
+  data?: AuthUser & Record<string, unknown>;
+}
+
+export async function loginUser(
+  username: string,
+  password: string
+): Promise<AuthResponse> {
+  const res = await fetch("/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+  });
+  return res.json();
+}
+
+export async function registerUser(
+  username: string,
+  email: string,
+  password: string
+): Promise<AuthResponse> {
+  const res = await fetch("/api/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, email, password }),
+  });
+  return res.json();
+}
+
+export async function logoutUser(): Promise<{ success: boolean }> {
+  const res = await fetch("/api/auth/logout", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+  return res.json();
+}
+
+export async function sendOtp(email: string): Promise<{ success: boolean; message: string }> {
+  const res = await fetch("/api/auth/send-otp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  return res.json();
+}
+
+export async function verifyOtp(
+  email: string,
+  otp: string
+): Promise<{ success: boolean; message: string }> {
+  const res = await fetch("/api/auth/verify-otp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, otp }),
+  });
+  return res.json();
+}
+
+// ─── User Profile ─────────────────────────────────────────────────────────────
+export interface UserProfile {
+  user_id: number;
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  display_name: string;
+}
+
+// ─── Cart ──────────────────────────────────────────────────────────────────────
+export interface CartItem {
+  product_id: number;
+  product_name: string;
+  quantity: number;
+  price: string;
+  total: string;
+  image: string;
+}
+
+export async function fetchMyCart(user_id: number): Promise<CartItem[]> {
+  const res = await fetch("/api/user/cart", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id }),
+  });
+  if (!res.ok) throw new Error("Failed to fetch cart");
+  const data = await res.json();
+  // Handle both array response and { items: [] } shape
+  return Array.isArray(data) ? data : (data.items ?? data.cart ?? []);
+}
+
+// ─── Orders ───────────────────────────────────────────────────────────────────
+export interface OrderItem {
+  product_id: number;
+  name: string;
+  quantity: number;
+  total: string;
+}
+
+export interface Order {
+  id: number;
+  status: string;
+  date_created: string;
+  total: string;
+  currency: string;
+  line_items: OrderItem[];
+}
+
+export async function fetchMyOrders(user_id: number): Promise<Order[]> {
+  const res = await fetch(`/api/user/orders?user_id=${user_id}`);
+  const data = await res.json();
+  // WP returns 404 + { error: true } when user has no orders — treat as empty
+  if (!res.ok || data?.error) return [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const raw: any[] = Array.isArray(data) ? data : (data.orders ?? []);
+  return raw.map((o) => ({
+    id: o.order_id ?? o.id,
+    status: o.status,
+    date_created: o.date ?? o.date_created ?? "",
+    total: o.total,
+    currency: o.currency ?? "INR",
+    line_items: (o.products ?? o.line_items ?? []).map(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (p: any) => ({
+        product_id: p.product_id,
+        name: p.product_name ?? p.name,
+        quantity: p.quantity,
+        total: p.subtotal ?? p.total ?? "0",
+      })
+    ),
+  }));
+}
+
+export async function fetchMyProfile(user_id: number): Promise<UserProfile> {
+  const res = await fetch(`/api/user/profile?user_id=${user_id}`);
+  if (!res.ok) throw new Error("Failed to fetch profile");
+  const json = await res.json();
+  // WP returns { success: true, data: { id, username, email, first_name, last_name } }
+  const d = json.data ?? json;
+  return {
+    user_id: d.id ?? d.user_id,
+    username: d.username,
+    email: d.email,
+    first_name: d.first_name ?? "",
+    last_name: d.last_name ?? "",
+    display_name: d.display_name ?? d.username ?? "",
+  };
+}
+
+export async function updateProfile(
+  user_id: number,
+  first_name: string,
+  last_name: string,
+  email: string
+): Promise<{ success: boolean; message: string }> {
+  const res = await fetch("/api/user/profile", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id, first_name, last_name, email }),
+  });
+  return res.json();
+}
+
+export async function resetPassword(
+  email: string,
+  otp: string,
+  new_password: string
+): Promise<{ success: boolean; message: string }> {
+  const res = await fetch("/api/auth/reset-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, otp, new_password }),
+  });
+  return res.json();
+}
+
+// ─── Book Test Ride Page ───────────────────────────────────────────────────────
+export interface BookTestRidePageData {
+  banner_title?: string;
+  section_title?: string;
+  section_sub_title?: string;
+  section_description?: string;
+  perk_1?: string;
+  perk_2?: string;
+  perk_3?: string;
+  [key: string]: string | undefined;
+}
+
+export async function fetchBookTestRidePage(): Promise<BookTestRidePageData> {
+  try {
+    const res = await fetch(`${API_BASE}?action=Book_A_Test_Ride_Page`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ page_slug: "book-a-test-ride" }),
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return {};
+    return res.json();
+  } catch {
+    return {};
+  }
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 // Parse "10K+", "513+" etc. → { value, suffix } for animated counters
