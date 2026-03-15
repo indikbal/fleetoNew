@@ -55,7 +55,7 @@ const labelClass = "block text-xs text-gray-500 font-medium mb-1";
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, totalPrice, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, isLoggedIn, isLoading } = useAuth();
 
   const [billing, setBilling] = useState<Address>(emptyAddress());
   const [shipping, setShipping] = useState<Address>(emptyAddress());
@@ -63,6 +63,13 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [orderId, setOrderId] = useState<number | null>(null);
+
+  // Guard: require login to access checkout
+  useEffect(() => {
+    if (!isLoading && !isLoggedIn) {
+      router.replace("/login?redirect=/checkout");
+    }
+  }, [isLoading, isLoggedIn, router]);
 
   // Pre-fill email from logged-in user
   useEffect(() => {

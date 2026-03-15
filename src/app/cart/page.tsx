@@ -6,17 +6,23 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Minus, Plus, Trash2, ShoppingCart, ArrowUpRight, PackageOpen } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 import { formatPrice } from "@/lib/api";
 import { colors, fonts, styles } from "@/config/theme";
 import InnerPageBanner from "@/components/ui/InnerPageBanner";
 
 export default function CartPage() {
   const { items, totalCount, totalPrice, removeItem, updateQty } = useCart();
+  const { isLoggedIn } = useAuth();
   const router = useRouter();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   const handleCheckout = () => {
     if (items.length === 0) return;
+    if (!isLoggedIn) {
+      router.push("/login?redirect=/checkout");
+      return;
+    }
     setIsCheckingOut(true);
     router.push("/checkout");
   };
