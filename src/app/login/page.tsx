@@ -1,15 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowUpRight, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { colors, fonts, styles } from "@/config/theme";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/profile";
   const { login, isLoggedIn } = useAuth();
 
   const [username, setUsername] = useState("");
@@ -20,8 +22,8 @@ export default function LoginPage() {
 
   // Redirect if already logged in
   useEffect(() => {
-    if (isLoggedIn) router.replace("/profile");
-  }, [isLoggedIn, router]);
+    if (isLoggedIn) router.replace(redirectTo);
+  }, [isLoggedIn, router, redirectTo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +32,7 @@ export default function LoginPage() {
     try {
       const res = await login(username, password);
       if (res.success) {
-        router.push("/profile");
+        router.push(redirectTo);
       } else {
         setError(res.message || "Invalid credentials. Please try again.");
       }
@@ -192,5 +194,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }
