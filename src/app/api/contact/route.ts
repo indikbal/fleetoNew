@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 
-const CONTACT_URL =
-  "https://fleetowebapi.codingcloud.in/wp-json/custom-api/v1/contact";
+const CONTACT_URL = `${process.env.WP_CUSTOM_API_URL}/contact`;
 
 export async function POST(req: Request) {
   try {

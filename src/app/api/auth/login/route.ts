@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const API_BASE = "https://fleetowebapi.codingcloud.in/wp-admin/admin-ajax.php";
+const API_BASE = process.env.WP_AJAX_URL!;
 
 export async function POST(req: NextRequest) {
   const body = await req.json();

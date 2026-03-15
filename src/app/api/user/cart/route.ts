@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BASE = "https://fleetowebapi.codingcloud.in/wp-json/custom/v1";
+const BASE = process.env.WP_CUSTOM_URL!;
 
 export async function POST(req: NextRequest) {
   const body = await req.json();

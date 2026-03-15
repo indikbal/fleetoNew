@@ -216,9 +216,12 @@ export default function SelectOptionModal({ product, onClose }: Props) {
                     </p>
                     <div className="flex flex-wrap gap-3">
                       {variations.map((v) => {
-                        const colorName = v.attributes[0]?.option ?? "";
-                        const hex       = colorNameToHex(colorName);
-                        const isActive  = selected?.id === v.id;
+                        const colorName =
+                          v.attributes.find(
+                            (a) => a.name.toLowerCase() === "color" || a.name.toLowerCase() === "colour"
+                          )?.option ?? v.attributes[0]?.option ?? "";
+                        const hex      = colorNameToHex(colorName);
+                        const isActive = selected?.id === v.id;
                         return (
                           <button
                             key={v.id}

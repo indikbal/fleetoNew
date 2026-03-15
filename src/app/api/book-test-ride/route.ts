@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 
-const BOOK_TEST_RIDE_URL =
-  "https://fleetowebapi.codingcloud.in/wp-json/custom-api/v1/book-a-test-ride";
+const BOOK_TEST_RIDE_URL = `${process.env.WP_CUSTOM_API_URL}/book-a-test-ride`;
 
 export async function POST(req: Request) {
   try {

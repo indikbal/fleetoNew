@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
 const WC_ORDERS_URL =
-  "https://fleetowebapi.codingcloud.in/wp-json/wc/v3/orders" +
-  "?consumer_key=ck_0a7c7f2a32c835c6b98118850adb53f62733fa05" +
-  "&consumer_secret=cs_3b4b2a820e23576861de453148196f29ee2de723";
+  `${process.env.WP_WC_URL}/orders` +
+  `?consumer_key=${process.env.WC_ORDERS_KEY}` +
+  `&consumer_secret=${process.env.WC_ORDERS_SECRET}`;
 
 export async function POST(req: Request) {
   try {
