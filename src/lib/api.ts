@@ -554,6 +554,33 @@ export async function resetPassword(
   return res.json();
 }
 
+// ─── Book Test Ride Page ───────────────────────────────────────────────────────
+export interface BookTestRidePageData {
+  banner_title?: string;
+  section_title?: string;
+  section_sub_title?: string;
+  section_description?: string;
+  perk_1?: string;
+  perk_2?: string;
+  perk_3?: string;
+  [key: string]: string | undefined;
+}
+
+export async function fetchBookTestRidePage(): Promise<BookTestRidePageData> {
+  try {
+    const res = await fetch(`${API_BASE}?action=Book_A_Test_Ride_Page`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ page_slug: "book-a-test-ride" }),
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return {};
+    return res.json();
+  } catch {
+    return {};
+  }
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 // Parse "10K+", "513+" etc. → { value, suffix } for animated counters

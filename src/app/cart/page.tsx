@@ -3,52 +3,22 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Minus, Plus, Trash2, ShoppingCart, ArrowUpRight, PackageOpen } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/lib/api";
 import { colors, fonts, styles } from "@/config/theme";
 import InnerPageBanner from "@/components/ui/InnerPageBanner";
 
-// WooCommerce base — browser navigates here directly so WP sets cookies in the user's browser
-const WP_BASE = "https://fleetowebapi.codingcloud.in";
-
 export default function CartPage() {
-  const { items, totalCount, totalPrice, removeItem, updateQty, clearCart } = useCart();
+  const { items, totalCount, totalPrice, removeItem, updateQty } = useCart();
+  const router = useRouter();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   const handleCheckout = () => {
     if (items.length === 0) return;
     setIsCheckingOut(true);
-
-    // Build a WooCommerce add-to-cart URL for each item.
-    // WC supports chaining: ?add-to-cart=ID1&add-to-cart=ID2 does NOT work natively,
-    // so we redirect to the first item and pass remaining as extra params.
-    // The WP developer can handle multi-item via a custom endpoint if needed.
-    //
-    // Using variation_id in ?add-to-cart= — WC resolves to the parent product automatically.
-    // Using browser navigation (NOT fetch/proxy) so WP sets session cookies directly.
-
-    if (items.length === 1) {
-      const item = items[0];
-      const url = `${WP_BASE}/?add-to-cart=${item.variation_id}&quantity=${item.quantity}`;
-      clearCart();
-      window.location.href = url;
-      return;
-    }
-
-    // Multiple items: build a query string with all variation IDs and quantities.
-    // WP developer should handle this via a custom endpoint or a WC plugin.
-    // Fallback: add items one-by-one by chaining redirect to cart after each.
-    const params = new URLSearchParams();
-    items.forEach((item) => {
-      params.append("add-to-cart", String(item.variation_id));
-      params.append(`quantity-${item.variation_id}`, String(item.quantity));
-    });
-    // Also pass first item as the primary add-to-cart param (WC default behaviour)
-    const primaryItem = items[0];
-    const url = `${WP_BASE}/?add-to-cart=${primaryItem.variation_id}&quantity=${primaryItem.quantity}&${params.toString()}`;
-    clearCart();
-    window.location.href = url;
+    router.push("/checkout");
   };
 
   return (

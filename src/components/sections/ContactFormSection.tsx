@@ -55,9 +55,42 @@ export default function ContactFormSection({
     subject: "",
     message: "",
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
 
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          full_name: form.name,
+          email: form.email,
+          phone: form.phone,
+          subject: form.subject,
+          message: form.message,
+        }),
+      });
+      const data = await res.json();
+      if (data?.error) {
+        setError(data.error);
+      } else {
+        setSubmitted(true);
+        setForm({ name: "", email: "", phone: "", subject: "", message: "" });
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Map dynamic labels to info items
   const labels = [addressTitle, mailTitle, telephoneTitle];
@@ -129,7 +162,7 @@ export default function ContactFormSection({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
 
             {/* ── Left: form ── */}
-            <form className="flex flex-col gap-7" onSubmit={(e) => e.preventDefault()}>
+            <form className="flex flex-col gap-7" onSubmit={handleSubmit}>
 
               {/* Row 1 */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-7">
@@ -172,15 +205,30 @@ export default function ContactFormSection({
                 />
               </div>
 
+              {/* Error */}
+              {error && (
+                <p className="text-sm text-red-500 -mb-3" style={{ fontFamily: fonts.body }}>
+                  {error}
+                </p>
+              )}
+
+              {/* Success */}
+              {submitted && (
+                <p className="text-sm text-green-600 -mb-3" style={{ fontFamily: fonts.body }}>
+                  Message sent! We&apos;ll get back to you shortly.
+                </p>
+              )}
+
               {/* Submit */}
               <button
                 type="submit"
-                className="w-full py-4 text-white text-sm font-semibold rounded-xl transition-colors btn-red-inner-shadow"
+                disabled={loading}
+                className="w-full py-4 text-white text-sm font-semibold rounded-xl transition-colors btn-red-inner-shadow disabled:opacity-70 disabled:cursor-not-allowed"
                 style={{ backgroundColor: colors.primary, fontFamily: fonts.body }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = colors.primaryDark)}
+                onMouseEnter={(e) => !loading && (e.currentTarget.style.backgroundColor = colors.primaryDark)}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = colors.primary)}
               >
-                SEND MESSAGE
+                {loading ? "SENDING…" : "SEND MESSAGE"}
               </button>
             </form>
 
