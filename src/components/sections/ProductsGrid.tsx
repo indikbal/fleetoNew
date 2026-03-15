@@ -15,7 +15,13 @@ function ProductCard({ product, index, onSelect }: { product: WCProduct; index: 
   const [hovered, setHovered] = useState(false);
 
   const imageUrl     = product.images[0]?.src ?? "/images/hero-scooty.png";
-  const colorOptions = product.attributes.find((a) => a.name === "Color")?.options ?? [];
+  // Use actual variation colors (accurate) — fall back to attribute options
+  const colorOptions =
+    product.variation_colors.length > 0
+      ? product.variation_colors
+      : product.attributes.find(
+          (a) => a.name.toLowerCase() === "color" || a.name.toLowerCase() === "colour"
+        )?.options ?? [];
   const hasSale      = !!product.sale_price && product.sale_price !== product.price;
 
   return (

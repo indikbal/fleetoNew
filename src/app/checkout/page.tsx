@@ -20,6 +20,17 @@ import InnerPageBanner from "@/components/ui/InnerPageBanner";
 import LoginModal from "@/components/ui/LoginModal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+interface StateItem {
+  code: string;
+  name: string;
+}
+
+interface CountryStateData {
+  country_code: string;
+  country_name: string;
+  states: StateItem[];
+}
+
 interface Address {
   first_name: string;
   last_name: string;
@@ -52,6 +63,9 @@ const inputClass =
 
 const labelClass = "block text-xs text-gray-500 font-medium mb-1";
 
+const selectClass =
+  "w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none bg-white text-gray-700 transition-colors focus:border-[#AB2323] focus:ring-1 focus:ring-[#AB2323]/20 cursor-pointer";
+
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function CheckoutPage() {
   const router = useRouter();
@@ -65,6 +79,7 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null);
   const [orderId, setOrderId] = useState<number | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [countriesData, setCountriesData] = useState<CountryStateData[]>([]);
 
   // Guard: require login to access checkout
   useEffect(() => {
@@ -87,13 +102,35 @@ export default function CheckoutPage() {
     }
   }, [items, orderId, router]);
 
+  // Fetch countries + states from API
+  useEffect(() => {
+    fetch("https://fleetowebapi.codingcloud.in/wp-json/custom/v1/all-countries-states")
+      .then((r) => r.json())
+      .then((data: CountryStateData[]) => setCountriesData(data))
+      .catch(() => {});
+  }, []);
+
   const setBillingField =
-    (key: keyof Address) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    (key: keyof Address) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
       setBilling((b) => ({ ...b, [key]: e.target.value }));
 
   const setShippingField =
-    (key: keyof Address) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    (key: keyof Address) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
       setShipping((s) => ({ ...s, [key]: e.target.value }));
+
+  const handleBillingCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setBilling((b) => ({ ...b, country: e.target.value, state: "" }));
+  };
+
+  const handleShippingCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setShipping((s) => ({ ...s, country: e.target.value, state: "" }));
+  };
+
+  const getBillingStates = () =>
+    countriesData.find((c) => c.country_code === billing.country)?.states ?? [];
+
+  const getShippingStates = () =>
+    countriesData.find((c) => c.country_code === shipping.country)?.states ?? [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -341,15 +378,20 @@ export default function CheckoutPage() {
                     <label className={labelClass} style={{ fontFamily: fonts.body }}>
                       Country *
                     </label>
-                    <input
-                      type="text"
-                      placeholder="IN"
+                    <select
                       value={billing.country}
-                      onChange={setBillingField("country")}
+                      onChange={handleBillingCountryChange}
                       required
-                      className={inputClass}
+                      className={selectClass}
                       style={{ fontFamily: fonts.body }}
-                    />
+                    >
+                      <option value="">Select Country</option>
+                      {countriesData.map((c) => (
+                        <option key={c.country_code} value={c.country_code}>
+                          {c.country_name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="sm:col-span-2">
                     <label className={labelClass} style={{ fontFamily: fonts.body }}>
@@ -396,15 +438,31 @@ export default function CheckoutPage() {
                     <label className={labelClass} style={{ fontFamily: fonts.body }}>
                       State *
                     </label>
-                    <input
-                      type="text"
-                      placeholder="WB"
-                      value={billing.state}
-                      onChange={setBillingField("state")}
-                      required
-                      className={inputClass}
-                      style={{ fontFamily: fonts.body }}
-                    />
+                    {getBillingStates().length > 0 ? (
+                      <select
+                        value={billing.state}
+                        onChange={setBillingField("state")}
+                        required
+                        className={selectClass}
+                        style={{ fontFamily: fonts.body }}
+                      >
+                        <option value="">Select State</option>
+                        {getBillingStates().map((s) => (
+                          <option key={s.code} value={s.code}>
+                            {s.name}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        placeholder="State / Province"
+                        value={billing.state}
+                        onChange={setBillingField("state")}
+                        className={inputClass}
+                        style={{ fontFamily: fonts.body }}
+                      />
+                    )}
                   </div>
                   <div>
                     <label className={labelClass} style={{ fontFamily: fonts.body }}>
@@ -526,15 +584,31 @@ export default function CheckoutPage() {
                       <label className={labelClass} style={{ fontFamily: fonts.body }}>
                         State *
                       </label>
-                      <input
-                        type="text"
-                        placeholder="WB"
-                        value={shipping.state}
-                        onChange={setShippingField("state")}
-                        required
-                        className={inputClass}
-                        style={{ fontFamily: fonts.body }}
-                      />
+                      {getShippingStates().length > 0 ? (
+                        <select
+                          value={shipping.state}
+                          onChange={setShippingField("state")}
+                          required
+                          className={selectClass}
+                          style={{ fontFamily: fonts.body }}
+                        >
+                          <option value="">Select State</option>
+                          {getShippingStates().map((s) => (
+                            <option key={s.code} value={s.code}>
+                              {s.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          placeholder="State / Province"
+                          value={shipping.state}
+                          onChange={setShippingField("state")}
+                          className={inputClass}
+                          style={{ fontFamily: fonts.body }}
+                        />
+                      )}
                     </div>
                     <div>
                       <label className={labelClass} style={{ fontFamily: fonts.body }}>
@@ -554,15 +628,20 @@ export default function CheckoutPage() {
                       <label className={labelClass} style={{ fontFamily: fonts.body }}>
                         Country *
                       </label>
-                      <input
-                        type="text"
-                        placeholder="IN"
+                      <select
                         value={shipping.country}
-                        onChange={setShippingField("country")}
+                        onChange={handleShippingCountryChange}
                         required
-                        className={inputClass}
+                        className={selectClass}
                         style={{ fontFamily: fonts.body }}
-                      />
+                      >
+                        <option value="">Select Country</option>
+                        {countriesData.map((c) => (
+                          <option key={c.country_code} value={c.country_code}>
+                            {c.country_name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 )}

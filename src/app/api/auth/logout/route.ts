@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const API_BASE = "https://fleetowebapi.codingcloud.in/wp-admin/admin-ajax.php";
+const API_BASE = process.env.WP_AJAX_URL!;
 
 export async function POST() {
   const res = await fetch(`${API_BASE}?action=logout_user`, {

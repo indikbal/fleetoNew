@@ -1,7 +1,7 @@
-const API_BASE = "https://fleetowebapi.codingcloud.in/wp-admin/admin-ajax.php";
-const WC_BASE = "https://fleetowebapi.codingcloud.in/wp-json/wc/v3";
-const WC_KEY = "ck_2a65d51ecd3d108e3e810dac3e03ba492cafe3bd";
-const WC_SECRET = "cs_bebf42f0e9337f689dc4e88c2989c531c8aad6d9";
+const API_BASE  = process.env.WP_AJAX_URL!;
+const WC_BASE   = process.env.WP_WC_URL!;
+const WC_KEY    = process.env.WC_KEY!;
+const WC_SECRET = process.env.WC_SECRET!;
 
 export interface BannerSlide {
   image: string;
@@ -81,6 +81,8 @@ export interface WCProduct {
   sale_price: string;
   images: { src: string }[];
   attributes: { name: string; options: string[] }[];
+  /** Colours extracted from active variations — populated by fetchProducts() */
+  variation_colors: string[];
 }
 
 export interface WCVariation {
@@ -110,7 +112,35 @@ export async function fetchProducts(): Promise<WCProduct[]> {
     { next: { revalidate: 3600 } }
   );
   if (!res.ok) throw new Error("Failed to fetch products");
-  return res.json();
+  const products: Omit<WCProduct, "variation_colors">[] = await res.json();
+
+  // Fetch each product's variations in parallel to get accurate active colors
+  const variationColors = await Promise.all(
+    products.map((p) =>
+      fetch(
+        `${WC_BASE}/products/${p.id}/variations?consumer_key=${WC_KEY}&consumer_secret=${WC_SECRET}`,
+        { next: { revalidate: 3600 } }
+      )
+        .then((r) => (r.ok ? r.json() : []))
+        .then((vars: WCVariation[]) =>
+          vars
+            .map(
+              (v) =>
+                v.attributes.find(
+                  (a) =>
+                    a.name.toLowerCase() === "color" ||
+                    a.name.toLowerCase() === "colour"
+                )?.option ??
+                v.attributes[0]?.option ??
+                ""
+            )
+            .filter(Boolean)
+        )
+        .catch(() => [] as string[])
+    )
+  );
+
+  return products.map((p, i) => ({ ...p, variation_colors: variationColors[i] }));
 }
 
 // ─── About Page ───────────────────────────────────────────────────────────────
@@ -288,8 +318,8 @@ export async function fetchShopPage(): Promise<ShopPageData> {
 }
 
 // ─── Header Menu ──────────────────────────────────────────────────────────────
-const CUSTOM_BASE = "https://fleetowebapi.codingcloud.in/wp-json/custom/v1";
-const WP_BASE = "https://fleetowebapi.codingcloud.in";
+const CUSTOM_BASE = process.env.WP_CUSTOM_URL!;
+const WP_BASE     = process.env.WP_BASE!;
 
 export interface HeaderMenuItem {
   id: number;
@@ -608,18 +638,72 @@ export function formatPrice(price: string): string {
 
 // Color name → hex for WooCommerce product attributes
 export const COLOR_HEX: Record<string, string> = {
-  black: "#010101",
-  blue: "#4A7FEB",
+  // Blacks
+  black: "#1A1A1A",
+  "matte black": "#1A1A1A",
+  "matt black": "#1A1A1A",
+  "gloss black": "#1A1A1A",
+  "glossy black": "#1A1A1A",
+  "metallic black": "#1A1A1A",
+  // Whites
+  white: "#F2F2F2",
+  "pearl white": "#F0EFE9",
+  "glossy white": "#F5F5F5",
+  "matt white": "#EFEFEF",
+  "matte white": "#EFEFEF",
+  "ivory white": "#FFFFF0",
+  // Reds
   red: "#AB2323",
-  white: "#F5F5F5",
+  "candy red": "#C0392B",
+  "cherry red": "#A93226",
+  "sporty red": "#C0392B",
+  "wine red": "#7B241C",
+  "fire red": "#C0392B",
+  maroon: "#800000",
+  // Blues
+  blue: "#4A7FEB",
+  "sky blue": "#5DADE2",
+  "navy blue": "#1A3A6B",
+  "ocean blue": "#1F618D",
+  "electric blue": "#007FFF",
+  "metallic blue": "#4A6FA5",
+  // Greens
   green: "#4AAB5E",
+  teal: "#008080",
+  "teal green": "#008080",
+  olive: "#808000",
+  // Greys / Silvers
   grey: "#888888",
   gray: "#888888",
-  pink: "#F4A0A0",
-  yellow: "#FFD700",
+  "dark grey": "#555555",
+  "dark gray": "#555555",
+  "light grey": "#BBBBBB",
+  "metallic grey": "#8D99AE",
+  "metallic gray": "#8D99AE",
+  "silver grey": "#9EAAB4",
   silver: "#C0C0C0",
+  // Pinks / Purples
+  pink: "#F4A0A0",
+  "rose gold": "#B76E79",
+  rose: "#FF007F",
+  purple: "#8B5CF6",
+  violet: "#7F00FF",
+  // Yellows / Oranges / Golds
+  yellow: "#FFD700",
+  gold: "#FFD700",
+  orange: "#E87722",
+  // Browns
+  brown: "#8B4513",
 };
 
 export function colorNameToHex(name: string): string {
-  return COLOR_HEX[name.toLowerCase()] ?? "#CCCCCC";
+  const lower = name.toLowerCase().trim();
+  // 1. Exact match
+  if (COLOR_HEX[lower]) return COLOR_HEX[lower];
+  // 2. Word-split match — handles "Matte Black", "Pearl White", "Sky Blue" etc.
+  const words = lower.split(/[\s\-_]+/);
+  for (const word of words) {
+    if (COLOR_HEX[word]) return COLOR_HEX[word];
+  }
+  return "#CCCCCC";
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const CART_URL = "https://fleetowebapi.codingcloud.in/wp-json/custom/v1/add-to-cart/";
+const CART_URL = `${process.env.WP_CUSTOM_URL}/add-to-cart/`;
 
 export async function POST(req: Request) {
   try {

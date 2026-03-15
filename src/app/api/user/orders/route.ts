@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BASE = "https://fleetowebapi.codingcloud.in/wp-json/custom-api/v1";
+const BASE = process.env.WP_CUSTOM_API_URL!;
 
 export async function GET(req: NextRequest) {
   const user_id = req.nextUrl.searchParams.get("user_id");

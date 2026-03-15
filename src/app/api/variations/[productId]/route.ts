@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
-const WC_BASE   = "https://fleetowebapi.codingcloud.in/wp-json/wc/v3";
-const WC_KEY    = "ck_2a65d51ecd3d108e3e810dac3e03ba492cafe3bd";
-const WC_SECRET = "cs_bebf42f0e9337f689dc4e88c2989c531c8aad6d9";
+const WC_BASE   = process.env.WP_WC_URL!;
+const WC_KEY    = process.env.WC_KEY!;
+const WC_SECRET = process.env.WC_SECRET!;
 
 export async function GET(
   _req: Request,
