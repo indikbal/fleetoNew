@@ -245,7 +245,7 @@ export default function HeroSection({ slides, socialLinks }: Props) {
                 className="mt-6 md:mt-8"
               >
                 <motion.a
-                  href={slide.button_url || "/explore"}
+                  href="/explore"
                   className="inline-flex items-center gap-2 px-6 md:px-8 py-3 md:py-3.5 text-white font-semibold rounded-full text-sm md:text-base"
                   animate={{ backgroundColor: style.accentColor }}
                   transition={{ duration: 0.8, ease: "easeInOut" }}

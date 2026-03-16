@@ -266,7 +266,7 @@ export default function ProductsGrid({ shopData, products }: Props) {
               {shopData.cant_decide_section_title}
             </p>
             <Link
-              href={shopData.cant_decide_section_button_url || "/contact"}
+              href="/contact"
               className="inline-flex items-center gap-2 px-7 py-3.5 text-white text-sm font-semibold rounded-full btn-red-inner-shadow transition-colors"
               style={{ backgroundColor: colors.primary, fontFamily: fonts.body }}
               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = colors.primaryDark)}
