@@ -69,15 +69,15 @@ function ProductCard({ product, index, onSelect }: { product: WCProduct; index: 
           }}
         />
 
-        {/* Scooter image */}
-        <div className="relative w-full h-56">
+        {/* Scooter image — links to product detail page */}
+        <Link href={`/products/${product.id}`} className="relative w-full h-56 block">
           <Image
             src={imageUrl}
             alt={product.name}
             fill
             className="object-contain object-center drop-shadow-md"
           />
-        </div>
+        </Link>
 
         {/* Colour bar */}
         {colorOptions.length > 0 && (
@@ -114,12 +114,14 @@ function ProductCard({ product, index, onSelect }: { product: WCProduct; index: 
 
         {/* Name + Price */}
         <div className="flex items-start justify-between gap-2">
-          <h3
-            className="leading-tight font-bold"
-            style={{ fontSize: "18px", color: colors.black, fontFamily: fonts.body }}
-          >
-            {product.name}
-          </h3>
+          <Link href={`/products/${product.id}`}>
+            <h3
+              className="leading-tight font-bold hover:underline"
+              style={{ fontSize: "18px", color: colors.black, fontFamily: fonts.body }}
+            >
+              {product.name}
+            </h3>
+          </Link>
           <div className="text-right flex-shrink-0">
             <p className="text-xs text-gray-400 leading-none mb-0.5" style={{ fontFamily: fonts.body }}>From</p>
             <p className="font-bold leading-none" style={{ color: colors.primary, fontSize: "18px", fontFamily: fonts.body }}>

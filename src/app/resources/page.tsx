@@ -1,4 +1,4 @@
-import InnerPageBanner from "@/components/ui/InnerPageBanner";
+import PageHeroBanner from "@/components/ui/PageHeroBanner";
 import { BookOpen, Download, Play, FileText } from "lucide-react";
 import { colors, fonts, styles } from "@/config/theme";
 import Navbar from "@/components/layout/Navbar";
@@ -53,12 +53,7 @@ export default function ResourcesPage() {
   return (
     <>
       <Navbar />
-      <InnerPageBanner
-        title="Resources"
-        subtitle="Manuals, brochures, guides and everything you need"
-        breadcrumbs={[{ label: "Home", href: "/" }, { label: "Resources" }]}
-        icon={<BookOpen size={22} style={{ color: colors.primary }} />}
-      />
+      <PageHeroBanner svgText="RESOURCES" />
 
       <main className="pb-20 pt-10 px-4" style={{ backgroundColor: "#F7F7F7" }}>
         <div className="max-w-4xl mx-auto">

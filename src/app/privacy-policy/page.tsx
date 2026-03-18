@@ -1,6 +1,5 @@
-import InnerPageBanner from "@/components/ui/InnerPageBanner";
-import { Shield } from "lucide-react";
-import { colors, fonts } from "@/config/theme";
+import PageHeroBanner from "@/components/ui/PageHeroBanner";
+import { fonts } from "@/config/theme";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 
@@ -27,12 +26,7 @@ export default async function PrivacyPolicyPage() {
   return (
     <>
       <Navbar />
-      <InnerPageBanner
-        title="Privacy Policy"
-        subtitle="How we collect, use, and protect your information"
-        breadcrumbs={[{ label: "Home", href: "/" }, { label: "Privacy Policy" }]}
-        icon={<Shield size={22} style={{ color: colors.primary }} />}
-      />
+      <PageHeroBanner svgText="PRIVACY" />
 
       <main className="pb-20 pt-10 px-4" style={{ backgroundColor: "#F7F7F7" }}>
         <div className="max-w-3xl mx-auto">

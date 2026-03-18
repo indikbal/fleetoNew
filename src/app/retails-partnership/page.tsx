@@ -1,9 +1,10 @@
-import InnerPageBanner from "@/components/ui/InnerPageBanner";
-import { Handshake, ArrowUpRight, CheckCircle } from "lucide-react";
+import PageHeroBanner from "@/components/ui/PageHeroBanner";
+import { ArrowUpRight, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { colors, fonts, styles } from "@/config/theme";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { fetchRetailsPartnershipPage, stripHtml } from "@/lib/api";
 
 const benefits = [
   "Exclusive dealership territory rights",
@@ -23,16 +24,12 @@ const steps = [
   { step: "04", title: "Agreement & Onboarding", desc: "Sign the dealership agreement and complete the onboarding and training program." },
 ];
 
-export default function RetailsPartnershipPage() {
+export default async function RetailsPartnershipPage() {
+  const data = await fetchRetailsPartnershipPage();
   return (
     <>
       <Navbar />
-      <InnerPageBanner
-        title="Retail Partnership"
-        subtitle="Join the Fleeto dealer network and grow with India's EV revolution"
-        breadcrumbs={[{ label: "Home", href: "/" }, { label: "Retail Partnership" }]}
-        icon={<Handshake size={22} style={{ color: colors.primary }} />}
-      />
+      <PageHeroBanner svgText="PARTNER" />
 
       <main className="pb-20 pt-10 px-4" style={{ backgroundColor: "#F7F7F7" }}>
         <div className="max-w-4xl mx-auto space-y-8">
@@ -42,8 +39,8 @@ export default function RetailsPartnershipPage() {
             <h2 className="text-2xl mb-4" style={{ ...styles.headingFont, color: "#010101" }}>
               Become a Fleeto Dealer
             </h2>
-            <p className="text-sm text-gray-500 leading-relaxed mb-0" style={{ fontFamily: fonts.body }}>
-              Fleeto is expanding its dealer network across India. We are looking for passionate entrepreneurs and existing automotive retailers who share our vision of making clean, affordable electric mobility accessible to everyone. Partner with us and be part of the EV revolution.
+            <p className="text-sm text-gray-500 leading-relaxed" style={{ fontFamily: fonts.body }}>
+              {data?.content ? stripHtml(data.content) : "Fleeto is expanding its dealer network across India. Partner with us and be part of the EV revolution."}
             </p>
           </div>
 

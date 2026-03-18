@@ -15,7 +15,10 @@ import "swiper/css";
 
 // ─── Card component ───────────────────────────────────────────────────────────
 function ProductCard({ product, onSelect }: { product: WCProduct; onSelect: () => void }) {
-  const colorOptions = product.attributes.find((a) => a.name === "Color")?.options ?? [];
+  const colorOptions =
+    product.variation_colors.length > 0
+      ? product.variation_colors
+      : (product.attributes.find((a) => a.name === "Color")?.options ?? []);
   const imageUrl     = product.images[0]?.src ?? "/images/hero-scooty.png";
   const hasSale      = !!product.sale_price && product.sale_price !== product.price;
 

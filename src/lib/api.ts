@@ -85,6 +85,42 @@ export interface WCProduct {
   variation_colors: string[];
 }
 
+export interface ProductVariation {
+  variation_id: number;
+  price: string;
+  regular_price: string;
+  sale_price: string;
+  stock: string;
+  attributes: Record<string, string>; // e.g. { Color: "black" }
+  image: string;
+}
+
+export interface WCProductDetail {
+  id: number;
+  title: string;
+  type: string;
+  price: string;
+  image: string;
+  desc: string;          // HTML list of specs
+  acf: ExplorePageData; // same structure as the explore page
+  variations: ProductVariation[];
+}
+
+export async function fetchProductDetails(productId: number): Promise<WCProductDetail | null> {
+  try {
+    const res = await fetch("https://fleetowebapi.codingcloud.in/wp-json/custom/v1/product", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ product_id: productId }),
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
 export interface WCVariation {
   id: number;
   price: string;
@@ -707,3 +743,87 @@ export function colorNameToHex(name: string): string {
   }
   return "#CCCCCC";
 }
+
+// ─── Blog / Posts ─────────────────────────────────────────────────────────────
+export interface BlogPost {
+  id: number;
+  title: string;
+  description: string;
+  image: string;
+  author: string;
+  date: string;
+}
+
+export interface BlogPostDetail {
+  id: number;
+  title: string;
+  description: string; // HTML
+  image: string;
+  author: string;
+  publish_date: string;
+}
+
+export async function fetchAllPosts(): Promise<BlogPost[]> {
+  try {
+    const res = await fetch(`${CUSTOM_BASE}/posts`, { next: { revalidate: 3600 } });
+    if (!res.ok) return [];
+    return res.json();
+  } catch { return []; }
+}
+
+export async function fetchPost(postId: number): Promise<BlogPostDetail | null> {
+  try {
+    const res = await fetch(`${CUSTOM_BASE}/post`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ post_id: postId }),
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json?.data ?? null;
+  } catch { return null; }
+}
+
+// ─── FAQ ──────────────────────────────────────────────────────────────────────
+export interface FaqItem {
+  title: string;
+  details: string; // HTML
+}
+
+export async function fetchFaqPage(): Promise<FaqItem[]> {
+  try {
+    const res = await fetch(`${API_BASE}?action=Faq_Page`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ page_slug: "faqs" }),
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json?.faq_section ?? [];
+  } catch { return []; }
+}
+
+// ─── Simple CMS pages (title + HTML content) ─────────────────────────────────
+export interface SimplePageData {
+  id: number;
+  title: string;
+  content: string; // HTML
+  image: string | false;
+}
+
+async function fetchSimplePage(endpoint: string): Promise<SimplePageData | null> {
+  try {
+    const res = await fetch(`${CUSTOM_BASE}/${endpoint}`, { next: { revalidate: 3600 } });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json?.data ?? null;
+  } catch { return null; }
+}
+
+export const fetchRetailsPartnershipPage = () => fetchSimplePage("retails-partnership");
+export const fetchSupportPage            = () => fetchSimplePage("support");
+export const fetchFinanceOptionPage      = () => fetchSimplePage("finance-option");
+export const fetchFindADealerPage        = () => fetchSimplePage("find-a-dealer");
+export const fetchCompareModelPage       = () => fetchSimplePage("compare-model");

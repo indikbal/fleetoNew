@@ -1,5 +1,5 @@
-import InnerPageBanner from "@/components/ui/InnerPageBanner";
-import { Map, ArrowUpRight } from "lucide-react";
+import PageHeroBanner from "@/components/ui/PageHeroBanner";
+import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { colors, fonts, styles } from "@/config/theme";
 import Navbar from "@/components/layout/Navbar";
@@ -39,7 +39,12 @@ const sitemapSections = [
     links: [
       { label: "FAQs", href: "/faqs" },
       { label: "Resources", href: "/resources" },
+      { label: "Support", href: "/support" },
       { label: "Retail Partnership", href: "/retails-partnership" },
+      { label: "Find a Dealer", href: "/find-a-dealer" },
+      { label: "Finance Options", href: "/finance-option" },
+      { label: "Compare Models", href: "/compare-model" },
+      { label: "Blog", href: "/blog" },
     ],
   },
   {
@@ -56,12 +61,7 @@ export default function SitemapPage() {
   return (
     <>
       <Navbar />
-      <InnerPageBanner
-        title="Sitemap"
-        subtitle="A complete overview of all pages on the Fleeto website"
-        breadcrumbs={[{ label: "Home", href: "/" }, { label: "Sitemap" }]}
-        icon={<Map size={22} style={{ color: colors.primary }} />}
-      />
+      <PageHeroBanner svgText="SITEMAP" />
 
       <main className="pb-20 pt-10 px-4" style={{ backgroundColor: "#F7F7F7" }}>
         <div className="max-w-4xl mx-auto">

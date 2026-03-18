@@ -1,6 +1,5 @@
-import InnerPageBanner from "@/components/ui/InnerPageBanner";
-import { RotateCcw } from "lucide-react";
-import { colors, fonts } from "@/config/theme";
+import PageHeroBanner from "@/components/ui/PageHeroBanner";
+import { fonts } from "@/config/theme";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 
@@ -27,12 +26,7 @@ export default async function RefundPolicyPage() {
   return (
     <>
       <Navbar />
-      <InnerPageBanner
-        title="Refund Policy"
-        subtitle="Our terms for returns, exchanges, and refunds"
-        breadcrumbs={[{ label: "Home", href: "/" }, { label: "Refund Policy" }]}
-        icon={<RotateCcw size={22} style={{ color: colors.primary }} />}
-      />
+      <PageHeroBanner svgText="REFUND" />
 
       <main className="pb-20 pt-10 px-4" style={{ backgroundColor: "#F7F7F7" }}>
         <div className="max-w-3xl mx-auto">

@@ -1,6 +1,5 @@
-import InnerPageBanner from "@/components/ui/InnerPageBanner";
-import { FileText } from "lucide-react";
-import { colors, fonts } from "@/config/theme";
+import PageHeroBanner from "@/components/ui/PageHeroBanner";
+import { fonts } from "@/config/theme";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 
@@ -27,12 +26,7 @@ export default async function TermsConditionsPage() {
   return (
     <>
       <Navbar />
-      <InnerPageBanner
-        title="Terms & Conditions"
-        subtitle="Please read these terms carefully before using our services"
-        breadcrumbs={[{ label: "Home", href: "/" }, { label: "Terms & Conditions" }]}
-        icon={<FileText size={22} style={{ color: colors.primary }} />}
-      />
+      <PageHeroBanner svgText="TERMS" />
 
       <main className="pb-20 pt-10 px-4" style={{ backgroundColor: "#F7F7F7" }}>
         <div className="max-w-3xl mx-auto">
