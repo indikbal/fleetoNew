@@ -552,6 +552,29 @@ export interface Order {
   line_items: OrderItem[];
 }
 
+export async function downloadInvoice(user_id: number, order_id: number): Promise<void> {
+  const res = await fetch("/api/user/invoice", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id }),
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data?.error ?? "Failed to download invoice");
+  }
+
+  const data = await res.json();
+  // Response shape: { status, user_id, orders: [{ order_id, date, total, invoice_link }] }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const orders: any[] = Array.isArray(data?.orders) ? data.orders : [];
+  const match = orders.find((o) => o.order_id === order_id || String(o.order_id) === String(order_id));
+  const invoiceLink: string = match?.invoice_link ?? "";
+
+  if (!invoiceLink) throw new Error("Invoice not found for this order");
+  window.open(invoiceLink, "_blank");
+}
+
 export async function fetchMyOrders(user_id: number): Promise<Order[]> {
   const res = await fetch(`/api/user/orders?user_id=${user_id}`);
   const data = await res.json();

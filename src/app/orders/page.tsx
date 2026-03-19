@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ShoppingBag, PackageOpen, ChevronDown, ChevronUp, ArrowUpRight } from "lucide-react";
+import { ShoppingBag, PackageOpen, ChevronDown, ChevronUp, ArrowUpRight, Download } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { fetchMyOrders, formatPrice, type Order } from "@/lib/api";
+import { fetchMyOrders, downloadInvoice, formatPrice, type Order } from "@/lib/api";
 import { colors, fonts, styles } from "@/config/theme";
 import InnerPageBanner from "@/components/ui/InnerPageBanner";
 
@@ -38,6 +38,7 @@ export default function OrdersPage() {
   const [isFetching, setIsFetching] = useState(true);
   const [error, setError] = useState("");
   const [expanded, setExpanded] = useState<number | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isLoggedIn) router.replace("/login");
@@ -196,6 +197,34 @@ export default function OrdersPage() {
                         <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
                           <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider" style={{ fontFamily: fonts.body }}>Order Total</span>
                           <span className="text-base font-bold" style={{ color: "#010101", fontFamily: fonts.body }}>{formatPrice(order.total)}</span>
+                        </div>
+
+                        {/* Download Invoice */}
+                        <div className="mt-4">
+                          <button
+                            onClick={async () => {
+                              if (!user) return;
+                              setIsDownloading(true);
+                              try {
+                                await downloadInvoice(user.user_id, order.id);
+                              } catch (e) {
+                                console.error(e);
+                              } finally {
+                                setIsDownloading(false);
+                              }
+                            }}
+                            disabled={isDownloading}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold border transition-colors disabled:opacity-60"
+                            style={{
+                              borderColor: colors.primary,
+                              color: colors.primary,
+                              fontFamily: fonts.body,
+                              backgroundColor: `${colors.primary}08`,
+                            }}
+                          >
+                            <Download size={13} />
+                            {isDownloading ? "Downloading…" : "Download Invoice"}
+                          </button>
                         </div>
                       </div>
                     )}
