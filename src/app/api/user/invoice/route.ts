@@ -1,18 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const WP_BASE = process.env.WP_BASE!;
-
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { user_id } = body;
+  const { order_id } = body;
 
-  if (!user_id) return NextResponse.json({ error: "user_id required" }, { status: 400 });
+  if (!order_id) return NextResponse.json({ error: "order_id required" }, { status: 400 });
 
   try {
-    const res = await fetch(`${WP_BASE}/wp-json/invoice/v1/user`, {
+    const res = await fetch("https://fleetowebapi.codingcloud.in/wp-json/invoice/v1/order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id }),
+      body: JSON.stringify({ order_id }),
       cache: "no-store",
     });
 
@@ -24,7 +22,7 @@ export async function POST(req: NextRequest) {
         status: res.status,
         headers: {
           "Content-Type": contentType,
-          "Content-Disposition": `attachment; filename="invoice-${user_id}.pdf"`,
+          "Content-Disposition": `attachment; filename="invoice-${order_id}.pdf"`,
         },
       });
     }

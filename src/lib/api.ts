@@ -540,10 +540,26 @@ export interface OrderItem {
   product_id: number;
   name: string;
   quantity: number;
+  subtotal: string;
   total: string;
 }
 
-export interface Order {
+export interface OrderAddress {
+  first_name: string;
+  last_name: string;
+  company: string;
+  email?: string;
+  phone?: string;
+  address_1: string;
+  address_2: string;
+  city: string;
+  state: string;
+  postcode: string;
+  country: string;
+}
+
+// Lightweight shape returned by the orders-list API
+export interface OrderSummary {
   id: number;
   status: string;
   date_created: string;
@@ -552,11 +568,61 @@ export interface Order {
   line_items: OrderItem[];
 }
 
-export async function downloadInvoice(user_id: number, order_id: number): Promise<void> {
+// Full shape returned by the order-details API (/invoice/v1/order)
+export interface OrderDetails extends OrderSummary {
+  discount: string;
+  shipping_cost: string;
+  tax: string;
+  payment_method: string;
+  billing: OrderAddress;
+  shipping: OrderAddress;
+  invoice_link: string;
+}
+
+export async function fetchOrderDetails(order_id: number): Promise<OrderDetails | null> {
   const res = await fetch("/api/user/invoice", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user_id }),
+    body: JSON.stringify({ order_id }),
+  });
+
+  if (!res.ok) return null;
+
+  const json = await res.json();
+  if (json?.status !== "success" || !json?.order) return null;
+
+  const o = json.order;
+  return {
+    id: o.order_id,
+    status: o.status,
+    date_created: o.date ?? "",
+    total: o.total,
+    currency: o.currency ?? "INR",
+    discount: o.discount ?? "0",
+    shipping_cost: o.shipping_cost ?? "0",
+    tax: o.tax ?? "0",
+    payment_method: o.payment_method ?? "",
+    billing: o.billing ?? {},
+    shipping: o.shipping ?? {},
+    line_items: (o.items ?? []).map(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (p: any) => ({
+        product_id: p.product_id,
+        name: p.name,
+        quantity: p.quantity,
+        subtotal: p.subtotal ?? p.total ?? "0",
+        total: p.total ?? "0",
+      })
+    ),
+    invoice_link: o.invoice_link ?? "",
+  };
+}
+
+export async function downloadInvoice(order_id: number): Promise<void> {
+  const res = await fetch("/api/user/invoice", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ order_id }),
   });
 
   if (!res.ok) {
@@ -564,18 +630,14 @@ export async function downloadInvoice(user_id: number, order_id: number): Promis
     throw new Error(data?.error ?? "Failed to download invoice");
   }
 
-  const data = await res.json();
-  // Response shape: { status, user_id, orders: [{ order_id, date, total, invoice_link }] }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const orders: any[] = Array.isArray(data?.orders) ? data.orders : [];
-  const match = orders.find((o) => o.order_id === order_id || String(o.order_id) === String(order_id));
-  const invoiceLink: string = match?.invoice_link ?? "";
+  const json = await res.json();
+  const invoiceLink: string = json?.order?.invoice_link ?? "";
 
   if (!invoiceLink) throw new Error("Invoice not found for this order");
   window.open(invoiceLink, "_blank");
 }
 
-export async function fetchMyOrders(user_id: number): Promise<Order[]> {
+export async function fetchMyOrders(user_id: number): Promise<OrderSummary[]> {
   const res = await fetch(`/api/user/orders?user_id=${user_id}`);
   const data = await res.json();
   // WP returns 404 + { error: true } when user has no orders — treat as empty
@@ -594,7 +656,8 @@ export async function fetchMyOrders(user_id: number): Promise<Order[]> {
         product_id: p.product_id,
         name: p.product_name ?? p.name,
         quantity: p.quantity,
-        total: p.subtotal ?? p.total ?? "0",
+        subtotal: p.subtotal ?? p.total ?? "0",
+        total: p.total ?? "0",
       })
     ),
   }));
