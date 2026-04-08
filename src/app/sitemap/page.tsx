@@ -43,6 +43,7 @@ const sitemapSections = [
       { label: "Retail Partnership", href: "/retails-partnership" },
       { label: "Find a Dealer", href: "/find-a-dealer" },
       { label: "Finance Options", href: "/finance-option" },
+      { label: "Warranty & Service", href: "/warranty-and-service" },
       { label: "Compare Models", href: "/compare-model" },
       { label: "Blog", href: "/blog" },
     ],

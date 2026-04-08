@@ -370,6 +370,7 @@ function wpUrlToHref(url: string): string {
   const map: Record<string, string> = {
     "/shop": "/products",
     "/book-a-test-ride": "/book-test-ride",
+    "/warranty-and-service": "/warranty-and-service",
   };
   // WooCommerce single product pages → products listing
   if (path.startsWith("/product/")) return "/products";
@@ -730,6 +731,107 @@ export async function fetchBookTestRidePage(): Promise<BookTestRidePageData> {
     return res.json();
   } catch {
     return {};
+  }
+}
+
+// ─── Performance / Design / Technology Sections ──────────────────────────
+export interface PerformanceSectionItem {
+  image: string;
+  title: string;
+  details: string;
+  main_section_image: string;
+  main_section_title: string;
+  main_section_details: string;
+}
+
+export interface DesignSectionItem {
+  image: string;
+  title: string;
+  details: string;
+}
+
+export interface TechnologySectionItem {
+  image: string;
+  title: string;
+  details: string;
+}
+
+export interface ProductSpecsData {
+  product_id: number;
+  product_name: string;
+  performance_section_title: string;
+  performance_section_details: string;
+  performance_section: PerformanceSectionItem[];
+  design_section_title: string;
+  design_section_description: string;
+  design_section: DesignSectionItem[];
+  technology_section_title: string;
+  technology_section_description: string;
+  technology_section: TechnologySectionItem[];
+}
+
+export async function fetchProductSpecs(productId: number): Promise<ProductSpecsData | null> {
+  try {
+    const res = await fetch(
+      "https://fleetowebapi.codingcloud.in/wp-json/custom-api/v1/performance_section",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ product_id: productId }),
+        next: { revalidate: 3600 },
+      }
+    );
+    if (!res.ok) return null;
+    const json = await res.json();
+    if (!json?.data || !Array.isArray(json.data)) return null;
+    return json.data.find((p: ProductSpecsData) => p.product_id === productId) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// ─── Warranty & Service ──────────────────────────────────────────────────
+export interface WarrantyProduct {
+  product_id: number;
+  product_name: string;
+  warranty_rules: string; // HTML
+  support_rules: string;  // HTML
+}
+
+export async function fetchWarrantyAndService(): Promise<WarrantyProduct[]> {
+  try {
+    const res = await fetch(
+      "https://fleetowebapi.codingcloud.in/wp-json/custom-api/v1/warentry_and_serivce",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        next: { revalidate: 3600 },
+      }
+    );
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json?.data ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchWarrantyServiceMenu(): Promise<HeaderMenuItem[]> {
+  try {
+    const res = await fetch(`${CUSTOM_BASE}/warranty-and-service-menu`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return [];
+    const data: { id: number; title: string; url: string; parent: string }[] =
+      await res.json();
+    return data.map((item) => ({
+      id: item.id,
+      title: item.title,
+      href: wpUrlToHref(item.url),
+      parent: item.parent,
+    }));
+  } catch {
+    return [];
   }
 }
 
