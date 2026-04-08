@@ -11,7 +11,8 @@ import FinanceYourWay from "@/components/sections/FinanceYourWay";
 import Accessories from "@/components/sections/Accessories";
 import ScootyReveal from "@/components/ui/ScootyReveal";
 import EverythingYouNeed from "@/components/sections/EverythingYouNeed";
-import { fetchProductDetails } from "@/lib/api";
+import { fetchProductDetails, fetchProductSpecs } from "@/lib/api";
+import ProductSpecifications from "@/components/sections/ProductSpecifications";
 
 interface Props {
   params: Promise<{ productId: string }>;
@@ -32,7 +33,10 @@ export default async function ProductDetailPage({ params }: Props) {
   const id = parseInt(productId, 10);
   if (isNaN(id)) notFound();
 
-  const product = await fetchProductDetails(id);
+  const [product, specs] = await Promise.all([
+    fetchProductDetails(id),
+    fetchProductSpecs(id),
+  ]);
   if (!product) notFound();
 
   const acf = product.acf;
@@ -67,6 +71,9 @@ export default async function ProductDetailPage({ params }: Props) {
           title={acf.the_familly_album_section_title}
           items={acf.the_familly_album_section}
         />
+
+        {/* 4. Performance / Design / Technology specs */}
+        {specs && <ProductSpecifications data={specs} />}
 
         <div className="relative">
           <SavingsCalculator
