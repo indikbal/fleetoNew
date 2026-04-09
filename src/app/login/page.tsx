@@ -62,8 +62,7 @@ function LoginForm() {
             className="text-5xl xl:text-6xl leading-tight mb-6"
             style={{ ...styles.headingFont, color: "#fff" }}
           >
-            Welcome<br />
-            back to{" "}
+            Welcome to<br />
             <span style={{ color: colors.primary }}>FLEETO</span>
           </h1>
           <p className="text-gray-400 text-base leading-relaxed max-w-sm" style={{ fontFamily: fonts.body }}>
