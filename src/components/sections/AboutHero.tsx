@@ -172,7 +172,7 @@ export default function AboutHero({
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: 0.6 }}
               >
-                {yearsExperience}
+                8+ Years Experience
               </motion.div>
 
               <div

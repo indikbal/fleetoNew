@@ -65,10 +65,8 @@ export default function EffortlessRiding({ title1, title2, title3, cards }: Prop
           className="text-center text-4xl md:text-5xl leading-tight mb-12"
           style={styles.headingFont}
         >
-          {title1}{" "}
-          <span style={{ color: colors.primary }}>{title2}</span>.
-          <br />
-          <span style={{ color: colors.primary }}>{title3}</span>
+          Effortless Riding.{" "}
+          <span style={{ color: colors.primary }}>Worry-free Ownership.</span>
         </motion.h2>
 
         {/* Bento grid */}

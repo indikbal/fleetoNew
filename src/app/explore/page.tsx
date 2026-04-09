@@ -38,7 +38,7 @@ export default async function ExplorePage() {
           title={data.always_in_sync_section_title}
           description={data.always_in_sync_section_description}
           videoUrl={data.always_in_sync_section_video_file}
-        />
+        />fre
         <FamilyAlbum
           title={data.the_familly_album_section_title}
           items={data.the_familly_album_section}
