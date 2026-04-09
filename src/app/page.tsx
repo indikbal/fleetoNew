@@ -7,6 +7,7 @@ import EffortlessRiding from "@/components/sections/EffortlessRiding";
 import RideSmarter from "@/components/sections/RideSmarter";
 import WhyRidersChoose from "@/components/sections/WhyRidersChoose";
 import EverythingYouNeed from "@/components/sections/EverythingYouNeed";
+import AppDownload from "@/components/sections/AppDownload";
 import { fetchHomePage, fetchProducts } from "@/lib/api";
 
 export default async function Home() {
@@ -65,6 +66,7 @@ export default async function Home() {
           title2={homeData.everything_you_need_to_know_about_fleeto_section_title_2}
           faqs={homeData.everything_you_need_to_know_about_fleeto_section}
         />
+        <AppDownload />
       </main>
       <Footer />
     </>
