@@ -57,7 +57,7 @@ function ProductCard({ product, index, onSelect }: { product: WCProduct; index: 
             Sale
           </span>
         )}
-
+ 
         {/* Glow circle */}
         <div
           className="absolute top-1/2 right-10 -translate-y-1/2 rounded-full pointer-events-none transition-all duration-500"

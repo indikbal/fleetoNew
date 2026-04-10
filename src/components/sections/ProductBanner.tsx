@@ -92,7 +92,7 @@ export default function ProductBanner({ stats, image, pricingUrl, testRideUrl }:
               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = colors.primaryDark)}
               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = colors.primary)}
             >
-              Book Your Test Ride
+              Book Test Ride
               <ArrowUpRight size={15} />
             </a>
           </motion.div>

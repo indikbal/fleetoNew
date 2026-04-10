@@ -87,7 +87,7 @@ export default function SavingsCalculator({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-start">
 
           {/* ── Left ── */}
-          <div className="pb-32 sm:pb-40 lg:pb-0">
+          <div className="pb-10 sm:pb-20 lg:pb-0">
 
             {/* Heading — API order: title1 title2 title4 title3 */}
             <h2

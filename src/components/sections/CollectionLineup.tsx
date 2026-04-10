@@ -9,6 +9,7 @@ import { colors, styles } from "@/config/theme";
 import { formatPrice, colorNameToHex } from "@/lib/api";
 import type { WCProduct } from "@/lib/api";
 import SelectOptionModal from "@/components/ui/SelectOptionModal";
+import Link from "next/link";
 
 // @ts-ignore — Swiper CSS
 import "swiper/css";
@@ -59,12 +60,14 @@ function ProductCard({ product, onSelect }: { product: WCProduct; onSelect: () =
 
         {/* Scooter image */}
         <div className="relative w-full h-64">
+          <Link href={`/products/${product.id}`}>
           <Image
             src={imageUrl}
             alt={product.name}
             fill
             className="object-contain object-center drop-shadow-md"
           />
+          </Link>
         </div>
 
         {/* Available colour overlay */}

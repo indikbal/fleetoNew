@@ -63,7 +63,7 @@ export default function RideSmarter({ title1, title2, title3, description, image
           {/* Description */}
           <motion.p
             {...fadeUp(0.15)}
-            className="text-white/80 text-sm leading-relaxed mb-8 max-w-[360px]"
+            className="text-white/80 text-sm leading-relaxed mb-8"
           >
             {stripHtml(description)}
           </motion.p>
