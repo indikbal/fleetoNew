@@ -214,7 +214,7 @@ export default function HeroSection({ slides, socialLinks }: Props) {
                     ...styles.headingFont,
                   }}
                 >
-                  <span style={{ color: "#010101" }}>{slide.sub_title_1}</span>
+                  <span style={{ color: "#1A3A8F" }}>{slide.sub_title_1}</span>
                   <span style={{ color: style.accentColor }}>{slide.sub_title_2}</span>
                 </motion.h1>
                 <motion.h1
@@ -225,7 +225,7 @@ export default function HeroSection({ slides, socialLinks }: Props) {
                   style={{
                     fontSize: "clamp(2rem, 5vw, 5.5rem)",
                     lineHeight: 1.2,
-                    color: "#010101",
+                    color: "#1A3A8F",
                     ...styles.headingFont,
                   }}
                 >

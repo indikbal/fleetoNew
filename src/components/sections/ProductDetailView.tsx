@@ -7,11 +7,12 @@ import { motion } from "framer-motion";
 import { ArrowUpRight, ShoppingCart, CheckCircle } from "lucide-react";
 import { colors, fonts, styles } from "@/config/theme";
 import { colorNameToHex, formatPrice } from "@/lib/api";
-import type { WCProductDetail, ProductVariation } from "@/lib/api";
+import type { WCProductDetail, ProductVariation, ProductDetailAttribute } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
 
 interface Props {
   product: WCProductDetail;
+  batteryAttributes?: ProductDetailAttribute[];
 }
 
 const fadeUp = (delay = 0) => ({
@@ -21,11 +22,18 @@ const fadeUp = (delay = 0) => ({
   transition:  { duration: 0.55, ease: "easeOut" as const, delay },
 });
 
-export default function ProductDetailView({ product }: Props) {
+export default function ProductDetailView({ product, batteryAttributes }: Props) {
   const [selected, setSelected]       = useState<ProductVariation | null>(null);
   const [cartStatus, setCartStatus]   = useState<"idle" | "added">("idle");
   const [activeImage, setActiveImage] = useState(product.image || "/images/hero-scooty.png");
+  const [selectedBattery, setSelectedBattery] = useState<string | null>(null);
   const { addItem } = useCart();
+
+  // Extract battery selection attributes
+  const batteryStandard = batteryAttributes?.find((a) => a.name === "Battery Selection");
+  const batterySmart = batteryAttributes?.find((a) => a.name === "Battery Selection (Smart)");
+  const batteryOptions = batteryStandard?.value.split(", ").filter(Boolean) ?? [];
+  const batterySmartOptions = batterySmart?.value.split(", ").filter(Boolean) ?? [];
 
   const handleSelect = (v: ProductVariation) => {
     setSelected(v);
@@ -243,6 +251,82 @@ export default function ProductDetailView({ product }: Props) {
                 </motion.div>
               )}
 
+              {/* Battery Selection */}
+              {(batteryOptions.length > 0 || batterySmartOptions.length > 0) && (
+                <>
+                  <div className="h-px bg-gray-100" />
+                  <motion.div {...fadeUp(0.30)}>
+                    <p
+                      className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wider"
+                      style={{ fontFamily: fonts.body }}
+                    >
+                      Battery Selection
+                      {selectedBattery && (
+                        <span className="ml-2 normal-case text-gray-400 font-normal">
+                          — {selectedBattery}
+                        </span>
+                      )}
+                    </p>
+
+                    {batteryOptions.length > 0 && (
+                      <div className="mb-3">
+                        <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-2" style={{ fontFamily: fonts.body }}>
+                          Standard
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {batteryOptions.map((opt) => {
+                            const isActive = selectedBattery === opt;
+                            return (
+                              <button
+                                key={opt}
+                                onClick={() => setSelectedBattery(opt)}
+                                className="px-3 py-2 rounded-full border-2 transition-all text-xs font-medium"
+                                style={{
+                                  borderColor: isActive ? colors.primary : "#E5E7EB",
+                                  backgroundColor: isActive ? `${colors.primary}10` : "#fff",
+                                  fontFamily: fonts.body,
+                                  color: isActive ? colors.primary : "#374151",
+                                }}
+                              >
+                                {opt}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {batterySmartOptions.length > 0 && (
+                      <div>
+                        <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-2" style={{ fontFamily: fonts.body }}>
+                          Smart
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {batterySmartOptions.map((opt) => {
+                            const isActive = selectedBattery === opt;
+                            return (
+                              <button
+                                key={opt}
+                                onClick={() => setSelectedBattery(opt)}
+                                className="px-3 py-2 rounded-full border-2 transition-all text-xs font-medium"
+                                style={{
+                                  borderColor: isActive ? colors.primary : "#E5E7EB",
+                                  backgroundColor: isActive ? `${colors.primary}10` : "#fff",
+                                  fontFamily: fonts.body,
+                                  color: isActive ? colors.primary : "#374151",
+                                }}
+                              >
+                                {opt}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                </>
+              )}
+
               <div className="h-px bg-gray-100" />
 
               {/* Action buttons */}
@@ -269,7 +353,7 @@ export default function ProductDetailView({ product }: Props) {
                   </button>
                 )}
                 <Link
-                  href={product.acf?.book_your_test_ride_button_url || "/book-test-ride"}
+                  href="/book-test-ride"
                   className="flex-1 flex items-center justify-center gap-2 py-4 text-sm font-semibold rounded-xl border-2 transition-all"
                   style={{ borderColor: colors.primary, color: colors.primary, fontFamily: fonts.body }}
                   onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = `${colors.primary}10`; }}

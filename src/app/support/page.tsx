@@ -32,6 +32,9 @@ export default async function SupportPage() {
               { label: "FAQs", href: "/faqs", desc: "Common questions answered" },
               { label: "Resources", href: "/resources", desc: "Manuals & guides" },
               { label: "Contact Us", href: "/contact", desc: "Reach our support team" },
+              { label: "Register Your Fleeto", href: "/register-your-fleeto", desc: "Activate your warranty" },
+              { label: "Raise Service Issue", href: "/raise-service-issue", desc: "Report a problem" },
+              { label: "Find a Dealer", href: "/find-a-dealer", desc: "Locate nearby dealers" },
             ].map((item) => (
               <a key={item.href} href={item.href} className="bg-white rounded-2xl p-6 hover:shadow-md transition-shadow block">
                 <p className="text-sm font-semibold text-gray-900 mb-1" style={{ fontFamily: fonts.body }}>{item.label}</p>

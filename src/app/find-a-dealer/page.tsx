@@ -5,6 +5,7 @@ import { colors, fonts, styles } from "@/config/theme";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { fetchFindADealerPage } from "@/lib/api";
+import StoreLocator from "@/components/sections/StoreLocator";
 
 export const metadata = {
   title: "Find a Dealer — Fleeto",
@@ -26,12 +27,16 @@ export default async function FindADealerPage() {
                 dangerouslySetInnerHTML={{ __html: data.content }} />
             </div>
           )}
+
+          {/* Store Locator — cascading filter */}
+          <StoreLocator />
+
           <div className="bg-white rounded-2xl p-8 sm:p-10">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
               <div>
-                <h2 className="text-xl mb-2" style={{ ...styles.headingFont, color: "#010101" }}>Can't Find a Dealer Near You?</h2>
+                <h2 className="text-xl mb-2" style={{ ...styles.headingFont, color: "#010101" }}>Can&apos;t Find a Dealer Near You?</h2>
                 <p className="text-sm text-gray-500" style={{ fontFamily: fonts.body }}>
-                  Contact us and we'll help you find the nearest authorised point or arrange a home demo.
+                  Contact us and we&apos;ll help you find the nearest authorised point or arrange a home demo.
                 </p>
               </div>
               <Link href="/contact" className="flex-shrink-0 inline-flex items-center gap-2 px-6 py-3 text-white text-sm font-semibold rounded-full"
@@ -43,7 +48,7 @@ export default async function FindADealerPage() {
           <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: "#010101" }}>
             <h3 className="text-2xl text-white mb-2" style={styles.headingFont}>Interested in Becoming a Dealer?</h3>
             <p className="text-gray-400 text-sm mb-6" style={{ fontFamily: fonts.body }}>
-              Join the Fleeto dealer network and grow with India's EV revolution.
+              Join the Fleeto dealer network and grow with India&apos;s EV revolution.
             </p>
             <Link href="/retails-partnership" className="inline-flex items-center gap-2 px-8 py-3.5 text-white text-sm font-semibold rounded-full"
               style={{ backgroundColor: colors.primary, fontFamily: fonts.body, ...styles.redButtonShadow }}>

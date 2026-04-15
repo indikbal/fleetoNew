@@ -11,7 +11,7 @@ import FinanceYourWay from "@/components/sections/FinanceYourWay";
 import Accessories from "@/components/sections/Accessories";
 import ScootyReveal from "@/components/ui/ScootyReveal";
 import EverythingYouNeed from "@/components/sections/EverythingYouNeed";
-import { fetchProductDetails, fetchProductSpecs } from "@/lib/api";
+import { fetchProductDetails, fetchProductSpecs, fetchProductDetailsNew } from "@/lib/api";
 import ProductSpecifications from "@/components/sections/ProductSpecifications";
 
 interface Props {
@@ -33,13 +33,19 @@ export default async function ProductDetailPage({ params }: Props) {
   const id = parseInt(productId, 10);
   if (isNaN(id)) notFound();
 
-  const [product, specs] = await Promise.all([
+  const [product, specs, productDetailsNew] = await Promise.all([
     fetchProductDetails(id),
     fetchProductSpecs(id),
+    fetchProductDetailsNew(id),
   ]);
   if (!product) notFound();
 
   const acf = product.acf;
+
+  // Extract battery attributes from the new product-details endpoint
+  const batteryAttributes = productDetailsNew?.attributes?.filter(
+    (a) => a.name === "Battery Selection" || a.name === "Battery Selection (Smart)"
+  );
 
   return (
     <>
@@ -54,7 +60,7 @@ export default async function ProductDetailPage({ params }: Props) {
         />
 
         {/* 2. Product info card — title, image, price, colour picker, add to cart */}
-        <ProductDetailView product={product} />
+        <ProductDetailView product={product} batteryAttributes={batteryAttributes} />
 
         {/* 3. Explore sections from acf */}
         <RideEasy

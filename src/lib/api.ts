@@ -1015,3 +1015,146 @@ export const fetchSupportPage            = () => fetchSimplePage("support");
 export const fetchFinanceOptionPage      = () => fetchSimplePage("finance-option");
 export const fetchFindADealerPage        = () => fetchSimplePage("find-a-dealer");
 export const fetchCompareModelPage       = () => fetchSimplePage("compare-model");
+
+// ─── Store Locator (Dealer Filter) ──────────────────────────────────────────
+const DEALER_FILTER_URL = "https://fleetowebapi.codingcloud.in/wp-json/dealer/v4/filter";
+
+export interface DealerFilterResult {
+  [key: string]: unknown;
+}
+
+export async function filterDealers(body: Record<string, string>): Promise<DealerFilterResult> {
+  const res = await fetch("/api/dealer/filter", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return res.json();
+}
+
+// Server-side dealer filter (used by API route)
+export async function filterDealersServer(body: Record<string, string>): Promise<DealerFilterResult> {
+  const res = await fetch(DEALER_FILTER_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error("Failed to filter dealers");
+  return res.json();
+}
+
+// ─── Product Details (new endpoint with battery selection) ──────────────────
+export interface ProductDetailAttribute {
+  name: string;
+  value: string;
+}
+
+export interface ProductDetailVariation {
+  variation_id: number;
+  price: number;
+  regular_price: number;
+  attributes: Record<string, string>;
+  image: string;
+}
+
+export interface ProductDetailsNew {
+  id: number;
+  name: string;
+  price: string;
+  description: string;
+  image: string;
+  gallery_images: string[];
+  attributes: ProductDetailAttribute[];
+  variations: ProductDetailVariation[];
+}
+
+export async function fetchProductDetailsNew(productId: number): Promise<ProductDetailsNew | null> {
+  try {
+    const res = await fetch("https://fleetowebapi.codingcloud.in/wp-json/custom/v1/product-details", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ product_id: productId }),
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json?.status ? json.data : null;
+  } catch {
+    return null;
+  }
+}
+
+// ─── 4-Years Warranty ───────────────────────────────────────────────────────
+export interface WarrantyTextItem {
+  product_id: number;
+  product_name: string;
+  "4_years_warranty": string;
+}
+
+export async function fetchFourYearsWarranty(): Promise<WarrantyTextItem[]> {
+  try {
+    const res = await fetch(
+      "https://fleetowebapi.codingcloud.in/wp-json/custom-api/v1/4-years-warranty",
+      { next: { revalidate: 3600 } }
+    );
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json?.data ?? [];
+  } catch {
+    return [];
+  }
+}
+
+// ─── Become a Dealer ────────────────────────────────────────────────────────
+export async function submitBecomeADealer(body: {
+  name: string;
+  contact_number: string;
+  email: string;
+  pincode: string;
+  state: string;
+}): Promise<{ status: string; message: string }> {
+  const res = await fetch("/api/become-a-dealer", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return res.json();
+}
+
+// ─── Register Your Fleeto ───────────────────────────────────────────────────
+export async function submitRegisterFleeto(body: {
+  customer_name: string;
+  customer_contact_number: string;
+  invoice_number: string;
+  invoice_date: string;
+  dealer_name: string;
+  dealer_contact_number: string;
+  chassis_number: string;
+  battery_numbers: string[];
+}): Promise<{ status: string; message: string }> {
+  const res = await fetch("/api/register-your-fleeto", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return res.json();
+}
+
+// ─── Raise Service Issue ────────────────────────────────────────────────────
+export async function submitRaiseServiceIssue(body: {
+  customer_name: string;
+  customer_contact_number: string;
+  invoice_number: string;
+  invoice_date: string;
+  dealer_name: string;
+  dealer_contact_number: string;
+  chassis_number: string;
+  issue_details: string;
+}): Promise<{ status: string; message: string }> {
+  const res = await fetch("/api/raise-service-issue", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return res.json();
+}

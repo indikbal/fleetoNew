@@ -1,10 +1,10 @@
 import PageHeroBanner from "@/components/ui/PageHeroBanner";
-import { ArrowUpRight, CheckCircle } from "lucide-react";
-import Link from "next/link";
+import { CheckCircle } from "lucide-react";
 import { colors, fonts, styles } from "@/config/theme";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { fetchRetailsPartnershipPage, stripHtml } from "@/lib/api";
+import BecomeADealerForm from "@/components/sections/BecomeADealerForm";
 
 const benefits = [
   "Exclusive dealership territory rights",
@@ -82,24 +82,26 @@ export default async function RetailsPartnershipPage() {
             </div>
           </div>
 
-          {/* CTA */}
-          <div
-            className="rounded-2xl p-8 text-center"
-            style={{ backgroundColor: "#010101" }}
-          >
-            <h3 className="text-2xl text-white mb-2" style={styles.headingFont}>
-              Ready to Get Started?
-            </h3>
-            <p className="text-gray-400 text-sm mb-6" style={{ fontFamily: fonts.body }}>
-              Fill out our enquiry form and our partnership team will reach out to you.
-            </p>
-            <Link
-              href="/contact"
-              className="inline-flex items-center gap-2 px-8 py-3.5 text-white text-sm font-semibold rounded-full"
-              style={{ backgroundColor: colors.primary, fontFamily: fonts.body, ...styles.redButtonShadow }}
-            >
-              Send Enquiry <ArrowUpRight size={16} />
-            </Link>
+          {/* Become a Dealer Form */}
+          <div className="bg-white rounded-2xl p-8 sm:p-10">
+            <div className="mb-8">
+              <p
+                className="text-xs font-semibold tracking-widest uppercase mb-2"
+                style={{ color: colors.primary, fontFamily: fonts.body }}
+              >
+                Apply Now
+              </p>
+              <h2
+                className="text-2xl mb-2"
+                style={{ ...styles.headingFont, color: "#010101" }}
+              >
+                Become a Fleeto Dealer
+              </h2>
+              <p className="text-sm text-gray-400" style={{ fontFamily: fonts.body }}>
+                Fill out the form below and our partnership team will get in touch.
+              </p>
+            </div>
+            <BecomeADealerForm />
           </div>
 
         </div>

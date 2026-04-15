@@ -86,7 +86,7 @@ export default function ProductBanner({ stats, image, pricingUrl, testRideUrl }:
 
             {/* Solid red pill */}
             <a
-              href={testRideUrl || "#contact"}
+              href="/book-test-ride"
               className="inline-flex items-center justify-center gap-2 px-6 py-3 text-white text-sm font-semibold rounded-full transition-colors btn-red-inner-shadow w-44 sm:w-52"
               style={{ backgroundColor: colors.primary }}
               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = colors.primaryDark)}
