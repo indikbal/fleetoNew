@@ -25,12 +25,8 @@ const INDIAN_STATES = [
 export default function StoreLocator() {
   const [state, setState] = useState("");
   const [district, setDistrict] = useState("");
-  const [dealer, setDealer] = useState("");
-  const [postcode, setPostcode] = useState("");
 
   const [districts, setDistricts] = useState<string[]>([]);
-  const [dealers, setDealers] = useState<string[]>([]);
-  const [postcodes, setPostcodes] = useState<string[]>([]);
 
   const [results, setResults] = useState<DealerResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -62,20 +58,15 @@ export default function StoreLocator() {
   const handleStateChange = async (val: string) => {
     setState(val);
     setDistrict("");
-    setDealer("");
-    setPostcode("");
     setDistricts([]);
-    setDealers([]);
-    setPostcodes([]);
     setResults(null);
 
     if (!val) return;
     const data = await fetchFilter({ state: val });
     if (data) {
-      // Extract districts from response
-      const distList = data.districts ?? data.data?.districts ?? [];
-      setDistricts(Array.isArray(distList) ? distList : []);
-      if (!Array.isArray(distList) || distList.length === 0) {
+      const distList = Array.isArray(data.data) ? data.data : [];
+      setDistricts(distList);
+      if (distList.length === 0) {
         setResults(data);
       }
     }
@@ -83,59 +74,20 @@ export default function StoreLocator() {
 
   const handleDistrictChange = async (val: string) => {
     setDistrict(val);
-    setDealer("");
-    setPostcode("");
-    setDealers([]);
-    setPostcodes([]);
     setResults(null);
 
     if (!val) return;
     const data = await fetchFilter({ state, district: val });
     if (data) {
-      const dealerList = data.dealers ?? data.data?.dealers ?? [];
-      setDealers(Array.isArray(dealerList) ? dealerList : []);
-      if (!Array.isArray(dealerList) || dealerList.length === 0) {
-        setResults(data);
-      }
-    }
-  };
-
-  const handleDealerChange = async (val: string) => {
-    setDealer(val);
-    setPostcode("");
-    setPostcodes([]);
-    setResults(null);
-
-    if (!val) return;
-    const data = await fetchFilter({ state, district, dealer: val });
-    if (data) {
-      const codeList = data.postcodes ?? data.data?.postcodes ?? [];
-      setPostcodes(Array.isArray(codeList) ? codeList : []);
-      if (!Array.isArray(codeList) || codeList.length === 0) {
-        setResults(data);
-      }
-    }
-  };
-
-  const handlePostcodeChange = async (val: string) => {
-    setPostcode(val);
-    setResults(null);
-
-    if (!val) return;
-    const data = await fetchFilter({ state, district, dealer, postcode: val });
-    if (data) {
       setResults(data);
     }
   };
 
-  // Helper to render dealer results
   const renderResults = () => {
     if (!results) return null;
 
-    // Try to extract dealer items from various response shapes
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const raw = (results as any).dealers_list ?? (results as any).data ?? (results as any).results ?? [];
-    const items: Record<string, string>[] = Array.isArray(raw) ? raw : [];
+    const raw = (results as { all_data?: unknown }).all_data;
+    const items: Record<string, string>[] = Array.isArray(raw) ? (raw as Record<string, string>[]) : [];
 
     if (items.length > 0) {
       return (
@@ -155,36 +107,65 @@ export default function StoreLocator() {
                 >
                   <MapPin size={16} style={{ color: colors.primary }} />
                 </div>
-                <div className="min-w-0">
-                  {item.name && (
-                    <p className="font-semibold text-sm text-gray-900 mb-1" style={{ fontFamily: fonts.body }}>
-                      {item.name}
+                <div className="min-w-0 flex-1">
+                  {item.title && (
+                    <p
+                      className="font-semibold text-sm text-gray-900 mb-1"
+                      style={{ fontFamily: fonts.body }}
+                      dangerouslySetInnerHTML={{ __html: item.title }}
+                    />
+                  )}
+                  {item.description && (
+                    <div
+                      className="text-xs text-gray-500 leading-relaxed prose prose-xs max-w-none"
+                      style={{ fontFamily: fonts.body }}
+                      dangerouslySetInnerHTML={{ __html: item.description }}
+                    />
+                  )}
+                  {(item.time || item.day) && (
+                    <p className="text-xs text-gray-400 mt-1" style={{ fontFamily: fonts.body }}>
+                      {[item.time, item.day].filter(Boolean).join(" · ")}
                     </p>
                   )}
-                  {item.dealer_name && (
-                    <p className="font-semibold text-sm text-gray-900 mb-1" style={{ fontFamily: fonts.body }}>
-                      {item.dealer_name}
-                    </p>
-                  )}
-                  {item.address && (
-                    <p className="text-xs text-gray-500 leading-relaxed" style={{ fontFamily: fonts.body }}>
-                      {item.address}
-                    </p>
-                  )}
-                  {item.phone && (
-                    <p className="text-xs mt-1" style={{ fontFamily: fonts.body, color: colors.primary }}>
-                      {item.phone}
-                    </p>
-                  )}
-                  {item.contact && (
-                    <p className="text-xs mt-1" style={{ fontFamily: fonts.body, color: colors.primary }}>
-                      {item.contact}
-                    </p>
+                  {item.call && (
+                    <a
+                      href={`tel:${item.call}`}
+                      className="text-xs mt-1 inline-block"
+                      style={{ fontFamily: fonts.body, color: colors.primary }}
+                    >
+                      {item.call}
+                    </a>
                   )}
                   {item.postcode && (
                     <p className="text-xs text-gray-400 mt-1" style={{ fontFamily: fonts.body }}>
                       PIN: {item.postcode}
                     </p>
+                  )}
+                  {(item.direction || item.test_ride) && (
+                    <div className="flex gap-3 mt-2">
+                      {item.direction && (
+                        <a
+                          href={item.direction}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-medium"
+                          style={{ fontFamily: fonts.body, color: colors.primary }}
+                        >
+                          Directions →
+                        </a>
+                      )}
+                      {item.test_ride && (
+                        <a
+                          href={item.test_ride}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-medium text-gray-700"
+                          style={{ fontFamily: fonts.body }}
+                        >
+                          Book test ride →
+                        </a>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -194,18 +175,23 @@ export default function StoreLocator() {
       );
     }
 
-    // If the response is just a message or simple object, show it
-    if (typeof results.message === "string") {
+    if (typeof (results as { message?: unknown }).message === "string") {
       return (
         <div className="bg-white rounded-xl p-6 text-center">
           <p className="text-sm text-gray-500" style={{ fontFamily: fonts.body }}>
-            {results.message}
+            {(results as { message: string }).message}
           </p>
         </div>
       );
     }
 
-    return null;
+    return (
+      <div className="bg-white rounded-xl p-6 text-center">
+        <p className="text-sm text-gray-500" style={{ fontFamily: fonts.body }}>
+          No dealers found for this location.
+        </p>
+      </div>
+    );
   };
 
   return (
@@ -267,50 +253,6 @@ export default function StoreLocator() {
                 <option value="">Select District</option>
                 {districts.map((d) => (
                   <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
-              <ChevronDown size={14} className="absolute right-0 top-1 text-gray-400 pointer-events-none" />
-            </div>
-          </div>
-
-          {/* Dealer */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs text-gray-400 font-medium" style={{ fontFamily: fonts.body }}>
-              Dealer
-            </label>
-            <div className="relative">
-              <select
-                value={dealer}
-                onChange={(e) => handleDealerChange(e.target.value)}
-                disabled={!district || dealers.length === 0}
-                className={`${inputClass} appearance-none cursor-pointer pr-8 disabled:opacity-40 disabled:cursor-not-allowed`}
-                style={{ fontFamily: fonts.body }}
-              >
-                <option value="">Select Dealer</option>
-                {dealers.map((d) => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
-              <ChevronDown size={14} className="absolute right-0 top-1 text-gray-400 pointer-events-none" />
-            </div>
-          </div>
-
-          {/* Postcode */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs text-gray-400 font-medium" style={{ fontFamily: fonts.body }}>
-              Postcode
-            </label>
-            <div className="relative">
-              <select
-                value={postcode}
-                onChange={(e) => handlePostcodeChange(e.target.value)}
-                disabled={!dealer || postcodes.length === 0}
-                className={`${inputClass} appearance-none cursor-pointer pr-8 disabled:opacity-40 disabled:cursor-not-allowed`}
-                style={{ fontFamily: fonts.body }}
-              >
-                <option value="">Select Postcode</option>
-                {postcodes.map((p) => (
-                  <option key={p} value={p}>{p}</option>
                 ))}
               </select>
               <ChevronDown size={14} className="absolute right-0 top-1 text-gray-400 pointer-events-none" />

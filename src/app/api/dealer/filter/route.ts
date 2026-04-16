@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const DEALER_FILTER_URL = "https://fleetowebapi.codingcloud.in/wp-json/dealer/v4/filter";
+const DEALER_FILTER_URL = "https://fleetowebapi.codingcloud.in/wp-json/dealer/v12/filter";
 
 export async function POST(req: Request) {
   try {

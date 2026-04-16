@@ -1017,7 +1017,7 @@ export const fetchFindADealerPage        = () => fetchSimplePage("find-a-dealer"
 export const fetchCompareModelPage       = () => fetchSimplePage("compare-model");
 
 // ─── Store Locator (Dealer Filter) ──────────────────────────────────────────
-const DEALER_FILTER_URL = "https://fleetowebapi.codingcloud.in/wp-json/dealer/v4/filter";
+const DEALER_FILTER_URL = "https://fleetowebapi.codingcloud.in/wp-json/dealer/v12/filter";
 
 export interface DealerFilterResult {
   [key: string]: unknown;
