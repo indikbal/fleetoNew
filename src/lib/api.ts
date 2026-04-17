@@ -3,6 +3,10 @@ const WC_BASE   = process.env.WP_WC_URL!;
 const WC_KEY    = process.env.WC_KEY!;
 const WC_SECRET = process.env.WC_SECRET!;
 
+// ISR cache lifetime (seconds) for all WP/WC fetches.
+// Lower = fresher backend updates, higher = faster pages & less API load.
+const CACHE_TTL = 60;
+
 export interface BannerSlide {
   image: string;
   title: string;
@@ -112,7 +116,7 @@ export async function fetchProductDetails(productId: number): Promise<WCProductD
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ product_id: productId }),
-      next: { revalidate: 3600 },
+      next: { revalidate: CACHE_TTL },
     });
     if (!res.ok) return null;
     return res.json();
@@ -136,7 +140,7 @@ export async function fetchHomePage(): Promise<HomePageData> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ page_slug: "home" }),
-    next: { revalidate: 3600 },
+    next: { revalidate: CACHE_TTL },
   });
   if (!res.ok) throw new Error("Failed to fetch home page data");
   return res.json();
@@ -145,7 +149,7 @@ export async function fetchHomePage(): Promise<HomePageData> {
 export async function fetchProducts(): Promise<WCProduct[]> {
   const res = await fetch(
     `${WC_BASE}/products?consumer_key=${WC_KEY}&consumer_secret=${WC_SECRET}`,
-    { next: { revalidate: 3600 } }
+    { next: { revalidate: CACHE_TTL } }
   );
   if (!res.ok) throw new Error("Failed to fetch products");
   const products: Omit<WCProduct, "variation_colors">[] = await res.json();
@@ -155,7 +159,7 @@ export async function fetchProducts(): Promise<WCProduct[]> {
     products.map((p) =>
       fetch(
         `${WC_BASE}/products/${p.id}/variations?consumer_key=${WC_KEY}&consumer_secret=${WC_SECRET}`,
-        { next: { revalidate: 3600 } }
+        { next: { revalidate: CACHE_TTL } }
       )
         .then((r) => (r.ok ? r.json() : []))
         .then((vars: WCVariation[]) =>
@@ -222,7 +226,7 @@ export async function fetchAboutPage(): Promise<AboutPageData> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ page_slug: "about" }),
-    next: { revalidate: 3600 },
+    next: { revalidate: CACHE_TTL },
   });
   if (!res.ok) throw new Error("Failed to fetch about page data");
   return res.json();
@@ -255,7 +259,7 @@ export async function fetchContactPage(): Promise<ContactPageData> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ page_slug: "contact" }),
-    next: { revalidate: 3600 },
+    next: { revalidate: CACHE_TTL },
   });
   if (!res.ok) throw new Error("Failed to fetch contact page data");
   return res.json();
@@ -326,7 +330,7 @@ export async function fetchExplorePage(): Promise<ExplorePageData> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ page_slug: "explore" }),
-    next: { revalidate: 3600 },
+    next: { revalidate: CACHE_TTL },
   });
   if (!res.ok) throw new Error("Failed to fetch explore page data");
   return res.json();
@@ -347,7 +351,7 @@ export async function fetchShopPage(): Promise<ShopPageData> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ page_slug: "shop" }),
-    next: { revalidate: 3600 },
+    next: { revalidate: CACHE_TTL },
   });
   if (!res.ok) throw new Error("Failed to fetch shop page data");
   return res.json();
@@ -379,7 +383,7 @@ function wpUrlToHref(url: string): string {
 
 export async function fetchHeaderMenu(): Promise<HeaderMenuItem[]> {
   const res = await fetch(`${CUSTOM_BASE}/header-menu`, {
-    next: { revalidate: 3600 },
+    next: { revalidate: CACHE_TTL },
   });
   if (!res.ok) throw new Error("Failed to fetch header menu");
   const data: { id: number; title: string; url: string; parent: string }[] =
@@ -406,7 +410,7 @@ export interface FooterMenuColumn {
 
 async function fetchMenuColumn(endpoint: string): Promise<FooterMenuItem[]> {
   const res = await fetch(`${CUSTOM_BASE}/${endpoint}`, {
-    next: { revalidate: 3600 },
+    next: { revalidate: CACHE_TTL },
   });
   if (!res.ok) throw new Error(`Failed to fetch ${endpoint}`);
   const data: { id: number; title: string; url: string; parent: string }[] =
@@ -725,7 +729,7 @@ export async function fetchBookTestRidePage(): Promise<BookTestRidePageData> {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ page_slug: "book-a-test-ride" }),
-      next: { revalidate: 3600 },
+      next: { revalidate: CACHE_TTL },
     });
     if (!res.ok) return {};
     return res.json();
@@ -745,7 +749,7 @@ export async function fetchModelList(): Promise<TestRideModel[]> {
   try {
     const res = await fetch(
       `${process.env.WP_CUSTOM_API_URL}/model-list`,
-      { next: { revalidate: 3600 } }
+      { next: { revalidate: CACHE_TTL } }
     );
     if (!res.ok) return [];
     const json = await res.json();
@@ -799,7 +803,7 @@ export async function fetchProductSpecs(productId: number): Promise<ProductSpecs
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ product_id: productId }),
-        next: { revalidate: 3600 },
+        next: { revalidate: CACHE_TTL },
       }
     );
     if (!res.ok) return null;
@@ -826,7 +830,7 @@ export async function fetchWarrantyAndService(): Promise<WarrantyProduct[]> {
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        next: { revalidate: 3600 },
+        next: { revalidate: CACHE_TTL },
       }
     );
     if (!res.ok) return [];
@@ -840,7 +844,7 @@ export async function fetchWarrantyAndService(): Promise<WarrantyProduct[]> {
 export async function fetchWarrantyServiceMenu(): Promise<HeaderMenuItem[]> {
   try {
     const res = await fetch(`${CUSTOM_BASE}/warranty-and-service-menu`, {
-      next: { revalidate: 3600 },
+      next: { revalidate: CACHE_TTL },
     });
     if (!res.ok) return [];
     const data: { id: number; title: string; url: string; parent: string }[] =
@@ -974,7 +978,7 @@ export interface BlogPostDetail {
 
 export async function fetchAllPosts(): Promise<BlogPost[]> {
   try {
-    const res = await fetch(`${CUSTOM_BASE}/posts`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${CUSTOM_BASE}/posts`, { next: { revalidate: CACHE_TTL } });
     if (!res.ok) return [];
     return res.json();
   } catch { return []; }
@@ -986,7 +990,7 @@ export async function fetchPost(postId: number): Promise<BlogPostDetail | null> 
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ post_id: postId }),
-      next: { revalidate: 3600 },
+      next: { revalidate: CACHE_TTL },
     });
     if (!res.ok) return null;
     const json = await res.json();
@@ -1006,7 +1010,7 @@ export async function fetchFaqPage(): Promise<FaqItem[]> {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ page_slug: "faqs" }),
-      next: { revalidate: 3600 },
+      next: { revalidate: CACHE_TTL },
     });
     if (!res.ok) return [];
     const json = await res.json();
@@ -1024,7 +1028,7 @@ export interface SimplePageData {
 
 async function fetchSimplePage(endpoint: string): Promise<SimplePageData | null> {
   try {
-    const res = await fetch(`${CUSTOM_BASE}/${endpoint}`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${CUSTOM_BASE}/${endpoint}`, { next: { revalidate: CACHE_TTL } });
     if (!res.ok) return null;
     const json = await res.json();
     return json?.data ?? null;
@@ -1096,7 +1100,7 @@ export async function fetchProductDetailsNew(productId: number): Promise<Product
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ product_id: productId }),
-      next: { revalidate: 3600 },
+      next: { revalidate: CACHE_TTL },
     });
     if (!res.ok) return null;
     const json = await res.json();
@@ -1117,7 +1121,7 @@ export async function fetchFourYearsWarranty(): Promise<WarrantyTextItem[]> {
   try {
     const res = await fetch(
       "https://fleetowebapi.codingcloud.in/wp-json/custom-api/v1/4-years-warranty",
-      { next: { revalidate: 3600 } }
+      { next: { revalidate: CACHE_TTL } }
     );
     if (!res.ok) return [];
     const json = await res.json();
