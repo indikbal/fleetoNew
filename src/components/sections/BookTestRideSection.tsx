@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { ArrowUpRight, Clock, ShieldCheck, ThumbsUp, CheckCircle2 } from "lucide-react";
 import { colors, fonts, styles } from "@/config/theme";
-import type { BookTestRidePageData } from "@/lib/api";
+import type { BookTestRidePageData, TestRideModel } from "@/lib/api";
 
 const DEFAULT_PERKS = [
   { icon: Clock,       text: "15-minute hands-on experience" },
@@ -13,9 +13,12 @@ const DEFAULT_PERKS = [
   { icon: ThumbsUp,    text: "Zero commitment, 100% free"     },
 ];
 
+const DEFAULT_SCOOTER_IMAGE = "/images/hero-scooty.png";
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 interface Props {
   pageData?: BookTestRidePageData;
+  models?: TestRideModel[];
 }
 
 // ─── Form fields config ───────────────────────────────────────────────────────
@@ -46,10 +49,11 @@ const slideIn = (dir: "left" | "right", delay = 0) => ({
 });
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function BookTestRideSection({ pageData = {} }: Props) {
+export default function BookTestRideSection({ pageData = {}, models = [] }: Props) {
   const [form, setForm] = useState<Record<FormKey, string>>({
     name: "", email: "", phone: "", address: "",
   });
+  const [selectedModel, setSelectedModel] = useState<string>("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,6 +63,9 @@ export default function BookTestRideSection({ pageData = {} }: Props) {
     { icon: ShieldCheck, text: pageData.perk_2 ?? DEFAULT_PERKS[1].text },
     { icon: ThumbsUp,    text: pageData.perk_3 ?? DEFAULT_PERKS[2].text },
   ];
+
+  const activeModel = models.find((m) => m.model_name === selectedModel);
+  const scooterImage = activeModel?.model_image ?? DEFAULT_SCOOTER_IMAGE;
 
   const set = (key: FormKey) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
@@ -76,6 +83,7 @@ export default function BookTestRideSection({ pageData = {} }: Props) {
           email: form.email,
           phone: form.phone,
           address: form.address,
+          model_name: selectedModel,
         }),
       });
       const data = await res.json();
@@ -210,18 +218,32 @@ export default function BookTestRideSection({ pageData = {} }: Props) {
           zIndex: 20,
         }}
       >
-        <motion.div
-          style={{ width: "100%", height: "100%", position: "relative" }}
-          animate={{ y: [0, -14, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <Image
-            src="/images/hero-scooty.png"
-            alt="Fleeto electric scooter"
-            fill
-            className="object-contain"
-          />
-        </motion.div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={scooterImage}
+            style={{ width: "100%", height: "100%", position: "relative" }}
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.92 }}
+            transition={{ duration: 0.45, ease: "easeOut" }}
+          >
+            <motion.div
+              style={{ width: "100%", height: "100%", position: "relative" }}
+              animate={{ y: [0, -14, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <Image
+                src={scooterImage}
+                alt={activeModel?.model_name ?? "Fleeto electric scooter"}
+                fill
+                sizes="520px"
+                className="object-contain"
+                unoptimized={scooterImage.startsWith("http")}
+                priority
+              />
+            </motion.div>
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* ══════════════════════════════════════════════════════════════════════
@@ -267,10 +289,37 @@ export default function BookTestRideSection({ pageData = {} }: Props) {
 
                 {/* Fields */}
                 <form className="flex flex-col gap-7" onSubmit={handleSubmit}>
+                  {/* Model select — shown first so users pick a model before filling details */}
+                  <motion.div
+                    {...fadeUp(0.4)}
+                    className="flex flex-col gap-1.5"
+                  >
+                    <label
+                      className="text-xs text-gray-400 font-medium"
+                      style={{ fontFamily: fonts.body }}
+                    >
+                      Select Model
+                    </label>
+                    <select
+                      value={selectedModel}
+                      onChange={(e) => setSelectedModel(e.target.value)}
+                      required
+                      className={`${inputClass} appearance-none cursor-pointer`}
+                      style={{ fontFamily: fonts.body }}
+                    >
+                      <option value="">Choose a model</option>
+                      {models.map((m) => (
+                        <option key={m.model_name} value={m.model_name}>
+                          {m.model_name}
+                        </option>
+                      ))}
+                    </select>
+                  </motion.div>
+
                   {fields.map(({ key, label, placeholder, type }, i) => (
                     <motion.div
                       key={key}
-                      {...fadeUp(0.4 + i * 0.08)}
+                      {...fadeUp(0.48 + i * 0.08)}
                       className="flex flex-col gap-1.5"
                     >
                       <label

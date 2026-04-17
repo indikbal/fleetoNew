@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link"; // used for Book Test Ride
-import { motion } from "framer-motion";
-import { ArrowUpRight, ShoppingCart, CheckCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowUpRight, ShoppingCart, CheckCircle, ShieldCheck, X } from "lucide-react";
 import { colors, fonts, styles } from "@/config/theme";
 import { colorNameToHex, formatPrice } from "@/lib/api";
 import type { WCProductDetail, ProductVariation, ProductDetailAttribute } from "@/lib/api";
@@ -13,6 +13,7 @@ import { useCart } from "@/context/CartContext";
 interface Props {
   product: WCProductDetail;
   batteryAttributes?: ProductDetailAttribute[];
+  warrantyText?: string;
 }
 
 const fadeUp = (delay = 0) => ({
@@ -22,18 +23,46 @@ const fadeUp = (delay = 0) => ({
   transition:  { duration: 0.55, ease: "easeOut" as const, delay },
 });
 
-export default function ProductDetailView({ product, batteryAttributes }: Props) {
+export default function ProductDetailView({ product, batteryAttributes, warrantyText }: Props) {
   const [selected, setSelected]       = useState<ProductVariation | null>(null);
   const [cartStatus, setCartStatus]   = useState<"idle" | "added">("idle");
   const [activeImage, setActiveImage] = useState(product.image || "/images/hero-scooty.png");
   const [selectedBattery, setSelectedBattery] = useState<string | null>(null);
+  const [warrantyPopup, setWarrantyPopup] = useState(false);
   const { addItem } = useCart();
+
+  const warrantyMessage = warrantyText?.trim() || "4 Years Warranty";
 
   // Extract battery selection attributes
   const batteryStandard = batteryAttributes?.find((a) => a.name === "Battery Selection");
   const batterySmart = batteryAttributes?.find((a) => a.name === "Battery Selection (Smart)");
   const batteryOptions = batteryStandard?.value.split(", ").filter(Boolean) ?? [];
   const batterySmartOptions = batterySmart?.value.split(", ").filter(Boolean) ?? [];
+
+  const hasStandard = batteryOptions.length > 0;
+  const hasSmart    = batterySmartOptions.length > 0;
+  const [batteryTab, setBatteryTab] = useState<"standard" | "smart">(
+    hasStandard ? "standard" : "smart"
+  );
+
+  const handleSelectSmartBattery = (opt: string) => {
+    setSelectedBattery(opt);
+    setWarrantyPopup(true);
+  };
+
+  useEffect(() => {
+    if (!warrantyPopup) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setWarrantyPopup(false);
+    };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [warrantyPopup]);
 
   const handleSelect = (v: ProductVariation) => {
     setSelected(v);
@@ -103,8 +132,8 @@ export default function ProductDetailView({ product, batteryAttributes }: Props)
         style={{ paddingTop: "10%" }}
       >
         {/* ── White card ── */}
-        <div className="bg-white rounded-3xl p-8 md:p-12 shadow-sm overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+        <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-6 lg:gap-10 items-start">
 
             {/* ── Left: product image ── */}
             <motion.div
@@ -112,16 +141,17 @@ export default function ProductDetailView({ product, batteryAttributes }: Props)
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.1 }}
+              className="lg:sticky lg:top-24"
             >
               <div
                 className="relative w-full rounded-2xl overflow-hidden"
-                style={{ height: "400px", backgroundColor: "#FFF5F5", border: "1px solid #F0E0E0" }}
+                style={{ height: "360px", backgroundColor: "#FFF5F5", border: "1px solid #F0E0E0" }}
               >
                 <Image
                   src={activeImage}
                   alt={product.title || "Product image"}
                   fill
-                  className="object-contain object-center p-8 drop-shadow-md"
+                  className="object-contain object-center p-6 drop-shadow-md"
                   priority
                 />
               </div>
@@ -133,7 +163,7 @@ export default function ProductDetailView({ product, batteryAttributes }: Props)
                     <button
                       key={v.variation_id}
                       onClick={() => handleSelect(v)}
-                      className="flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden border-2 transition-all"
+                      className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all"
                       style={{
                         borderColor:     selected?.variation_id === v.variation_id ? colors.primary : "#E6E6E6",
                         backgroundColor: "#FFF5F5",
@@ -142,8 +172,8 @@ export default function ProductDetailView({ product, batteryAttributes }: Props)
                       <Image
                         src={v.image || product.image}
                         alt={Object.values(v.attributes)[0] || "variant"}
-                        width={56}
-                        height={56}
+                        width={48}
+                        height={48}
                         className="object-contain w-full h-full p-1"
                       />
                     </button>
@@ -153,44 +183,46 @@ export default function ProductDetailView({ product, batteryAttributes }: Props)
             </motion.div>
 
             {/* ── Right: product info ── */}
-            <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-4">
 
-              {/* Title */}
-              <motion.h2
+              {/* Title + Price in one header row */}
+              <motion.div
                 {...fadeUp(0.15)}
-                className="text-4xl md:text-5xl leading-tight"
-                style={{ ...styles.headingFont, color: colors.black }}
+                className="flex items-start justify-between gap-4"
               >
-                {product.title}
-              </motion.h2>
-
-              {/* Price */}
-              <motion.div {...fadeUp(0.2)} className="flex items-baseline gap-2">
-                <span
-                  className="text-3xl font-bold"
-                  style={{ color: colors.primary, fontFamily: fonts.body }}
+                <h2
+                  className="text-2xl md:text-3xl leading-tight"
+                  style={{ ...styles.headingFont, color: colors.black }}
                 >
-                  {formatPrice(selected?.price ?? product.price)}
-                </span>
-                <span className="text-sm text-gray-400" style={{ fontFamily: fonts.body }}>
-                  onwards
-                </span>
+                  {product.title}
+                </h2>
+                <div className="text-right flex-shrink-0">
+                  <div
+                    className="text-xl md:text-2xl font-bold leading-none"
+                    style={{ color: colors.primary, fontFamily: fonts.body }}
+                  >
+                    {formatPrice(selected?.price ?? product.price)}
+                  </div>
+                  <div
+                    className="text-[10px] text-gray-400 mt-0.5 uppercase tracking-wider"
+                    style={{ fontFamily: fonts.body }}
+                  >
+                    onwards
+                  </div>
+                </div>
               </motion.div>
 
               {/* Specs (desc is an HTML <ul> list) */}
               {product.desc && (
                 <motion.div
-                  {...fadeUp(0.23)}
+                  {...fadeUp(0.2)}
                   className="
-                    text-sm text-gray-500
-                    [&_ul]:flex [&_ul]:flex-wrap [&_ul]:gap-2 [&_ul]:p-0 [&_ul]:m-0
-                    [&_li]:list-none [&_li]:rounded-full [&_li]:px-3.5 [&_li]:py-1.5
-                    [&_li]:text-sm [&_li]:font-medium
+                    text-xs text-gray-500
+                    [&_ul]:flex [&_ul]:flex-wrap [&_ul]:gap-1.5 [&_ul]:p-0 [&_ul]:m-0
+                    [&_li]:list-none [&_li]:rounded-full [&_li]:px-2.5 [&_li]:py-1
+                    [&_li]:text-xs [&_li]:font-medium
                   "
-                  style={{
-                    fontFamily: fonts.body,
-                    // pill styling via inline so Tailwind purge can't strip runtime values
-                  }}
+                  style={{ fontFamily: fonts.body }}
                 >
                   <style>{`
                     .spec-pills li {
@@ -208,21 +240,26 @@ export default function ProductDetailView({ product, batteryAttributes }: Props)
 
               <div className="h-px bg-gray-100" />
 
-              {/* Colour picker */}
+              {/* Colour picker — compact swatches with shared label */}
               {product.variations?.length > 0 && (
-                <motion.div {...fadeUp(0.27)}>
-                  <p
-                    className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wider"
-                    style={{ fontFamily: fonts.body }}
-                  >
-                    Choose Colour
+                <motion.div {...fadeUp(0.24)}>
+                  <div className="flex items-center justify-between mb-2">
+                    <p
+                      className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider"
+                      style={{ fontFamily: fonts.body }}
+                    >
+                      Choose Colour
+                    </p>
                     {selected && (
-                      <span className="ml-2 normal-case text-gray-400 font-normal">
-                        — {Object.values(selected.attributes)[0]}
-                      </span>
+                      <p
+                        className="text-[11px] text-gray-500 font-medium capitalize"
+                        style={{ fontFamily: fonts.body }}
+                      >
+                        {Object.values(selected.attributes)[0]}
+                      </p>
                     )}
-                  </p>
-                  <div className="flex flex-wrap gap-2.5">
+                  </div>
+                  <div className="flex flex-wrap gap-2">
                     {product.variations.map((v) => {
                       const colorName = Object.values(v.attributes)[0] ?? "";
                       const hex       = colorNameToHex(colorName);
@@ -231,19 +268,19 @@ export default function ProductDetailView({ product, batteryAttributes }: Props)
                         <button
                           key={v.variation_id}
                           onClick={() => handleSelect(v)}
-                          className="flex items-center gap-2 px-3.5 py-2.5 rounded-full border-2 transition-all text-sm font-medium"
+                          title={colorName}
+                          aria-label={colorName}
+                          className="w-8 h-8 rounded-full flex items-center justify-center transition-all"
                           style={{
-                            borderColor:     isActive ? colors.primary : "#E5E7EB",
-                            backgroundColor: isActive ? `${colors.primary}10` : "#fff",
-                            fontFamily:      fonts.body,
-                            color:           isActive ? colors.primary : "#374151",
+                            boxShadow: isActive
+                              ? `0 0 0 2px #fff inset, 0 0 0 2px ${colors.primary}`
+                              : `0 0 0 1px #E5E7EB`,
                           }}
                         >
                           <span
-                            className="w-4 h-4 rounded-full flex-shrink-0 border border-gray-200 shadow-sm"
+                            className="w-full h-full rounded-full border border-gray-100"
                             style={{ backgroundColor: hex }}
                           />
-                          {colorName}
                         </button>
                       );
                     })}
@@ -251,78 +288,85 @@ export default function ProductDetailView({ product, batteryAttributes }: Props)
                 </motion.div>
               )}
 
-              {/* Battery Selection */}
-              {(batteryOptions.length > 0 || batterySmartOptions.length > 0) && (
+              {/* Battery Selection — tabbed Standard/Smart */}
+              {(hasStandard || hasSmart) && (
                 <>
                   <div className="h-px bg-gray-100" />
-                  <motion.div {...fadeUp(0.30)}>
-                    <p
-                      className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wider"
-                      style={{ fontFamily: fonts.body }}
-                    >
-                      Battery Selection
+                  <motion.div {...fadeUp(0.27)}>
+                    <div className="flex items-center justify-between mb-2">
+                      <p
+                        className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider"
+                        style={{ fontFamily: fonts.body }}
+                      >
+                        Battery
+                      </p>
                       {selectedBattery && (
-                        <span className="ml-2 normal-case text-gray-400 font-normal">
-                          — {selectedBattery}
-                        </span>
+                        <p
+                          className="text-[11px] text-gray-500 font-medium truncate max-w-[60%]"
+                          style={{ fontFamily: fonts.body }}
+                          title={selectedBattery}
+                        >
+                          {selectedBattery}
+                        </p>
                       )}
-                    </p>
+                    </div>
 
-                    {batteryOptions.length > 0 && (
-                      <div className="mb-3">
-                        <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-2" style={{ fontFamily: fonts.body }}>
-                          Standard
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {batteryOptions.map((opt) => {
-                            const isActive = selectedBattery === opt;
-                            return (
-                              <button
-                                key={opt}
-                                onClick={() => setSelectedBattery(opt)}
-                                className="px-3 py-2 rounded-full border-2 transition-all text-xs font-medium"
-                                style={{
-                                  borderColor: isActive ? colors.primary : "#E5E7EB",
-                                  backgroundColor: isActive ? `${colors.primary}10` : "#fff",
-                                  fontFamily: fonts.body,
-                                  color: isActive ? colors.primary : "#374151",
-                                }}
-                              >
-                                {opt}
-                              </button>
-                            );
-                          })}
-                        </div>
+                    {/* Segmented tabs */}
+                    {hasStandard && hasSmart && (
+                      <div className="relative inline-flex p-0.5 rounded-full bg-gray-100 mb-2.5">
+                        {(["standard", "smart"] as const).map((tab) => {
+                          const active = batteryTab === tab;
+                          return (
+                            <button
+                              key={tab}
+                              onClick={() => setBatteryTab(tab)}
+                              className="relative px-4 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider transition-colors"
+                              style={{
+                                color: active ? "#fff" : "#6B7280",
+                                fontFamily: fonts.body,
+                              }}
+                            >
+                              {active && (
+                                <motion.span
+                                  layoutId="battery-tab-pill"
+                                  className="absolute inset-0 rounded-full"
+                                  style={{ backgroundColor: colors.primary }}
+                                  transition={{ type: "spring", stiffness: 320, damping: 28 }}
+                                />
+                              )}
+                              <span className="relative">{tab}</span>
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
 
-                    {batterySmartOptions.length > 0 && (
-                      <div>
-                        <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-2" style={{ fontFamily: fonts.body }}>
-                          Smart
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {batterySmartOptions.map((opt) => {
-                            const isActive = selectedBattery === opt;
-                            return (
-                              <button
-                                key={opt}
-                                onClick={() => setSelectedBattery(opt)}
-                                className="px-3 py-2 rounded-full border-2 transition-all text-xs font-medium"
-                                style={{
-                                  borderColor: isActive ? colors.primary : "#E5E7EB",
-                                  backgroundColor: isActive ? `${colors.primary}10` : "#fff",
-                                  fontFamily: fonts.body,
-                                  color: isActive ? colors.primary : "#374151",
-                                }}
-                              >
-                                {opt}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
+                    {/* Chip grid for active tab */}
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {(batteryTab === "standard" ? batteryOptions : batterySmartOptions).map((opt) => {
+                        const isActive = selectedBattery === opt;
+                        const onClick  =
+                          batteryTab === "smart"
+                            ? () => handleSelectSmartBattery(opt)
+                            : () => setSelectedBattery(opt);
+                        return (
+                          <button
+                            key={opt}
+                            onClick={onClick}
+                            className="px-2.5 py-1.5 rounded-lg border transition-all text-[11px] font-medium text-left truncate"
+                            style={{
+                              borderColor: isActive ? colors.primary : "#E5E7EB",
+                              backgroundColor: isActive ? `${colors.primary}10` : "#fff",
+                              fontFamily: fonts.body,
+                              color: isActive ? colors.primary : "#374151",
+                            }}
+                            title={opt}
+                          >
+                            {opt}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </motion.div>
                 </>
               )}
@@ -330,37 +374,37 @@ export default function ProductDetailView({ product, batteryAttributes }: Props)
               <div className="h-px bg-gray-100" />
 
               {/* Action buttons */}
-              <motion.div {...fadeUp(0.32)} className="flex flex-col sm:flex-row gap-3">
+              <motion.div {...fadeUp(0.3)} className="flex flex-col sm:flex-row gap-2.5">
                 {cartStatus === "added" ? (
                   <div
-                    className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl text-sm font-semibold"
+                    className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold"
                     style={{ backgroundColor: "#22c55e15", color: "#16a34a", fontFamily: fonts.body }}
                   >
-                    <CheckCircle size={18} />
+                    <CheckCircle size={16} />
                     Added to Cart!
                   </div>
                 ) : (
                   <button
                     onClick={handleAddToCart}
                     disabled={!selected}
-                    className="flex-1 flex items-center justify-center gap-2 py-4 text-white text-sm font-semibold rounded-xl btn-red-inner-shadow transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="flex-1 flex items-center justify-center gap-2 py-3 text-white text-sm font-semibold rounded-xl btn-red-inner-shadow transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                     style={{ backgroundColor: colors.primary, fontFamily: fonts.body }}
                     onMouseEnter={(e) => { if (selected) e.currentTarget.style.backgroundColor = colors.primaryDark; }}
                     onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = colors.primary; }}
                   >
-                    <ShoppingCart size={16} />
-                    {selected ? "Add to Cart" : "Select a Colour First"}
+                    <ShoppingCart size={15} />
+                    {selected ? "Add to Cart" : "Select a Colour"}
                   </button>
                 )}
                 <Link
                   href="/book-test-ride"
-                  className="flex-1 flex items-center justify-center gap-2 py-4 text-sm font-semibold rounded-xl border-2 transition-all"
+                  className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold rounded-xl border-2 transition-all"
                   style={{ borderColor: colors.primary, color: colors.primary, fontFamily: fonts.body }}
                   onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = `${colors.primary}10`; }}
                   onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                 >
                   Book Test Ride
-                  <ArrowUpRight size={15} />
+                  <ArrowUpRight size={14} />
                 </Link>
               </motion.div>
 
@@ -368,6 +412,107 @@ export default function ProductDetailView({ product, batteryAttributes }: Props)
           </div>
         </div>
       </div>
+
+      {/* ── Smart Battery Warranty Popup ── */}
+      <AnimatePresence>
+        {warrantyPopup && (
+          <motion.div
+            className="fixed inset-0 z-[100] flex items-center justify-center px-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+          >
+            {/* Backdrop */}
+            <motion.div
+              className="absolute inset-0 bg-black/55 backdrop-blur-sm"
+              onClick={() => setWarrantyPopup(false)}
+            />
+
+            {/* Dialog */}
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="warranty-title"
+              className="relative w-full max-w-md bg-white rounded-3xl overflow-hidden shadow-2xl"
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 10 }}
+              transition={{ type: "spring", stiffness: 260, damping: 22 }}
+            >
+              {/* Accent bar */}
+              <div
+                className="h-1.5 w-full"
+                style={{
+                  background: `linear-gradient(90deg, ${colors.primary}, ${colors.primaryDark})`,
+                }}
+              />
+
+              <button
+                aria-label="Close warranty dialog"
+                onClick={() => setWarrantyPopup(false)}
+                className="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                <X size={18} />
+              </button>
+
+              <div className="px-8 pt-10 pb-8 text-center">
+                {/* Icon */}
+                <motion.div
+                  className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5"
+                  style={{ backgroundColor: `${colors.primary}12` }}
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 220, damping: 15, delay: 0.1 }}
+                >
+                  <ShieldCheck size={38} style={{ color: colors.primary }} />
+                </motion.div>
+
+                <h3
+                  id="warranty-title"
+                  className="text-2xl md:text-3xl mb-2"
+                  style={{ ...styles.headingFont, color: colors.black }}
+                >
+                  {warrantyMessage}
+                </h3>
+
+                {selectedBattery && (
+                  <p
+                    className="text-sm text-gray-500 mb-5"
+                    style={{ fontFamily: fonts.body }}
+                  >
+                    on Smart Lithium battery
+                    <span className="block text-gray-700 font-medium mt-1">
+                      {selectedBattery}
+                    </span>
+                  </p>
+                )}
+
+                <p
+                  className="text-sm text-gray-500 leading-relaxed mb-7"
+                  style={{ fontFamily: fonts.body }}
+                >
+                  You&apos;ve chosen our Smart Lithium battery — it comes backed by a{" "}
+                  <span className="font-semibold" style={{ color: colors.primary }}>
+                    {warrantyMessage.toLowerCase()}
+                  </span>{" "}
+                  for complete peace of mind.
+                </p>
+
+                <button
+                  onClick={() => setWarrantyPopup(false)}
+                  className="inline-flex items-center justify-center gap-2 px-8 py-3 text-white text-sm font-semibold rounded-full btn-red-inner-shadow transition-colors"
+                  style={{ backgroundColor: colors.primary, fontFamily: fonts.body }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = colors.primaryDark)}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = colors.primary)}
+                >
+                  Got It
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }

@@ -46,6 +46,7 @@ export default async function ProductDetailPage({ params }: Props) {
   const batteryAttributes = productDetailsNew?.attributes?.filter(
     (a) => a.name === "Battery Selection" || a.name === "Battery Selection (Smart)"
   );
+  const warrantyText = productDetailsNew?.["4_years_warranty"]?.trim() ?? "";
 
   return (
     <>
@@ -60,7 +61,11 @@ export default async function ProductDetailPage({ params }: Props) {
         />
 
         {/* 2. Product info card — title, image, price, colour picker, add to cart */}
-        <ProductDetailView product={product} batteryAttributes={batteryAttributes} />
+        <ProductDetailView
+          product={product}
+          batteryAttributes={batteryAttributes}
+          warrantyText={warrantyText}
+        />
 
         {/* 3. Explore sections from acf */}
         <RideEasy

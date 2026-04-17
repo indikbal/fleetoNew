@@ -1,6 +1,6 @@
 import Navbar from "@/components/layout/Navbar";
 import BookTestRideSection from "@/components/sections/BookTestRideSection";
-import { fetchBookTestRidePage } from "@/lib/api";
+import { fetchBookTestRidePage, fetchModelList } from "@/lib/api";
 
 export const metadata = {
   title: "Book a Test Ride — Fleeto",
@@ -9,13 +9,16 @@ export const metadata = {
 };
 
 export default async function BookTestRidePage() {
-  const pageData = await fetchBookTestRidePage();
+  const [pageData, models] = await Promise.all([
+    fetchBookTestRidePage(),
+    fetchModelList(),
+  ]);
 
   return (
     <>
       <Navbar />
       <main>
-        <BookTestRideSection pageData={pageData} />
+        <BookTestRideSection pageData={pageData} models={models} />
       </main>
     </>
   );

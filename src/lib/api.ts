@@ -734,6 +734,27 @@ export async function fetchBookTestRidePage(): Promise<BookTestRidePageData> {
   }
 }
 
+// ─── Model List (for Book a Test Ride) ─────────────────────────────────────
+export interface TestRideModel {
+  model_name: string;
+  model_image: string;
+}
+
+// Server-side fetcher (used for SSR prefill)
+export async function fetchModelList(): Promise<TestRideModel[]> {
+  try {
+    const res = await fetch(
+      `${process.env.WP_CUSTOM_API_URL}/model-list`,
+      { next: { revalidate: 3600 } }
+    );
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json?.models ?? [];
+  } catch {
+    return [];
+  }
+}
+
 // ─── Performance / Design / Technology Sections ──────────────────────────
 export interface PerformanceSectionItem {
   image: string;
@@ -1066,6 +1087,7 @@ export interface ProductDetailsNew {
   gallery_images: string[];
   attributes: ProductDetailAttribute[];
   variations: ProductDetailVariation[];
+  "4_years_warranty"?: string;
 }
 
 export async function fetchProductDetailsNew(productId: number): Promise<ProductDetailsNew | null> {
