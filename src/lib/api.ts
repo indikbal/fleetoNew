@@ -821,6 +821,7 @@ export interface WarrantyProduct {
   product_name: string;
   warranty_rules: string; // HTML
   support_rules: string;  // HTML
+  warranty_and_support_section_pdf?: string;
 }
 
 export async function fetchWarrantyAndService(): Promise<WarrantyProduct[]> {
@@ -1069,9 +1070,15 @@ export async function filterDealersServer(body: Record<string, string>): Promise
 }
 
 // ─── Product Details (new endpoint with battery selection) ──────────────────
-export interface ProductDetailAttribute {
+export interface ProductDetailAttributeValue {
   name: string;
-  value: string;
+  description: string;
+  warranty: string | null;
+}
+
+export interface ProductDetailAttribute {
+  attribute_name: string;
+  values: ProductDetailAttributeValue[];
 }
 
 export interface ProductDetailVariation {

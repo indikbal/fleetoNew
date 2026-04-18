@@ -7,7 +7,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUpRight, ShoppingCart, CheckCircle, ShieldCheck, X } from "lucide-react";
 import { colors, fonts, styles } from "@/config/theme";
 import { colorNameToHex, formatPrice } from "@/lib/api";
-import type { WCProductDetail, ProductVariation, ProductDetailAttribute } from "@/lib/api";
+import type {
+  WCProductDetail,
+  ProductVariation,
+  ProductDetailAttribute,
+  ProductDetailAttributeValue,
+} from "@/lib/api";
 import { useCart } from "@/context/CartContext";
 
 interface Props {
@@ -27,17 +32,18 @@ export default function ProductDetailView({ product, batteryAttributes, warranty
   const [selected, setSelected]       = useState<ProductVariation | null>(null);
   const [cartStatus, setCartStatus]   = useState<"idle" | "added">("idle");
   const [activeImage, setActiveImage] = useState(product.image || "/images/hero-scooty.png");
-  const [selectedBattery, setSelectedBattery] = useState<string | null>(null);
+  const [selectedBattery, setSelectedBattery] = useState<ProductDetailAttributeValue | null>(null);
   const [warrantyPopup, setWarrantyPopup] = useState(false);
+  const [popupTab, setPopupTab] = useState<"standard" | "smart">("standard");
   const { addItem } = useCart();
 
-  const warrantyMessage = warrantyText?.trim() || "4 Years Warranty";
+  const fallbackWarranty = warrantyText?.trim() || "4 Years Warranty";
 
   // Extract battery selection attributes
-  const batteryStandard = batteryAttributes?.find((a) => a.name === "Battery Selection");
-  const batterySmart = batteryAttributes?.find((a) => a.name === "Battery Selection (Smart)");
-  const batteryOptions = batteryStandard?.value.split(", ").filter(Boolean) ?? [];
-  const batterySmartOptions = batterySmart?.value.split(", ").filter(Boolean) ?? [];
+  const batteryStandard = batteryAttributes?.find((a) => a.attribute_name === "Battery Selection");
+  const batterySmart    = batteryAttributes?.find((a) => a.attribute_name === "Battery Selection (Smart)");
+  const batteryOptions      = batteryStandard?.values ?? [];
+  const batterySmartOptions = batterySmart?.values ?? [];
 
   const hasStandard = batteryOptions.length > 0;
   const hasSmart    = batterySmartOptions.length > 0;
@@ -45,9 +51,15 @@ export default function ProductDetailView({ product, batteryAttributes, warranty
     hasStandard ? "standard" : "smart"
   );
 
-  const handleSelectSmartBattery = (opt: string) => {
+  const isLithium = (opt: ProductDetailAttributeValue) =>
+    /lithium/i.test(opt.name);
+
+  const handleSelectBattery = (opt: ProductDetailAttributeValue, tab: "standard" | "smart") => {
     setSelectedBattery(opt);
-    setWarrantyPopup(true);
+    if (isLithium(opt)) {
+      setPopupTab(tab);
+      setWarrantyPopup(true);
+    }
   };
 
   useEffect(() => {
@@ -304,9 +316,9 @@ export default function ProductDetailView({ product, batteryAttributes, warranty
                         <p
                           className="text-[11px] text-gray-500 font-medium truncate max-w-[60%]"
                           style={{ fontFamily: fonts.body }}
-                          title={selectedBattery}
+                          title={selectedBattery.name}
                         >
-                          {selectedBattery}
+                          {selectedBattery.name}
                         </p>
                       )}
                     </div>
@@ -344,15 +356,11 @@ export default function ProductDetailView({ product, batteryAttributes, warranty
                     {/* Chip grid for active tab */}
                     <div className="grid grid-cols-2 gap-1.5">
                       {(batteryTab === "standard" ? batteryOptions : batterySmartOptions).map((opt) => {
-                        const isActive = selectedBattery === opt;
-                        const onClick  =
-                          batteryTab === "smart"
-                            ? () => handleSelectSmartBattery(opt)
-                            : () => setSelectedBattery(opt);
+                        const isActive = selectedBattery?.name === opt.name;
                         return (
                           <button
-                            key={opt}
-                            onClick={onClick}
+                            key={opt.name}
+                            onClick={() => handleSelectBattery(opt, batteryTab)}
                             className="px-2.5 py-1.5 rounded-lg border transition-all text-[11px] font-medium text-left truncate"
                             style={{
                               borderColor: isActive ? colors.primary : "#E5E7EB",
@@ -360,9 +368,9 @@ export default function ProductDetailView({ product, batteryAttributes, warranty
                               fontFamily: fonts.body,
                               color: isActive ? colors.primary : "#374151",
                             }}
-                            title={opt}
+                            title={opt.name}
                           >
-                            {opt}
+                            {opt.name}
                           </button>
                         );
                       })}
@@ -468,36 +476,51 @@ export default function ProductDetailView({ product, batteryAttributes, warranty
                   <ShieldCheck size={38} style={{ color: colors.primary }} />
                 </motion.div>
 
-                <h3
-                  id="warranty-title"
-                  className="text-2xl md:text-3xl mb-2"
-                  style={{ ...styles.headingFont, color: colors.black }}
-                >
-                  {warrantyMessage}
-                </h3>
+                {(() => {
+                  const warrantyMessage =
+                    selectedBattery?.warranty?.trim() || fallbackWarranty;
+                  const batteryKind =
+                    popupTab === "smart" ? "Smart Lithium" : "Lithium";
+                  return (
+                    <>
+                      <h3
+                        id="warranty-title"
+                        className="text-2xl md:text-3xl mb-2"
+                        style={{ ...styles.headingFont, color: colors.black }}
+                      >
+                        {warrantyMessage}
+                      </h3>
 
-                {selectedBattery && (
-                  <p
-                    className="text-sm text-gray-500 mb-5"
-                    style={{ fontFamily: fonts.body }}
-                  >
-                    on Smart Lithium battery
-                    <span className="block text-gray-700 font-medium mt-1">
-                      {selectedBattery}
-                    </span>
-                  </p>
-                )}
+                      {selectedBattery && (
+                        <p
+                          className="text-sm text-gray-500 mb-5"
+                          style={{ fontFamily: fonts.body }}
+                        >
+                          on {batteryKind} battery
+                          <span className="block text-gray-700 font-medium mt-1">
+                            {selectedBattery.name}
+                          </span>
+                          {selectedBattery.description && (
+                            <span className="block text-gray-500 text-xs mt-0.5">
+                              {selectedBattery.description}
+                            </span>
+                          )}
+                        </p>
+                      )}
 
-                <p
-                  className="text-sm text-gray-500 leading-relaxed mb-7"
-                  style={{ fontFamily: fonts.body }}
-                >
-                  You&apos;ve chosen our Smart Lithium battery — it comes backed by a{" "}
-                  <span className="font-semibold" style={{ color: colors.primary }}>
-                    {warrantyMessage.toLowerCase()}
-                  </span>{" "}
-                  for complete peace of mind.
-                </p>
+                      <p
+                        className="text-sm text-gray-500 leading-relaxed mb-7"
+                        style={{ fontFamily: fonts.body }}
+                      >
+                        You&apos;ve chosen our {batteryKind} battery — it comes backed by a{" "}
+                        <span className="font-semibold" style={{ color: colors.primary }}>
+                          {warrantyMessage.toLowerCase()}
+                        </span>{" "}
+                        for complete peace of mind.
+                      </p>
+                    </>
+                  );
+                })()}
 
                 <button
                   onClick={() => setWarrantyPopup(false)}

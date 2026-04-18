@@ -44,7 +44,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
   // Extract battery attributes from the new product-details endpoint
   const batteryAttributes = productDetailsNew?.attributes?.filter(
-    (a) => a.name === "Battery Selection" || a.name === "Battery Selection (Smart)"
+    (a) => a.attribute_name === "Battery Selection" || a.attribute_name === "Battery Selection (Smart)"
   );
   const warrantyText = productDetailsNew?.["4_years_warranty"]?.trim() ?? "";
 

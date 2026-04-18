@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ShieldCheck, Wrench } from "lucide-react";
+import { ChevronDown, ShieldCheck, Wrench, FileText } from "lucide-react";
 import { colors, fonts } from "@/config/theme";
 import type { WarrantyProduct } from "@/lib/api";
 
@@ -10,7 +10,7 @@ interface Props {
   products: WarrantyProduct[];
 }
 
-type TabKey = "warranty" | "service";
+type TabKey = "warranty" | "service" | "document";
 
 export default function WarrantyContent({ products }: Props) {
   const [selectedId, setSelectedId] = useState<number>(
@@ -20,6 +20,13 @@ export default function WarrantyContent({ products }: Props) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const current = products.find((p) => p.product_id === selectedId);
+
+  // If the newly selected product has no PDF, snap away from the Document tab.
+  useEffect(() => {
+    if (activeTab === "document" && !current?.warranty_and_support_section_pdf) {
+      setActiveTab("warranty");
+    }
+  }, [activeTab, current]);
 
   return (
     <div className="space-y-6">
@@ -99,11 +106,14 @@ export default function WarrantyContent({ products }: Props) {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {(
             [
               { key: "warranty" as TabKey, label: "Warranty", Icon: ShieldCheck },
               { key: "service" as TabKey, label: "Service & Support", Icon: Wrench },
+              ...(current?.warranty_and_support_section_pdf
+                ? [{ key: "document" as TabKey, label: "Document", Icon: FileText }]
+                : []),
             ] as const
           ).map(({ key, label, Icon }) => {
             const isActive = activeTab === key;
@@ -145,29 +155,47 @@ export default function WarrantyContent({ products }: Props) {
             <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
               {activeTab === "warranty" ? (
                 <ShieldCheck size={22} style={{ color: colors.primary }} />
-              ) : (
+              ) : activeTab === "service" ? (
                 <Wrench size={22} style={{ color: colors.primary }} />
+              ) : (
+                <FileText size={22} style={{ color: colors.primary }} />
               )}
               <h2
                 className="text-lg sm:text-xl font-semibold"
                 style={{ fontFamily: fonts.body, color: colors.black }}
               >
                 {current.product_name} —{" "}
-                {activeTab === "warranty" ? "Warranty Rules" : "Service & Support"}
+                {activeTab === "warranty"
+                  ? "Warranty Rules"
+                  : activeTab === "service"
+                  ? "Service & Support"
+                  : "Document Preview"}
               </h2>
             </div>
 
-            {/* HTML content */}
-            <div
-              className="prose prose-sm max-w-none text-gray-600 leading-relaxed"
-              style={{ fontFamily: fonts.body }}
-              dangerouslySetInnerHTML={{
-                __html:
-                  activeTab === "warranty"
-                    ? current.warranty_rules
-                    : current.support_rules,
-              }}
-            />
+            {activeTab === "document" ? (
+              current.warranty_and_support_section_pdf ? (
+                <PdfPreview url={current.warranty_and_support_section_pdf} />
+              ) : (
+                <p
+                  className="text-sm text-gray-400 text-center py-10"
+                  style={{ fontFamily: fonts.body }}
+                >
+                  No document available for this model.
+                </p>
+              )
+            ) : (
+              <div
+                className="prose prose-sm max-w-none text-gray-600 leading-relaxed"
+                style={{ fontFamily: fonts.body }}
+                dangerouslySetInnerHTML={{
+                  __html:
+                    activeTab === "warranty"
+                      ? current.warranty_rules
+                      : current.support_rules,
+                }}
+              />
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -183,6 +211,39 @@ export default function WarrantyContent({ products }: Props) {
           </p>
         </div>
       )}
+    </div>
+  );
+}
+
+// ── PDF preview (read-only, download/print toolbar hidden) ──────────────────
+function PdfPreview({ url }: { url: string }) {
+  // Proxy through our own route so the PDF is served with
+  // `Content-Disposition: inline` and the source domain isn't exposed via
+  // "Save as…". Hash params hide the built-in viewer toolbar / download
+  // button in Chromium browsers. No `sandbox` attribute — Chrome's PDF
+  // viewer plugin refuses to load inside a sandboxed frame.
+  const src = `/api/pdf-proxy?url=${encodeURIComponent(
+    url
+  )}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`;
+
+  return (
+    <div
+      className="relative w-full rounded-xl overflow-hidden border"
+      style={{ borderColor: "rgba(0,0,0,0.08)", backgroundColor: "#F7F7F7" }}
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      <iframe
+        src={src}
+        title="Document preview"
+        className="block w-full"
+        style={{ height: "80vh", minHeight: 520, border: "none" }}
+      />
+      <p
+        className="text-[11px] text-gray-400 text-center py-2"
+        style={{ fontFamily: fonts.body }}
+      >
+        Preview only — this document cannot be downloaded.
+      </p>
     </div>
   );
 }
