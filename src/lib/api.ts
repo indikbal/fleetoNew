@@ -13,6 +13,7 @@ export interface BannerSlide {
   sub_title_1: string;
   sub_title_2: string;
   sub_title_3: string;
+  sub_title_4: string;
   button_url: string;
 }
 
@@ -423,18 +424,131 @@ async function fetchMenuColumn(endpoint: string): Promise<FooterMenuItem[]> {
 }
 
 export async function fetchFooterMenus(): Promise<FooterMenuColumn[]> {
-  const [products, quickLinks, aboutUs, support] = await Promise.all([
+  const [products, quickLinks, aboutUs, support, common] = await Promise.all([
     fetchMenuColumn("our-product-menu"),
     fetchMenuColumn("quick-link-menu"),
     fetchMenuColumn("about-us-menu"),
     fetchMenuColumn("footer-menu"),
+    fetchCommonData(),
   ]);
   return [
-    { title: "Our Products", items: products },
-    { title: "Quick Links", items: quickLinks },
-    { title: "About us", items: aboutUs },
-    { title: "Support", items: support },
+    { title: common.columnTitles.ourProducts, items: products },
+    { title: common.columnTitles.quickLinks, items: quickLinks },
+    { title: common.columnTitles.aboutUs, items: aboutUs },
+    { title: common.columnTitles.support, items: support },
   ];
+}
+
+// ─── Common (shared site-wide data) ───────────────────────────────────────────
+export interface CommonSocialMedia {
+  svg: string;
+  name: string;
+  url: string;
+}
+
+export interface CommonData {
+  headerLogo: string;
+  headerTestRideUrl: string;
+  footerContent: string;
+  footerTestRideUrl: string;
+  columnTitles: {
+    ourProducts: string;
+    quickLinks: string;
+    aboutUs: string;
+    support: string;
+    contact: string;
+  };
+  address: string;
+  phone: string;
+  email: string;
+  workingHours: string;
+  footerTitle1: string;
+  footerTitle2: string;
+  socialMedia: CommonSocialMedia[];
+}
+
+const pickFirst = (v: unknown): string => {
+  if (Array.isArray(v)) return typeof v[0] === "string" ? v[0] : "";
+  if (typeof v === "string") return v;
+  return "";
+};
+
+const stripHtmlBasic = (s: string) =>
+  s.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+
+const commonFallback: CommonData = {
+  headerLogo: "/images/logo.png",
+  headerTestRideUrl: "/book-test-ride",
+  footerContent: "",
+  footerTestRideUrl: "/book-test-ride",
+  columnTitles: {
+    ourProducts: "Our Products",
+    quickLinks: "Quick Links",
+    aboutUs: "About us",
+    support: "Support",
+    contact: "Contact",
+  },
+  address: "",
+  phone: "",
+  email: "",
+  workingHours: "",
+  footerTitle1: "Ride with",
+  footerTitle2: "FLEETO",
+  socialMedia: [],
+};
+
+export async function fetchCommonData(): Promise<CommonData> {
+  try {
+    const res = await fetch(`${API_BASE}?action=Common`, {
+      method: "POST",
+      next: { revalidate: CACHE_TTL },
+    });
+    if (!res.ok) return commonFallback;
+    const json = await res.json();
+
+    const socialRaw = Array.isArray(json.Footer_social_media)
+      ? json.Footer_social_media
+      : [];
+
+    return {
+      headerLogo: pickFirst(json.Header_logo) || commonFallback.headerLogo,
+      headerTestRideUrl:
+        pickFirst(json.Book_an_test_ride_url) || commonFallback.headerTestRideUrl,
+      footerContent: pickFirst(json.Footer_content),
+      footerTestRideUrl:
+        pickFirst(json.Footer_book_your_test_ride_url) ||
+        commonFallback.footerTestRideUrl,
+      columnTitles: {
+        ourProducts:
+          pickFirst(json.Our_products_title) || commonFallback.columnTitles.ourProducts,
+        quickLinks:
+          pickFirst(json.Quick_links_title) || commonFallback.columnTitles.quickLinks,
+        aboutUs:
+          pickFirst(json.About_us_title) || commonFallback.columnTitles.aboutUs,
+        support:
+          pickFirst(json.Support_title) || commonFallback.columnTitles.support,
+        contact:
+          pickFirst(json.Contact_title) || commonFallback.columnTitles.contact,
+      },
+      address: pickFirst(json.Address),
+      phone: stripHtmlBasic(pickFirst(json.Phone_number)),
+      email: pickFirst(json.Email_id),
+      workingHours: pickFirst(json.Working_hours),
+      footerTitle1:
+        pickFirst(json.Footer_ride_with_section_title_1) || commonFallback.footerTitle1,
+      footerTitle2:
+        pickFirst(json.Footer_ride_with_section_title_2) || commonFallback.footerTitle2,
+      socialMedia: socialRaw.map(
+        (s: { image_svg?: string; name?: string; url?: string }) => ({
+          svg: s.image_svg ?? "",
+          name: s.name ?? "",
+          url: s.url ?? "#",
+        })
+      ),
+    };
+  } catch {
+    return commonFallback;
+  }
 }
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────

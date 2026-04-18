@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowUpRight,
   ChevronDown,
-  X,
   Palette,
   IndianRupee,
   Gauge,
@@ -115,124 +114,32 @@ export default function CompareTable({ products }: CompareTableProps) {
         </div>
       </div>
 
-      {/* ─── Hero product cards ─────────────────────────────────────────── */}
+      {/* ─── Product cards with specs ─────────────────────────────────── */}
       {activeCount > 0 && (
-        <div className="grid grid-cols-2 gap-3 sm:gap-6 relative">
+        <div className="grid grid-cols-2 gap-3 sm:gap-6 relative items-start">
           {selected.map((p, idx) => (
-            <ProductHeroCard key={idx} product={p} index={idx} />
+            <ProductHeroCard
+              key={idx}
+              product={p}
+              index={idx}
+              attrRows={attrRows}
+            />
           ))}
-
-          {/* Floating VS badge overlap */}
-          {activeCount === 2 && (
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex pointer-events-none z-10">
-              <span
-                className="inline-flex items-center justify-center w-9 h-9 sm:w-14 sm:h-14 rounded-full text-white text-[11px] sm:text-sm font-bold shadow-xl ring-2 sm:ring-4 ring-white"
-                style={{
-                  background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
-                  fontFamily: fonts.display,
-                  letterSpacing: "1px",
-                }}
-              >
-                VS
-              </span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ─── Spec comparison ────────────────────────────────────────────── */}
-      {activeCount > 0 && (
-        <div className="bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm border border-gray-100">
-          <div
-            className="px-4 sm:px-8 py-3 sm:py-4 border-b border-gray-100"
-            style={{
-              background:
-                "linear-gradient(90deg, #FFF5F5 0%, #ffffff 100%)",
-            }}
-          >
-            <h4
-              className="text-xs sm:text-sm font-bold uppercase tracking-widest"
-              style={{ color: colors.primary, fontFamily: fonts.body }}
-            >
-              Specifications
-            </h4>
-          </div>
-
-          <div className="divide-y divide-gray-100">
-            <SpecRow
-              label="Price"
-              icon={<IndianRupee size={14} />}
-              selected={selected}
-              render={(p) => (
-                <span
-                  className="text-sm sm:text-lg font-extrabold whitespace-nowrap"
-                  style={{ color: colors.primary, fontFamily: fonts.body }}
-                >
-                  {formatPrice(p.price)}
-                </span>
-              )}
-            />
-
-            <SpecRow
-              label="Colours"
-              icon={<Palette size={14} />}
-              highlight
-              selected={selected}
-              render={(p) => <ColorSwatches colors={p.variation_colors} />}
-            />
-
-            {attrRows.map((attrName, idx) => (
-              <SpecRow
-                key={attrName}
-                label={attrName}
-                highlight={idx % 2 === 0}
-                selected={selected}
-                render={(p) => {
-                  const attr = p.attributes.find((a) => a.name === attrName);
-                  return attr ? (
-                    <span
-                      className="text-xs sm:text-sm text-gray-700 font-medium break-words"
-                      style={{ fontFamily: fonts.body }}
-                    >
-                      {attr.options.join(", ")}
-                    </span>
-                  ) : (
-                    <X size={14} className="text-gray-300 mx-auto" />
-                  );
-                }}
-              />
-            ))}
-
-            <SpecRow
-              label="Details"
-              selected={selected}
-              render={(p) => (
-                <Link
-                  href={`/products/${p.id}`}
-                  className="inline-flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-xs font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-white transition-transform hover:scale-105"
-                  style={{
-                    backgroundColor: colors.primary,
-                    fontFamily: fonts.body,
-                  }}
-                >
-                  View <ArrowUpRight size={12} />
-                </Link>
-              )}
-            />
-          </div>
         </div>
       )}
     </div>
   );
 }
 
-/* ─── Hero product card ─────────────────────────────────────────────────── */
+/* ─── Hero product card with specs ───────────────────────────────────── */
 function ProductHeroCard({
   product,
   index,
+  attrRows,
 }: {
   product: WCProduct | null;
   index: number;
+  attrRows: string[];
 }) {
   if (!product) {
     return (
@@ -266,7 +173,7 @@ function ProductHeroCard({
         className="rounded-2xl sm:rounded-3xl overflow-hidden relative flex flex-col border shadow-sm hover:shadow-lg transition-shadow"
         style={{
           background:
-            "linear-gradient(to bottom, #ffffff 0%, #FFE8E8 100%)",
+            "linear-gradient(to bottom, #ffffff 0%, #FFF5F5 100%)",
           borderColor: "#F2D4D4",
         }}
       >
@@ -294,7 +201,7 @@ function ProductHeroCard({
           />
         </div>
 
-        <div className="px-3 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-2 text-center">
+        <div className="px-3 pb-3 pt-1 sm:px-6 sm:pb-4 sm:pt-2 text-center">
           <h3
             className="text-sm sm:text-2xl font-extrabold mb-0.5 sm:mb-1 leading-tight"
             style={{
@@ -312,32 +219,89 @@ function ProductHeroCard({
             {formatPrice(product.price)}
           </div>
         </div>
+
+        {/* ─── Specifications inside the card ─── */}
+        <div className="border-t border-gray-200 bg-white/70 px-3 py-3 sm:px-6 sm:py-5">
+          <h4
+            className="text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-2.5 sm:mb-3"
+            style={{ color: colors.primary, fontFamily: fonts.body }}
+          >
+            Specifications
+          </h4>
+
+          <ul className="divide-y divide-gray-100">
+            <SpecItem
+              label="Price"
+              icon={<IndianRupee size={12} />}
+              value={
+                <span
+                  className="text-xs sm:text-sm font-extrabold whitespace-nowrap"
+                  style={{ color: colors.primary, fontFamily: fonts.body }}
+                >
+                  {formatPrice(product.price)}
+                </span>
+              }
+            />
+            <SpecItem
+              label="Colours"
+              icon={<Palette size={12} />}
+              value={<ColorSwatches colors={product.variation_colors} />}
+            />
+            {attrRows.map((attrName) => {
+              const attr = product.attributes.find(
+                (a) => a.name === attrName
+              );
+              return (
+                <SpecItem
+                  key={attrName}
+                  label={attrName}
+                  value={
+                    attr ? (
+                      <span
+                        className="text-[11px] sm:text-xs text-gray-700 font-medium break-words text-right"
+                        style={{ fontFamily: fonts.body }}
+                      >
+                        {attr.options.join(", ")}
+                      </span>
+                    ) : (
+                      <span className="text-gray-300 text-xs">—</span>
+                    )
+                  }
+                />
+              );
+            })}
+          </ul>
+
+          <Link
+            href={`/products/${product.id}`}
+            className="mt-3 sm:mt-4 w-full inline-flex items-center justify-center gap-1 sm:gap-1.5 text-[11px] sm:text-xs font-semibold px-3 sm:px-4 py-2 sm:py-2.5 rounded-full text-white transition-transform hover:scale-[1.02]"
+            style={{
+              backgroundColor: colors.primary,
+              fontFamily: fonts.body,
+            }}
+          >
+            View Details <ArrowUpRight size={12} />
+          </Link>
+        </div>
       </motion.div>
     </AnimatePresence>
   );
 }
 
-/* ─── Spec row ──────────────────────────────────────────────────────────── */
-function SpecRow({
+/* ─── Spec item row (inside card) ────────────────────────────────────── */
+function SpecItem({
   label,
   icon,
-  highlight,
-  selected,
-  render,
+  value,
 }: {
   label: string;
   icon?: React.ReactNode;
-  highlight?: boolean;
-  selected: (WCProduct | null)[];
-  render: (p: WCProduct) => React.ReactNode;
+  value: React.ReactNode;
 }) {
   return (
-    <div
-      className="grid grid-cols-[0.9fr_1fr_1fr] sm:grid-cols-[1fr_1fr_1fr] items-center"
-      style={{ backgroundColor: highlight ? "#FAFAFA" : "#fff" }}
-    >
-      <div
-        className="px-3 sm:px-8 py-3 sm:py-4 flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-sm font-semibold uppercase tracking-wider text-gray-600"
+    <li className="flex items-center justify-between gap-2 py-2 sm:py-2.5">
+      <span
+        className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-gray-500 shrink-0"
         style={{ fontFamily: fonts.body }}
       >
         {icon && (
@@ -345,31 +309,20 @@ function SpecRow({
             {icon}
           </span>
         )}
-        <span className="break-words leading-tight">{label}</span>
-      </div>
-      {selected.map((p, i) => (
-        <div
-          key={i}
-          className="px-2 sm:px-6 py-3 sm:py-4 text-center border-l border-gray-100"
-        >
-          {p ? (
-            render(p)
-          ) : (
-            <span className="text-gray-300 text-sm">—</span>
-          )}
-        </div>
-      ))}
-    </div>
+        {label}
+      </span>
+      <span className="min-w-0 flex items-center justify-end">{value}</span>
+    </li>
   );
 }
 
 /* ─── Color swatches ────────────────────────────────────────────────────── */
 function ColorSwatches({ colors: list }: { colors: string[] }) {
   if (list.length === 0) {
-    return <span className="text-gray-400 text-sm">—</span>;
+    return <span className="text-gray-400 text-xs">—</span>;
   }
   return (
-    <div className="flex items-center justify-center gap-1 sm:gap-1.5 flex-wrap">
+    <div className="flex items-center justify-end gap-1 sm:gap-1.5 flex-wrap">
       {list.slice(0, 4).map((c, i) => (
         <span
           key={i}

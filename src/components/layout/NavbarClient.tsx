@@ -14,9 +14,14 @@ import type { HeaderMenuItem } from "@/lib/api";
 
 interface NavbarClientProps {
   links: HeaderMenuItem[];
+  logoUrl: string;
+  testRideUrl: string;
 }
 
-export default function NavbarClient({ links }: NavbarClientProps) {
+const isExternalUrl = (url: string) => /^https?:\/\//i.test(url);
+
+export default function NavbarClient({ links, logoUrl, testRideUrl }: NavbarClientProps) {
+  const testRideIsExternal = isExternalUrl(testRideUrl);
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
@@ -48,7 +53,7 @@ export default function NavbarClient({ links }: NavbarClientProps) {
         <Link href="/" className="flex items-center">
           <div className="relative w-18 h-18">
             <Image
-              src="/images/logo.png"
+              src={logoUrl}
               alt="Fleeto Logo"
               fill
               className="object-contain"
@@ -137,20 +142,39 @@ export default function NavbarClient({ links }: NavbarClientProps) {
             )}
           </Link>
 
-          <Link
-            href="/book-test-ride"
-            className="inline-flex items-center gap-2 px-5 py-2.5 text-white text-sm font-semibold rounded-full transition-colors btn-red-inner-shadow"
-            style={{
-              backgroundColor: colors.primary,
-              fontFamily: fonts.body,
-              ...styles.redButtonShadow,
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = colors.primaryDark)}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = colors.primary)}
-          >
-            Book A Test Ride
-            <ArrowUpRight size={16} />
-          </Link>
+          {testRideIsExternal ? (
+            <a
+              href={testRideUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-white text-sm font-semibold rounded-full transition-colors btn-red-inner-shadow"
+              style={{
+                backgroundColor: colors.primary,
+                fontFamily: fonts.body,
+                ...styles.redButtonShadow,
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = colors.primaryDark)}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = colors.primary)}
+            >
+              Book A Test Ride
+              <ArrowUpRight size={16} />
+            </a>
+          ) : (
+            <Link
+              href={testRideUrl}
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-white text-sm font-semibold rounded-full transition-colors btn-red-inner-shadow"
+              style={{
+                backgroundColor: colors.primary,
+                fontFamily: fonts.body,
+                ...styles.redButtonShadow,
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = colors.primaryDark)}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = colors.primary)}
+            >
+              Book A Test Ride
+              <ArrowUpRight size={16} />
+            </Link>
+          )}
         </div>
 
         {/* Mobile: cart icon + hamburger */}
@@ -237,19 +261,37 @@ export default function NavbarClient({ links }: NavbarClientProps) {
                 )
               )}
 
-              <Link
-                href="/book-test-ride"
-                className="inline-flex items-center gap-2 px-6 py-3 text-white font-semibold rounded-full mt-4 w-full justify-center"
-                style={{
-                  backgroundColor: colors.primary,
-                  fontFamily: fonts.body,
-                  ...styles.redButtonShadow,
-                }}
-                onClick={() => setMobileOpen(false)}
-              >
-                Book A Test Ride
-                <ArrowUpRight size={16} />
-              </Link>
+              {testRideIsExternal ? (
+                <a
+                  href={testRideUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-6 py-3 text-white font-semibold rounded-full mt-4 w-full justify-center"
+                  style={{
+                    backgroundColor: colors.primary,
+                    fontFamily: fonts.body,
+                    ...styles.redButtonShadow,
+                  }}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Book A Test Ride
+                  <ArrowUpRight size={16} />
+                </a>
+              ) : (
+                <Link
+                  href={testRideUrl}
+                  className="inline-flex items-center gap-2 px-6 py-3 text-white font-semibold rounded-full mt-4 w-full justify-center"
+                  style={{
+                    backgroundColor: colors.primary,
+                    fontFamily: fonts.body,
+                    ...styles.redButtonShadow,
+                  }}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Book A Test Ride
+                  <ArrowUpRight size={16} />
+                </Link>
+              )}
             </div>
           </motion.div>
         )}

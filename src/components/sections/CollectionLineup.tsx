@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import type { Swiper as SwiperType } from "swiper";
 import { Swiper, SwiperSlide } from "swiper/react";
 import Image from "next/image";
@@ -8,14 +8,13 @@ import { ArrowUpRight } from "lucide-react";
 import { colors, styles } from "@/config/theme";
 import { formatPrice, colorNameToHex } from "@/lib/api";
 import type { WCProduct } from "@/lib/api";
-import SelectOptionModal from "@/components/ui/SelectOptionModal";
 import Link from "next/link";
 
 // @ts-ignore — Swiper CSS
 import "swiper/css";
 
 // ─── Card component ───────────────────────────────────────────────────────────
-function ProductCard({ product, onSelect }: { product: WCProduct; onSelect: () => void }) {
+function ProductCard({ product }: { product: WCProduct }) {
   const colorOptions =
     product.variation_colors.length > 0
       ? product.variation_colors
@@ -101,12 +100,13 @@ function ProductCard({ product, onSelect }: { product: WCProduct; onSelect: () =
       <div className="px-4 pt-3 pb-5 flex flex-col gap-3 flex-1">
         {/* Name + Price */}
         <div className="flex items-start justify-between gap-2">
-          <h3
-            className="leading-tight text-[#010101] font-bold"
+          <Link
+            href={`/products/${product.id}`}
+            className="leading-tight text-[#010101] font-bold hover:underline"
             style={{ fontSize: "clamp(18px, 2vw, 20px)", fontFamily: "var(--font-inter), sans-serif" }}
           >
-            {product.name}
-          </h3>
+            <h3 className="inline">{product.name}</h3>
+          </Link>
           <div className="text-right flex-shrink-0">
             <p className="text-[14px] text-gray-400 leading-none mb-0.5">From</p>
             <p className="font-bold leading-none" style={{ color: colors.primary, fontSize: "clamp(18px, 2vw, 20px)" }}>
@@ -118,16 +118,16 @@ function ProductCard({ product, onSelect }: { product: WCProduct; onSelect: () =
         <div className="h-px bg-gray-100" />
 
         {/* CTA */}
-        <button
-          onClick={onSelect}
+        <Link
+          href={`/products/${product.id}`}
           className="self-start inline-flex items-center gap-2 px-5 py-2.5 text-white text-sm font-semibold rounded-lg mt-auto btn-red-inner-shadow transition-colors"
           style={{ backgroundColor: colors.primary }}
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = colors.primaryDark)}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = colors.primary)}
         >
-          Select Option
+          View Details
           <ArrowUpRight size={15} />
-        </button>
+        </Link>
       </div>
     </div>
   );
@@ -141,8 +141,7 @@ interface Props {
 
 // ─── Section ──────────────────────────────────────────────────────────────────
 export default function CollectionLineup({ title1, title2, products }: Props) {
-  const [swiperInstance, setSwiperInstance]   = useState<SwiperType | null>(null);
-  const [selectedProduct, setSelectedProduct] = useState<WCProduct | null>(null);
+  const [swiperInstance, setSwiperInstance] = useState<SwiperType | null>(null);
 
   return (
     <>
@@ -185,10 +184,7 @@ export default function CollectionLineup({ title1, title2, products }: Props) {
               >
                 {products.map((product) => (
                   <SwiperSlide key={product.id} className="!h-auto">
-                    <ProductCard
-                      product={product}
-                      onSelect={() => setSelectedProduct(product)}
-                    />
+                    <ProductCard product={product} />
                   </SwiperSlide>
                 ))}
               </Swiper>
@@ -206,14 +202,6 @@ export default function CollectionLineup({ title1, title2, products }: Props) {
           </div>
         </div>
       </section>
-
-      {/* ── Select Option Modal ── */}
-      {selectedProduct && (
-        <SelectOptionModal
-          product={selectedProduct}
-          onClose={() => setSelectedProduct(null)}
-        />
-      )}
     </>
   );
 }

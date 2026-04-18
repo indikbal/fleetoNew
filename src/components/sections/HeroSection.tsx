@@ -14,6 +14,33 @@ const SLIDE_STYLES = [
   { svgColor: "#4AAB5E", bgColor: "#E4F5EA", accentColor: "#4AAB5E", watermark: ["FLEETO", "POWER"] },
 ];
 
+// ─── Render text with ® styled as a superscript registered mark ─────────────
+// Auto-inserts ® after "FLEETO" (any casing) if the CMS text doesn't already include it.
+const renderWithRegMark = (text: string) => {
+  if (!text) return null;
+  const normalized = text.replace(/FLEETO(?!®)/gi, (m) => `${m}®`);
+  const parts = normalized.split(/(®)/g);
+  return parts.map((part, i) =>
+    part === "®" ? (
+      <sup
+        key={i}
+        style={{
+          fontSize: "0.35em",
+          verticalAlign: "top",
+          position: "relative",
+          top: "0.55em",
+          marginLeft: "0.1em",
+          fontWeight: 400,
+        }}
+      >
+        ®
+      </sup>
+    ) : (
+      <span key={i}>{part}</span>
+    )
+  );
+};
+
 // ─── Inline SVG bg with dynamic fill ─────────────────────────────────────────
 const HeroBgSVG = ({ color }: { color: string }) => (
   <svg
@@ -214,8 +241,8 @@ export default function HeroSection({ slides, socialLinks }: Props) {
                     ...styles.headingFont,
                   }}
                 >
-                  <span style={{ color: "#1A3A8F" }}>{slide.sub_title_1}</span>
-                  <span style={{ color: style.accentColor }}>{slide.sub_title_2}</span>
+                  <span style={{ color: "#1A3A8F" }}>{renderWithRegMark(slide.sub_title_1)}</span>
+                  <span style={{ color: style.accentColor }}>{renderWithRegMark(slide.sub_title_2)}</span>
                 </motion.h1>
                 <motion.h1
                   initial={{ opacity: 0, x: -20 }}
@@ -225,11 +252,11 @@ export default function HeroSection({ slides, socialLinks }: Props) {
                   style={{
                     fontSize: "clamp(2rem, 5vw, 5.5rem)",
                     lineHeight: 1.2,
-                    color: "#1A3A8F",
                     ...styles.headingFont,
                   }}
                 >
-                  {slide.sub_title_3}
+                  <span style={{ color: "#1A3A8F" }}>{renderWithRegMark(slide.sub_title_3)}</span>
+                  <span style={{ color: style.accentColor }}>{renderWithRegMark(slide.sub_title_4)}</span>
                 </motion.h1>
               </motion.div>
             </AnimatePresence>

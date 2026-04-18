@@ -346,6 +346,12 @@ function DealerCard({ item, index }: { item: DealerItem; index: number }) {
   const title = stripHtml(item.title) || `Dealer ${index + 1}`;
   const hours = [item.time, item.day].filter(Boolean).join(" · ");
 
+  const directionUrl =
+    item.direction?.trim() ||
+    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+      [title, stripHtml(item.description), item.postcode].filter(Boolean).join(", ")
+    )}`;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -441,36 +447,32 @@ function DealerCard({ item, index }: { item: DealerItem; index: number }) {
       </div>
 
       {/* Footer CTAs */}
-      {(item.direction || item.test_ride) && (
-        <div className="px-5 pb-5 pt-1 flex flex-wrap gap-2">
-          {item.direction && (
-            <a
-              href={item.direction}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-full text-white transition-transform hover:scale-105 shadow-sm"
-              style={{ backgroundColor: colors.primary, fontFamily: fonts.body }}
-            >
-              <Navigation size={12} /> Directions
-            </a>
-          )}
-          {item.test_ride && (
-            <a
-              href={item.test_ride}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-full border-2 transition-colors hover:bg-gray-50"
-              style={{
-                borderColor: colors.primary,
-                color: colors.primary,
-                fontFamily: fonts.body,
-              }}
-            >
-              Book Test Ride <ArrowUpRight size={12} />
-            </a>
-          )}
-        </div>
-      )}
+      <div className="px-5 pb-5 pt-1 flex flex-wrap gap-2">
+        <a
+          href={directionUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-full text-white transition-transform hover:scale-105 shadow-sm"
+          style={{ backgroundColor: colors.primary, fontFamily: fonts.body }}
+        >
+          <Navigation size={12} /> Get Directions
+        </a>
+        {item.test_ride && (
+          <a
+            href={item.test_ride}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-full border-2 transition-colors hover:bg-gray-50"
+            style={{
+              borderColor: colors.primary,
+              color: colors.primary,
+              fontFamily: fonts.body,
+            }}
+          >
+            Book Test Ride <ArrowUpRight size={12} />
+          </a>
+        )}
+      </div>
     </motion.div>
   );
 }

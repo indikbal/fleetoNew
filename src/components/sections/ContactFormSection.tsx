@@ -5,27 +5,6 @@ import { motion } from "framer-motion";
 import { MapPin, Mail, Phone, Clock } from "lucide-react";
 import { colors, fonts, styles } from "@/config/theme";
 
-const infoItems = [
-  {
-    icon: MapPin,
-    lines: [
-      "Plot No 2, 3rd Floor, Block FA",
-      "East Kolkata Development Project",
-      "Ward no 107, Rajdanga Main Road",
-      "PS Kasba, Kolkata – 700107",
-    ],
-  },
-  {
-    icon: Mail,
-    lines: ["reach_fleeto@fleetoev.in"],
-    isLink: true,
-  },
-  {
-    icon: Phone,
-    lines: ["Sales: 08064521248", "Service: 08064521248"],
-  },
-];
-
 const inputClass =
   "w-full border-b border-gray-200 pb-2.5 text-sm outline-none bg-transparent text-gray-700 placeholder-gray-300 transition-colors focus:border-[#AB2323]";
 
@@ -37,6 +16,10 @@ interface Props {
   mailTitle: string;
   telephoneTitle: string;
   workingHoursTitle: string;
+  address: string;
+  email: string;
+  phone: string;
+  workingHours: string;
 }
 
 export default function ContactFormSection({
@@ -47,6 +30,10 @@ export default function ContactFormSection({
   mailTitle,
   telephoneTitle,
   workingHoursTitle,
+  address,
+  email,
+  phone,
+  workingHours,
 }: Props) {
   const [form, setForm] = useState({
     name: "",
@@ -55,17 +42,53 @@ export default function ContactFormSection({
     subject: "",
     message: "",
   });
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof typeof form, string>>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
-  const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+  const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm((f) => ({ ...f, [key]: e.target.value }));
+    setFieldErrors((prev) => {
+      if (!prev[key]) return prev;
+      const { [key]: _, ...rest } = prev;
+      return rest;
+    });
+  };
+
+  const validate = () => {
+    const errs: Partial<Record<keyof typeof form, string>> = {};
+    if (!form.name.trim()) errs.name = "Please enter your name.";
+    if (!form.email.trim()) {
+      errs.email = "Please enter your email.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      errs.email = "Enter a valid email address.";
+    }
+    if (!form.phone.trim()) {
+      errs.phone = "Please enter your phone number.";
+    } else if (!/^[0-9+\-\s()]{7,20}$/.test(form.phone.trim())) {
+      errs.phone = "Enter a valid phone number.";
+    }
+    if (!form.subject.trim()) errs.subject = "Please enter a subject.";
+    if (!form.message.trim()) {
+      errs.message = "Please enter a message.";
+    } else if (form.message.trim().length < 10) {
+      errs.message = "Message should be at least 10 characters.";
+    }
+    return errs;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
+    setSubmitted(false);
+    const errs = validate();
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      return;
+    }
+    setFieldErrors({});
+    setLoading(true);
     try {
       const res = await fetch("/api/contact", {
         method: "POST",
@@ -92,8 +115,26 @@ export default function ContactFormSection({
     }
   };
 
-  // Map dynamic labels to info items
-  const labels = [addressTitle, mailTitle, telephoneTitle];
+  const addressLines = address
+    ? address.split(/\r?\n|<br\s*\/?>(?![^<]*<\/[^>]+>)/i).map((l) => l.trim()).filter(Boolean)
+    : [];
+
+  const infoItems: {
+    icon: typeof MapPin;
+    label: string;
+    lines: string[];
+    href?: string;
+  }[] = [
+    ...(address
+      ? [{ icon: MapPin, label: addressTitle, lines: addressLines }]
+      : []),
+    ...(email
+      ? [{ icon: Mail, label: mailTitle, lines: [email], href: `mailto:${email}` }]
+      : []),
+    ...(phone
+      ? [{ icon: Phone, label: telephoneTitle, lines: [phone], href: `tel:${phone.replace(/\s+/g, "")}` }]
+      : []),
+  ];
 
   return (
     <section
@@ -162,19 +203,25 @@ export default function ContactFormSection({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
 
             {/* ── Left: form ── */}
-            <form className="flex flex-col gap-7" onSubmit={handleSubmit}>
+            <form className="flex flex-col gap-7" onSubmit={handleSubmit} noValidate>
 
               {/* Row 1 */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-7">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs text-gray-400 font-medium" style={{ fontFamily: fonts.body }}>Your Name</label>
                   <input type="text" placeholder="John Doe" value={form.name} onChange={set("name")}
-                    className={inputClass} style={{ fontFamily: fonts.body }} />
+                    className={`${inputClass} ${fieldErrors.name ? "border-red-400" : ""}`} style={{ fontFamily: fonts.body }} />
+                  {fieldErrors.name && (
+                    <span className="text-xs text-red-500" style={{ fontFamily: fonts.body }}>{fieldErrors.name}</span>
+                  )}
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs text-gray-400 font-medium" style={{ fontFamily: fonts.body }}>Email Address</label>
                   <input type="email" placeholder="you@example.com" value={form.email} onChange={set("email")}
-                    className={inputClass} style={{ fontFamily: fonts.body }} />
+                    className={`${inputClass} ${fieldErrors.email ? "border-red-400" : ""}`} style={{ fontFamily: fonts.body }} />
+                  {fieldErrors.email && (
+                    <span className="text-xs text-red-500" style={{ fontFamily: fonts.body }}>{fieldErrors.email}</span>
+                  )}
                 </div>
               </div>
 
@@ -183,12 +230,18 @@ export default function ContactFormSection({
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs text-gray-400 font-medium" style={{ fontFamily: fonts.body }}>Phone Number</label>
                   <input type="tel" placeholder="+91 98765 43210" value={form.phone} onChange={set("phone")}
-                    className={inputClass} style={{ fontFamily: fonts.body }} />
+                    className={`${inputClass} ${fieldErrors.phone ? "border-red-400" : ""}`} style={{ fontFamily: fonts.body }} />
+                  {fieldErrors.phone && (
+                    <span className="text-xs text-red-500" style={{ fontFamily: fonts.body }}>{fieldErrors.phone}</span>
+                  )}
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs text-gray-400 font-medium" style={{ fontFamily: fonts.body }}>Subject</label>
                   <input type="text" placeholder="How can we help?" value={form.subject} onChange={set("subject")}
-                    className={inputClass} style={{ fontFamily: fonts.body }} />
+                    className={`${inputClass} ${fieldErrors.subject ? "border-red-400" : ""}`} style={{ fontFamily: fonts.body }} />
+                  {fieldErrors.subject && (
+                    <span className="text-xs text-red-500" style={{ fontFamily: fonts.body }}>{fieldErrors.subject}</span>
+                  )}
                 </div>
               </div>
 
@@ -200,9 +253,12 @@ export default function ContactFormSection({
                   placeholder="Tell us more about your enquiry..."
                   value={form.message}
                   onChange={set("message")}
-                  className={`${inputClass} resize-none`}
+                  className={`${inputClass} resize-none ${fieldErrors.message ? "border-red-400" : ""}`}
                   style={{ fontFamily: fonts.body }}
                 />
+                {fieldErrors.message && (
+                  <span className="text-xs text-red-500" style={{ fontFamily: fonts.body }}>{fieldErrors.message}</span>
+                )}
               </div>
 
               {/* Error */}
@@ -235,7 +291,7 @@ export default function ContactFormSection({
             {/* ── Right: info cards ── */}
             <div className="flex flex-col gap-5">
 
-              {infoItems.map(({ icon: Icon, lines, isLink }, idx) => (
+              {infoItems.map(({ icon: Icon, label, lines, href }, idx) => (
                 <div key={idx} className="flex gap-4 items-start">
                   <div
                     className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
@@ -248,7 +304,7 @@ export default function ContactFormSection({
                       className="font-semibold text-gray-800 mb-1 text-sm"
                       style={{ fontFamily: fonts.body }}
                     >
-                      {labels[idx]}
+                      {label}
                     </p>
                     {lines.map((line, i) => (
                       <p
@@ -256,10 +312,16 @@ export default function ContactFormSection({
                         className="text-sm leading-relaxed"
                         style={{
                           fontFamily: fonts.body,
-                          color: isLink ? colors.primary : "#6b7280",
+                          color: href ? colors.primary : "#6b7280",
                         }}
                       >
-                        {line}
+                        {href ? (
+                          <a href={href} className="hover:underline break-all">
+                            {line}
+                          </a>
+                        ) : (
+                          line
+                        )}
                       </p>
                     ))}
                   </div>
@@ -270,21 +332,26 @@ export default function ContactFormSection({
               <div className="h-px bg-gray-100" />
 
               {/* Working hours */}
-              <div className="flex gap-4 items-start">
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: `${colors.primary}18` }}
-                >
-                  <Clock size={18} style={{ color: colors.primary }} />
+              {workingHours && (
+                <div className="flex gap-4 items-start">
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: `${colors.primary}18` }}
+                  >
+                    <Clock size={18} style={{ color: colors.primary }} />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-800 mb-1.5 text-sm" style={{ fontFamily: fonts.body }}>
+                      {workingHoursTitle}
+                    </p>
+                    <div
+                      className="text-sm text-gray-500 leading-relaxed [&_p]:m-0"
+                      style={{ fontFamily: fonts.body }}
+                      dangerouslySetInnerHTML={{ __html: workingHours }}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <p className="font-semibold text-gray-800 mb-1.5 text-sm" style={{ fontFamily: fonts.body }}>
-                    {workingHoursTitle}
-                  </p>
-                  <p className="text-sm text-gray-500" style={{ fontFamily: fonts.body }}>Mon – Sat &nbsp;&nbsp; 10:00 am – 7:00 pm</p>
-                  <p className="text-sm text-gray-400" style={{ fontFamily: fonts.body }}>Sunday &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Closed</p>
-                </div>
-              </div>
+              )}
 
             </div>
           </div>
