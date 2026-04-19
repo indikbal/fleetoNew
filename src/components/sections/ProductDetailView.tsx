@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link"; // used for Book Test Ride
 import { motion, AnimatePresence } from "framer-motion";
@@ -53,6 +53,28 @@ export default function ProductDetailView({ product, batteryAttributes, warranty
 
   const isLithium = (opt: ProductDetailAttributeValue) =>
     /lithium/i.test(opt.name);
+
+  // Parse product.desc (<ul><li>…</li></ul>) into plain-text pills
+  const basePills = useMemo<string[]>(() => {
+    if (!product.desc) return [];
+    return (product.desc.match(/<li[^>]*>([\s\S]*?)<\/li>/gi) ?? []).map((li) =>
+      li.replace(/<\/?[^>]+>/g, "").replace(/&nbsp;/g, " ").trim()
+    );
+  }, [product.desc]);
+
+  // Pills shown under the title — swap Kms / Volts based on selected battery
+  const displayPills = useMemo<string[]>(() => {
+    if (!selectedBattery) return basePills;
+    const voltsMatch = selectedBattery.name.match(/(\d+)\s*V\b/i);
+    const voltsPill = voltsMatch ? `${voltsMatch[1]} Volts` : null;
+    const kmsPill = selectedBattery.description?.trim() || null;
+    return basePills.map((pill) => {
+      if (/kmph/i.test(pill)) return pill;
+      if (/\bkms?\b/i.test(pill) && kmsPill) return kmsPill;
+      if (/volts?\b/i.test(pill) && voltsPill) return voltsPill;
+      return pill;
+    });
+  }, [basePills, selectedBattery]);
 
   const handleSelectBattery = (opt: ProductDetailAttributeValue, tab: "standard" | "smart") => {
     setSelectedBattery(opt);
@@ -224,29 +246,31 @@ export default function ProductDetailView({ product, batteryAttributes, warranty
                 </div>
               </motion.div>
 
-              {/* Specs (desc is an HTML <ul> list) */}
-              {product.desc && (
+              {/* Specs — reactive pills that swap with selected battery */}
+              {displayPills.length > 0 && (
                 <motion.div
                   {...fadeUp(0.2)}
-                  className="
-                    text-xs text-gray-500
-                    [&_ul]:flex [&_ul]:flex-wrap [&_ul]:gap-1.5 [&_ul]:p-0 [&_ul]:m-0
-                    [&_li]:list-none [&_li]:rounded-full [&_li]:px-2.5 [&_li]:py-1
-                    [&_li]:text-xs [&_li]:font-medium
-                  "
+                  className="text-xs text-gray-500"
                   style={{ fontFamily: fonts.body }}
                 >
-                  <style>{`
-                    .spec-pills li {
-                      background: #FFF5F5;
-                      border: 1px solid #F0E0E0;
-                      color: #374151;
-                    }
-                  `}</style>
-                  <div
-                    className="spec-pills"
-                    dangerouslySetInnerHTML={{ __html: product.desc }}
-                  />
+                  <ul className="flex flex-wrap gap-1.5 p-0 m-0">
+                    {displayPills.map((pill, i) => (
+                      <motion.li
+                        key={`${i}-${pill}`}
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.25 }}
+                        className="list-none rounded-full px-2.5 py-1 text-xs font-medium"
+                        style={{
+                          background: "#FFF5F5",
+                          border: "1px solid #F0E0E0",
+                          color: "#374151",
+                        }}
+                      >
+                        {pill}
+                      </motion.li>
+                    ))}
+                  </ul>
                 </motion.div>
               )}
 

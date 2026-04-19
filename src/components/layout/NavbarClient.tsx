@@ -50,16 +50,50 @@ export default function NavbarClient({ links, logoUrl, testRideUrl }: NavbarClie
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16 md:h-20">
 
         {/* Logo */}
-        <Link href="/" className="flex items-center">
-          <div className="relative w-18 h-18">
-            <Image
-              src={logoUrl}
-              alt="Fleeto Logo"
-              fill
-              className="object-contain"
-              priority
+        <Link href="/" className="flex items-center group" aria-label="Fleeto — Home">
+          <motion.div
+            className="relative w-12 h-12 md:w-18 md:h-18"
+            initial={{ opacity: 0, rotate: -180, scale: 0.6 }}
+            animate={{ opacity: 1, rotate: 0, scale: 1 }}
+            transition={{ type: "spring", stiffness: 120, damping: 14, delay: 0.1 }}
+          >
+            {/* Soft glow that pulses gently (idle) and intensifies on hover */}
+            <motion.span
+              aria-hidden
+              className="absolute inset-0 rounded-full pointer-events-none"
+              style={{
+                background: `radial-gradient(circle, ${colors.primary}33 0%, transparent 65%)`,
+              }}
+              animate={{ scale: [1, 1.12, 1], opacity: [0.45, 0.75, 0.45] }}
+              transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
             />
-          </div>
+
+            {/* Logo image — subtle breathing idle + full spin + scale on hover */}
+            <motion.div
+              className="relative w-full h-full"
+              animate={{ rotate: [0, 14, -10, 0], scale: [1, 1.05, 1, 1] }}
+              transition={{
+                duration: 6,
+                repeat: Infinity,
+                ease: "easeInOut",
+                times: [0, 0.3, 0.6, 1],
+              }}
+              whileHover={{
+                rotate: 360,
+                scale: 1.12,
+                transition: { rotate: { duration: 0.9, ease: "easeInOut" }, scale: { type: "spring", stiffness: 260, damping: 14 } },
+              }}
+              whileTap={{ scale: 0.94 }}
+            >
+              <Image
+                src={logoUrl}
+                alt="Fleeto Logo"
+                fill
+                className="object-contain drop-shadow-sm"
+                priority
+              />
+            </motion.div>
+          </motion.div>
         </Link>
 
         {/* Desktop nav */}

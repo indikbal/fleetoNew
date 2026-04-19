@@ -423,14 +423,54 @@ async function fetchMenuColumn(endpoint: string): Promise<FooterMenuItem[]> {
   }));
 }
 
+// Map WC product slug → numeric ID so footer product links resolve to /products/[id]
+async function fetchProductSlugMap(): Promise<Record<string, number>> {
+  try {
+    const res = await fetch(
+      `${WC_BASE}/products?consumer_key=${WC_KEY}&consumer_secret=${WC_SECRET}&per_page=100&_fields=id,slug&status=publish`,
+      { next: { revalidate: CACHE_TTL } }
+    );
+    if (!res.ok) return {};
+    const list: { id: number; slug: string }[] = await res.json();
+    const map: Record<string, number> = {};
+    for (const p of list) if (p.slug) map[p.slug] = p.id;
+    return map;
+  } catch {
+    return {};
+  }
+}
+
 export async function fetchFooterMenus(): Promise<FooterMenuColumn[]> {
-  const [products, quickLinks, aboutUs, support, common] = await Promise.all([
-    fetchMenuColumn("our-product-menu"),
-    fetchMenuColumn("quick-link-menu"),
-    fetchMenuColumn("about-us-menu"),
-    fetchMenuColumn("footer-menu"),
-    fetchCommonData(),
-  ]);
+  const [quickLinks, aboutUs, support, common, slugToId, productsRaw] =
+    await Promise.all([
+      fetchMenuColumn("quick-link-menu"),
+      fetchMenuColumn("about-us-menu"),
+      fetchMenuColumn("footer-menu"),
+      fetchCommonData(),
+      fetchProductSlugMap(),
+      fetch(`${CUSTOM_BASE}/our-product-menu`, {
+        next: { revalidate: CACHE_TTL },
+      })
+        .then((r) =>
+          r.ok
+            ? (r.json() as Promise<
+                { id: number; title: string; url: string; parent: string }[]
+              >)
+            : []
+        )
+        .catch(() => [] as { id: number; title: string; url: string }[]),
+    ]);
+
+  const products: FooterMenuItem[] = productsRaw.map((item) => {
+    const slug = item.url.match(/\/product\/([^/]+)/)?.[1];
+    const pid = slug ? slugToId[slug] : undefined;
+    return {
+      id: item.id,
+      title: item.title,
+      href: pid ? `/products/${pid}` : wpUrlToHref(item.url),
+    };
+  });
+
   return [
     { title: common.columnTitles.ourProducts, items: products },
     { title: common.columnTitles.quickLinks, items: quickLinks },

@@ -245,24 +245,45 @@ function ProductHeroCard({
             <SpecItem
               label="Colours"
               icon={<Palette size={12} />}
+              stacked
               value={<ColorSwatches colors={product.variation_colors} />}
             />
             {attrRows.map((attrName) => {
               const attr = product.attributes.find(
                 (a) => a.name === attrName
               );
+              const hasMany = !!attr && attr.options.length > 1;
               return (
                 <SpecItem
                   key={attrName}
                   label={attrName}
+                  stacked={hasMany}
                   value={
                     attr ? (
-                      <span
-                        className="text-[11px] sm:text-xs text-gray-700 font-medium break-words text-right"
-                        style={{ fontFamily: fonts.body }}
-                      >
-                        {attr.options.join(", ")}
-                      </span>
+                      hasMany ? (
+                        <div className="flex flex-wrap gap-1 justify-start sm:justify-end w-full">
+                          {attr.options.map((opt) => (
+                            <span
+                              key={opt}
+                              className="text-[10px] sm:text-[11px] text-gray-700 font-medium px-2 py-0.5 rounded-full border"
+                              style={{
+                                backgroundColor: "#FFF5F5",
+                                borderColor: "#F0E0E0",
+                                fontFamily: fonts.body,
+                              }}
+                            >
+                              {opt}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span
+                          className="text-[11px] sm:text-xs text-gray-700 font-medium break-words text-right"
+                          style={{ fontFamily: fonts.body }}
+                        >
+                          {attr.options[0]}
+                        </span>
+                      )
                     ) : (
                       <span className="text-gray-300 text-xs">—</span>
                     )
@@ -293,13 +314,21 @@ function SpecItem({
   label,
   icon,
   value,
+  stacked = false,
 }: {
   label: string;
   icon?: React.ReactNode;
   value: React.ReactNode;
+  stacked?: boolean;
 }) {
   return (
-    <li className="flex items-center justify-between gap-2 py-2 sm:py-2.5">
+    <li
+      className={
+        stacked
+          ? "flex flex-col gap-1.5 py-2 sm:py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2"
+          : "flex items-center justify-between gap-2 py-2 sm:py-2.5"
+      }
+    >
       <span
         className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-gray-500 shrink-0"
         style={{ fontFamily: fonts.body }}
@@ -311,7 +340,15 @@ function SpecItem({
         )}
         {label}
       </span>
-      <span className="min-w-0 flex items-center justify-end">{value}</span>
+      <span
+        className={
+          stacked
+            ? "min-w-0 flex flex-wrap items-center justify-start sm:justify-end w-full sm:w-auto"
+            : "min-w-0 flex items-center justify-end"
+        }
+      >
+        {value}
+      </span>
     </li>
   );
 }
@@ -322,7 +359,7 @@ function ColorSwatches({ colors: list }: { colors: string[] }) {
     return <span className="text-gray-400 text-xs">—</span>;
   }
   return (
-    <div className="flex items-center justify-end gap-1 sm:gap-1.5 flex-wrap">
+    <div className="flex items-center justify-start sm:justify-end gap-1 sm:gap-1.5 flex-wrap">
       {list.slice(0, 4).map((c, i) => (
         <span
           key={i}
