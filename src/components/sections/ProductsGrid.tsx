@@ -8,10 +8,9 @@ import { ArrowUpRight } from "lucide-react";
 import { colors, fonts, styles } from "@/config/theme";
 import { formatPrice, colorNameToHex } from "@/lib/api";
 import type { ShopPageData, WCProduct } from "@/lib/api";
-import SelectOptionModal from "@/components/ui/SelectOptionModal";
 
 // ─── Product card ─────────────────────────────────────────────────────────────
-function ProductCard({ product, index, onSelect }: { product: WCProduct; index: number; onSelect: () => void }) {
+function ProductCard({ product, index }: { product: WCProduct; index: number }) {
   const [hovered, setHovered] = useState(false);
 
   const imageUrl     = product.images[0]?.src ?? "/images/hero-scooty.png";
@@ -134,16 +133,16 @@ function ProductCard({ product, index, onSelect }: { product: WCProduct; index: 
         <div className="h-px bg-gray-100" />
 
         {/* CTA */}
-        <button
-          onClick={onSelect}
+        <Link
+          href={`/products/${product.id}`}
           className="self-start inline-flex items-center gap-2 px-5 py-2.5 text-white text-sm font-semibold rounded-lg mt-auto btn-red-inner-shadow transition-colors"
           style={{ backgroundColor: colors.primary, fontFamily: fonts.body }}
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = colors.primaryDark)}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = colors.primary)}
         >
-          Select Option
+          View Details
           <ArrowUpRight size={15} />
-        </button>
+        </Link>
       </div>
     </motion.div>
   );
@@ -156,8 +155,6 @@ interface Props {
 
 // ─── Section ──────────────────────────────────────────────────────────────────
 export default function ProductsGrid({ shopData, products }: Props) {
-  const [selectedProduct, setSelectedProduct] = useState<WCProduct | null>(null);
-
   return (
     <>
       <section
@@ -244,12 +241,7 @@ export default function ProductsGrid({ shopData, products }: Props) {
           {/* Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {products.map((product, i) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                index={i}
-                onSelect={() => setSelectedProduct(product)}
-              />
+              <ProductCard key={product.id} product={product} index={i} />
             ))}
           </div>
 
@@ -280,14 +272,6 @@ export default function ProductsGrid({ shopData, products }: Props) {
           </motion.div>
         </div>
       </section>
-
-      {/* ── Select Option Modal ── */}
-      {selectedProduct && (
-        <SelectOptionModal
-          product={selectedProduct}
-          onClose={() => setSelectedProduct(null)}
-        />
-      )}
     </>
   );
 }
