@@ -865,6 +865,73 @@ export async function resetPassword(
   return res.json();
 }
 
+// ─── Razorpay Payment ────────────────────────────────────────────────────────
+export interface CheckoutLineItem {
+  product_id: number;
+  variation_id: number;
+  quantity: number;
+}
+
+export interface CheckoutAddress {
+  first_name: string;
+  last_name: string;
+  address_1: string;
+  address_2: string;
+  city: string;
+  state: string;
+  postcode: string;
+  country: string;
+  email?: string;
+  phone?: string;
+}
+
+export interface CreateRazorpayOrderResponse {
+  success: boolean;
+  rp_order_id?: string;
+  amount?: number;
+  currency?: string;
+  key_id?: string;
+  error?: string;
+}
+
+export async function createRazorpayOrder(payload: {
+  items: CheckoutLineItem[];
+  billing: CheckoutAddress;
+  shipping: CheckoutAddress;
+  customer_id?: number;
+}): Promise<CreateRazorpayOrderResponse> {
+  const res = await fetch("/api/payment/create-order", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return res.json();
+}
+
+export interface VerifyRazorpayPaymentResponse {
+  success: boolean;
+  wc_order_id?: number;
+  error?: string;
+  payment_id?: string;
+}
+
+export async function verifyRazorpayPayment(payload: {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+  items: CheckoutLineItem[];
+  billing: CheckoutAddress;
+  shipping: CheckoutAddress;
+  customer_id?: number;
+}): Promise<VerifyRazorpayPaymentResponse> {
+  const res = await fetch("/api/payment/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return res.json();
+}
+
 // ─── Book Test Ride Page ───────────────────────────────────────────────────────
 export interface BookTestRidePageData {
   banner_title?: string;
