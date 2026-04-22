@@ -3,8 +3,29 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import { Check, Minus, ChevronDown } from "lucide-react";
 import { colors, fonts } from "@/config/theme";
-import { stripHtml } from "@/lib/api";
+
+// The API returns HTML for descriptions/details (paragraphs, <br/>s).
+// Render it inline so multi-line copy doesn't collapse into one run-on string.
+const RichText = ({
+  html,
+  className,
+  style,
+}: {
+  html?: string;
+  className?: string;
+  style?: React.CSSProperties;
+}) => {
+  if (!html) return null;
+  return (
+    <div
+      className={className}
+      style={style}
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  );
+};
 
 /* ── Types ────────────────────────────────────────────────────────────────── */
 export interface PerformanceItem {
@@ -41,7 +62,8 @@ export interface ProductSpecificationsData {
 }
 
 interface Props {
-  data: ProductSpecificationsData;
+  data?: ProductSpecificationsData | null;
+  technicalInfo?: Record<string, string>;
 }
 
 /* ── Animation helpers ────────────────────────────────────────────────────── */
@@ -52,17 +74,27 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.55, ease: "easeOut" as const, delay },
 });
 
-const tabs = ["Performance", "Design", "Technology"] as const;
-type TabKey = (typeof tabs)[number];
+const allTabs = ["Performance", "Design", "Technology", "Technical Specification"] as const;
+type TabKey = (typeof allTabs)[number];
 
 /* ══════════════════════════════════════════════════════════════════════════ */
-export default function ProductSpecifications({ data }: Props) {
-  const [active, setActive] = useState<TabKey>("Performance");
+export default function ProductSpecifications({ data, technicalInfo }: Props) {
+  const hasTechInfo = !!technicalInfo && Object.keys(technicalInfo).length > 0;
+
+  // Only include tabs we actually have data for, so a missing endpoint never
+  // surfaces an empty tab.
+  const tabs = allTabs.filter((t) => {
+    if (t === "Technical Specification") return hasTechInfo;
+    return !!data;
+  });
+
+  const [active, setActive] = useState<TabKey>(tabs[0] ?? "Performance");
 
   const tabTitles: Record<TabKey, string> = {
-    Performance: data.performance_section_title || "Performance",
-    Design: data.design_section_title || "Design",
-    Technology: data.technology_section_title || "Technology",
+    Performance: data?.performance_section_title || "Performance",
+    Design: data?.design_section_title || "Design",
+    Technology: data?.technology_section_title || "Technology",
+    "Technical Specification": "Technical Specification",
   };
 
   return (
@@ -106,7 +138,7 @@ export default function ProductSpecifications({ data }: Props) {
         {/* ── Tab bar ── */}
         <motion.div
           {...fadeUp(0.1)}
-          className="flex justify-center gap-2 md:gap-3 mb-12 md:mb-16"
+          className="flex justify-start md:justify-center gap-2 md:gap-3 mb-12 md:mb-16 overflow-x-auto px-1 -mx-1 scrollbar-none"
         >
           {tabs.map((tab) => {
             const isActive = active === tab;
@@ -114,7 +146,7 @@ export default function ProductSpecifications({ data }: Props) {
               <button
                 key={tab}
                 onClick={() => setActive(tab)}
-                className="relative px-5 md:px-8 py-2.5 md:py-3 rounded-full text-sm md:text-base font-semibold transition-colors duration-300"
+                className="relative shrink-0 px-4 md:px-7 py-2.5 md:py-3 rounded-full text-xs md:text-base font-semibold transition-colors duration-300 whitespace-nowrap"
                 style={{
                   fontFamily: fonts.body,
                   color: isActive ? "#fff" : colors.black,
@@ -135,25 +167,31 @@ export default function ProductSpecifications({ data }: Props) {
 
         {/* ── Tab content ── */}
         <AnimatePresence mode="wait">
-          {active === "Performance" && (
+          {active === "Performance" && data && (
             <PerformanceTab
               key="performance"
               items={data.performance_section}
               description={data.performance_section_details}
             />
           )}
-          {active === "Design" && (
+          {active === "Design" && data && (
             <DesignTab
               key="design"
               items={data.design_section}
               description={data.design_section_description}
             />
           )}
-          {active === "Technology" && (
+          {active === "Technology" && data && (
             <TechnologyTab
               key="technology"
               items={data.technology_section}
               description={data.technology_section_description}
+            />
+          )}
+          {active === "Technical Specification" && technicalInfo && (
+            <TechnicalSpecificationTab
+              key="techspec"
+              info={technicalInfo}
             />
           )}
         </AnimatePresence>
@@ -183,14 +221,11 @@ function PerformanceTab({
       transition={{ duration: 0.35 }}
     >
       {/* Subtitle */}
-      {description && (
-        <p
-          className="text-center text-gray-500 text-sm md:text-base mb-10"
-          style={{ fontFamily: fonts.body }}
-        >
-          {stripHtml(description)}
-        </p>
-      )}
+      <RichText
+        html={description}
+        className="prose-spec text-center text-gray-500 text-sm md:text-base mb-10 max-w-3xl mx-auto"
+        style={{ fontFamily: fonts.body }}
+      />
 
       {/* Main highlight area */}
       {current && (
@@ -213,19 +248,18 @@ function PerformanceTab({
                 className="object-cover object-center"
               />
               {/* Bottom overlay with title + details */}
-              <div className="absolute inset-x-0 bottom-0 p-5 md:p-7 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+              <div className="absolute inset-x-0 bottom-0 p-5 md:p-7 bg-gradient-to-t from-black/85 via-black/45 to-transparent">
                 <h3
                   className="text-white text-2xl md:text-3xl uppercase"
                   style={{ fontFamily: fonts.display }}
                 >
                   {current.main_section_title}
                 </h3>
-                <p
-                  className="text-white/70 text-sm mt-1"
+                <RichText
+                  html={current.main_section_details}
+                  className="prose-spec text-white/80 text-sm mt-1"
                   style={{ fontFamily: fonts.body }}
-                >
-                  {stripHtml(current.main_section_details)}
-                </p>
+                />
               </div>
             </motion.div>
           </AnimatePresence>
@@ -238,7 +272,7 @@ function PerformanceTab({
                 <button
                   key={i}
                   onClick={() => setSelected(i)}
-                  className="flex items-center gap-4 rounded-xl p-3 md:p-4 text-left transition-all duration-300"
+                  className="flex items-start gap-4 rounded-xl p-3 md:p-4 text-left transition-all duration-300"
                   style={{
                     background: isSel
                       ? "rgba(171,35,35,0.08)"
@@ -262,19 +296,18 @@ function PerformanceTab({
                       className="object-cover"
                     />
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <h4
-                      className="text-sm md:text-base font-semibold truncate"
+                      className="text-sm md:text-base font-semibold"
                       style={{ fontFamily: fonts.body, color: colors.black }}
                     >
                       {item.title}
                     </h4>
-                    <p
-                      className="text-gray-500 text-xs md:text-sm mt-0.5 line-clamp-2"
+                    <RichText
+                      html={item.details}
+                      className="prose-spec text-gray-500 text-xs md:text-sm mt-0.5"
                       style={{ fontFamily: fonts.body }}
-                    >
-                      {stripHtml(item.details)}
-                    </p>
+                    />
                   </div>
                 </button>
               );
@@ -303,14 +336,11 @@ function DesignTab({
       exit={{ opacity: 0, y: -16 }}
       transition={{ duration: 0.35 }}
     >
-      {description && (
-        <p
-          className="text-center text-gray-500 text-sm md:text-base mb-10"
-          style={{ fontFamily: fonts.body }}
-        >
-          {stripHtml(description)}
-        </p>
-      )}
+      <RichText
+        html={description}
+        className="prose-spec text-center text-gray-500 text-sm md:text-base mb-10 max-w-3xl mx-auto"
+        style={{ fontFamily: fonts.body }}
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {items.map((item, i) => (
@@ -319,7 +349,7 @@ function DesignTab({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: i * 0.08 }}
-            className="group rounded-2xl overflow-hidden bg-white shadow-sm"
+            className="group rounded-2xl overflow-hidden bg-white shadow-sm flex flex-col"
             style={{
               border: "1px solid rgba(0,0,0,0.06)",
             }}
@@ -332,19 +362,18 @@ function DesignTab({
                 className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
               />
             </div>
-            <div className="p-4 md:p-5">
+            <div className="p-4 md:p-5 flex-1">
               <h3
                 className="text-base md:text-lg font-semibold mb-1"
                 style={{ fontFamily: fonts.body, color: colors.black }}
               >
                 {item.title}
               </h3>
-              <p
-                className="text-gray-500 text-sm leading-relaxed"
+              <RichText
+                html={item.details}
+                className="prose-spec text-gray-500 text-sm leading-relaxed"
                 style={{ fontFamily: fonts.body }}
-              >
-                {stripHtml(item.details)}
-              </p>
+              />
             </div>
           </motion.div>
         ))}
@@ -370,14 +399,11 @@ function TechnologyTab({
       exit={{ opacity: 0, y: -16 }}
       transition={{ duration: 0.35 }}
     >
-      {description && (
-        <p
-          className="text-center text-gray-500 text-sm md:text-base mb-10"
-          style={{ fontFamily: fonts.body }}
-        >
-          {stripHtml(description)}
-        </p>
-      )}
+      <RichText
+        html={description}
+        className="prose-spec text-center text-gray-500 text-sm md:text-base mb-10 max-w-3xl mx-auto"
+        style={{ fontFamily: fonts.body }}
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         {items.map((item, i) => (
@@ -409,15 +435,222 @@ function TechnologyTab({
               >
                 {item.title}
               </h3>
-              <p
-                className="text-gray-500 text-sm leading-relaxed"
+              <RichText
+                html={item.details}
+                className="prose-spec text-gray-500 text-sm leading-relaxed"
                 style={{ fontFamily: fonts.body }}
-              >
-                {stripHtml(item.details)}
-              </p>
+              />
             </div>
           </motion.div>
         ))}
+      </div>
+    </motion.div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  Technical Specification Tab                                              */
+/* ══════════════════════════════════════════════════════════════════════════ */
+// The technical-information-section endpoint returns a flat ordered dict where
+// 4 well-known keys act as section headers. Group everything under the most
+// recent header as we walk the entries.
+const TECH_SECTION_HEADERS: Record<string, string> = {
+  vehicle_operational_features: "Vehicle Operational Features",
+  lead_acid_battery_compatibility: "Lead Acid Battery Compatibility",
+  lithium_battery_compatibility: "Lithium Battery Compatibility",
+  vehicle_mileage: "Vehicle Mileage",
+};
+
+// "lead_acid:_60v_32_ah_vm" → "Lead Acid: 60V 32 Ah" (drop _vm/_lbc suffixes
+// that disambiguate same-named keys in compatibility vs mileage sections).
+function humanizeTechKey(key: string): string {
+  return key
+    .replace(/_lbc$/i, "")
+    .replace(/_vm$/i, "")
+    .replace(/_/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b([a-z])/g, (_, c: string) => c.toUpperCase())
+    .replace(/(\d+)\s*v\b/gi, "$1V")
+    .replace(/(\d+)\s*ah\b/gi, "$1Ah");
+}
+
+interface TechRow {
+  key: string;
+  label: string;
+  value: string;
+}
+
+interface TechGroup {
+  title: string;
+  rows: TechRow[];
+}
+
+function groupTechnicalInfo(info: Record<string, string>): TechGroup[] {
+  const groups: TechGroup[] = [];
+  let current: TechGroup = { title: "", rows: [] };
+  for (const [key, value] of Object.entries(info)) {
+    const headerLabel = TECH_SECTION_HEADERS[key];
+    if (headerLabel) {
+      if (current.title || current.rows.length > 0) groups.push(current);
+      current = { title: headerLabel, rows: [] };
+      continue;
+    }
+    current.rows.push({ key, label: humanizeTechKey(key), value });
+  }
+  if (current.title || current.rows.length > 0) groups.push(current);
+  return groups;
+}
+
+function TechnicalSpecificationTab({ info }: { info: Record<string, string> }) {
+  const groups = groupTechnicalInfo(info);
+
+  // Open the first group by default so the user sees content without clicking;
+  // the rest stay collapsed to keep the section short.
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+
+  // Render YES/NA as icons for compatibility sections; everything else stays
+  // as the raw API string (e.g. "12 Inches", "BLDC Hub Motor (IP67)").
+  const renderValue = (v: string) => {
+    const trimmed = (v ?? "").trim();
+    const upper = trimmed.toUpperCase();
+    if (upper === "YES") {
+      return (
+        <span
+          className="inline-flex items-center gap-1.5 text-sm font-medium"
+          style={{ color: colors.primary, fontFamily: fonts.body }}
+        >
+          <Check size={16} strokeWidth={2.5} />
+          Yes
+        </span>
+      );
+    }
+    if (upper === "NO" || upper === "NA" || upper === "N/A") {
+      return (
+        <span
+          className="inline-flex items-center gap-1.5 text-sm text-gray-400"
+          style={{ fontFamily: fonts.body }}
+        >
+          <Minus size={16} strokeWidth={2.5} />
+          {upper === "NO" ? "No" : "NA"}
+        </span>
+      );
+    }
+    return (
+      <span
+        className="text-sm text-gray-800"
+        style={{ fontFamily: fonts.body }}
+      >
+        {trimmed}
+      </span>
+    );
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -16 }}
+      transition={{ duration: 0.35 }}
+      className="max-w-5xl mx-auto"
+    >
+      <div className="flex flex-col gap-3 md:gap-4">
+        {groups.map((group, gi) => {
+          const isOpen = openIndex === gi;
+          const panelId = `tech-spec-panel-${gi}`;
+          const buttonId = `tech-spec-button-${gi}`;
+          return (
+            <motion.div
+              key={`${group.title}-${gi}`}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: gi * 0.05 }}
+              className="rounded-2xl bg-white overflow-hidden shadow-sm"
+              style={{ border: "1px solid rgba(0,0,0,0.06)" }}
+            >
+              {group.title && (
+                <button
+                  type="button"
+                  id={buttonId}
+                  aria-expanded={isOpen}
+                  aria-controls={panelId}
+                  onClick={() => setOpenIndex(isOpen ? null : gi)}
+                  className="w-full flex items-center justify-between gap-4 px-5 md:px-6 py-3.5 md:py-4 text-left transition-colors"
+                  style={{
+                    color: isOpen ? "#fff" : colors.black,
+                    background: isOpen
+                      ? `linear-gradient(90deg, ${colors.primary}, ${colors.primaryDark})`
+                      : "rgba(0,0,0,0.02)",
+                    fontFamily: fonts.body,
+                  }}
+                >
+                  <span className="flex items-center gap-3">
+                    <span
+                      className="text-xs font-semibold opacity-70 tabular-nums"
+                      style={{ minWidth: "1.5rem" }}
+                    >
+                      {String(gi + 1).padStart(2, "0")}
+                    </span>
+                    <span className="text-sm md:text-base font-semibold tracking-wide">
+                      {group.title}
+                    </span>
+                    <span
+                      className="text-xs font-medium opacity-60 hidden sm:inline"
+                    >
+                      ({group.rows.length})
+                    </span>
+                  </span>
+                  <motion.span
+                    animate={{ rotate: isOpen ? 180 : 0 }}
+                    transition={{ duration: 0.25, ease: "easeOut" }}
+                    className="shrink-0 flex items-center justify-center w-7 h-7 rounded-full"
+                    style={{
+                      background: isOpen ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.05)",
+                    }}
+                  >
+                    <ChevronDown size={16} strokeWidth={2.5} />
+                  </motion.span>
+                </button>
+              )}
+              <AnimatePresence initial={false}>
+                {isOpen && (
+                  <motion.div
+                    key="content"
+                    id={panelId}
+                    role="region"
+                    aria-labelledby={buttonId}
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                    style={{ overflow: "hidden" }}
+                  >
+                    <dl
+                      className="divide-y"
+                      style={{ borderColor: "rgba(0,0,0,0.06)" }}
+                    >
+                      {group.rows.map((row) => (
+                        <div
+                          key={row.key}
+                          className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-1 sm:gap-4 px-5 md:px-6 py-3 md:py-3.5"
+                          style={{ borderColor: "rgba(0,0,0,0.06)" }}
+                        >
+                          <dt
+                            className="text-sm font-medium text-gray-500"
+                            style={{ fontFamily: fonts.body }}
+                          >
+                            {row.label}
+                          </dt>
+                          <dd className="sm:text-right">{renderValue(row.value)}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          );
+        })}
       </div>
     </motion.div>
   );

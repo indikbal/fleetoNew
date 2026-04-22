@@ -11,7 +11,12 @@ import FinanceYourWay from "@/components/sections/FinanceYourWay";
 import Accessories from "@/components/sections/Accessories";
 import ScootyReveal from "@/components/ui/ScootyReveal";
 import EverythingYouNeed from "@/components/sections/EverythingYouNeed";
-import { fetchProductDetails, fetchProductSpecs, fetchProductDetailsNew } from "@/lib/api";
+import {
+  fetchProductDetails,
+  fetchProductSpecs,
+  fetchProductDetailsNew,
+  fetchTechnicalInformation,
+} from "@/lib/api";
 import ProductSpecifications from "@/components/sections/ProductSpecifications";
 
 interface Props {
@@ -33,10 +38,11 @@ export default async function ProductDetailPage({ params }: Props) {
   const id = parseInt(productId, 10);
   if (isNaN(id)) notFound();
 
-  const [product, specs, productDetailsNew] = await Promise.all([
+  const [product, specs, productDetailsNew, technicalInfo] = await Promise.all([
     fetchProductDetails(id),
     fetchProductSpecs(id),
     fetchProductDetailsNew(id),
+    fetchTechnicalInformation(id),
   ]);
   if (!product) notFound();
 
@@ -47,6 +53,9 @@ export default async function ProductDetailPage({ params }: Props) {
     (a) => a.attribute_name === "Battery Selection" || a.attribute_name === "Battery Selection (Smart)"
   );
   const warrantyText = productDetailsNew?.["4_years_warranty"]?.trim() ?? "";
+  // Variations from the new endpoint carry a per-battery range description
+  // (e.g. "85-90 Kms") that the spec pills swap in when a battery is selected.
+  const detailVariations = productDetailsNew?.variations ?? [];
 
   return (
     <>
@@ -65,6 +74,7 @@ export default async function ProductDetailPage({ params }: Props) {
           product={product}
           batteryAttributes={batteryAttributes}
           warrantyText={warrantyText}
+          detailVariations={detailVariations}
         />
 
         {/* 3. Explore sections from acf */}
@@ -83,8 +93,10 @@ export default async function ProductDetailPage({ params }: Props) {
           items={acf.the_familly_album_section}
         />
 
-        {/* 4. Performance / Design / Technology specs */}
-        {specs && <ProductSpecifications data={specs} />}
+        {/* 4. Performance / Design / Technology / Technical Specification */}
+        {(specs || technicalInfo) && (
+          <ProductSpecifications data={specs} technicalInfo={technicalInfo?.technical_info} />
+        )}
 
         <div className="relative">
           <SavingsCalculator

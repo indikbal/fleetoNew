@@ -14,27 +14,35 @@ const SLIDE_STYLES = [
   { svgColor: "#4AAB5E", bgColor: "#E4F5EA", accentColor: "#4AAB5E", watermark: ["FLEETO", "POWER"] },
 ];
 
-// ─── Render text with ® styled as a superscript registered mark ─────────────
-// Auto-inserts ® after "FLEETO" (any casing) if the CMS text doesn't already include it.
+// ─── Replace the word FLEETO with the brand logo image ──────────────────────
+// The logo (public/images/FLEETO.jpg) already includes the ® mark, so we strip
+// any trailing ® from the CMS text before swapping in the image. The CMS may
+// also insert the FLEETO logo as an inline <img> tag OR as a bare image URL —
+// collapse either form to a single token so our swap below picks it up. This
+// must happen BEFORE the case-insensitive FLEETO match, otherwise "fleeto"
+// inside the URL host or filename produces phantom logos.
 const renderWithRegMark = (text: string) => {
   if (!text) return null;
-  const normalized = text.replace(/FLEETO(?!®)/gi, (m) => `${m}®`);
-  const parts = normalized.split(/(®)/g);
+  let cleaned = text.replace(/<img\b[^>]*>/gi, "FLEETO");
+  cleaned = cleaned.replace(/<[^>]+>/g, "");
+  cleaned = cleaned.replace(/https?:\/\/\S+\.(?:png|jpe?g|gif|webp|svg)\b\S*/gi, "FLEETO");
+  cleaned = cleaned.replace(/FLEETO\s*®/gi, "FLEETO");
+  const parts = cleaned.split(/(FLEETO)/gi);
   return parts.map((part, i) =>
-    part === "®" ? (
-      <sup
+    /^FLEETO$/i.test(part) ? (
+      <img
         key={i}
+        src="/images/FLEETO.jpg"
+        alt="FLEETO"
         style={{
-          fontSize: "0.35em",
-          verticalAlign: "top",
-          position: "relative",
-          top: "0.55em",
-          marginLeft: "0.1em",
-          fontWeight: 400,
+          display: "inline-block",
+          height: "0.85em",
+          width: "auto",
+          verticalAlign: "baseline",
+          marginRight: "0.05em",
+          borderRadius: "0.08em",
         }}
-      >
-        ®
-      </sup>
+      />
     ) : (
       <span key={i}>{part}</span>
     )

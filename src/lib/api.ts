@@ -1308,6 +1308,7 @@ export interface ProductDetailVariation {
   regular_price: number;
   attributes: Record<string, string>;
   image: string;
+  description?: string;
 }
 
 export interface ProductDetailsNew {
@@ -1333,6 +1334,34 @@ export async function fetchProductDetailsNew(productId: number): Promise<Product
     if (!res.ok) return null;
     const json = await res.json();
     return json?.status ? json.data : null;
+  } catch {
+    return null;
+  }
+}
+
+// ─── Technical Information (4th specs tab) ──────────────────────────────────
+// GET /custom-api/v1/technical-information-section returns ALL products in one
+// payload. The `technical_info` value is a flat ordered object whose 4 special
+// "header" keys split it into logical sections (operational features, lead-acid
+// compatibility, lithium compatibility, mileage). The rest are data rows.
+export interface TechnicalInformationItem {
+  product_id: number;
+  product_name: string;
+  technical_info: Record<string, string>;
+}
+
+export async function fetchTechnicalInformation(
+  productId: number
+): Promise<TechnicalInformationItem | null> {
+  try {
+    const res = await fetch(
+      "https://fleetowebapi.codingcloud.in/wp-json/custom-api/v1/technical-information-section",
+      { next: { revalidate: CACHE_TTL } }
+    );
+    if (!res.ok) return null;
+    const json = await res.json();
+    const list: TechnicalInformationItem[] = json?.data ?? [];
+    return list.find((p) => p.product_id === productId) ?? null;
   } catch {
     return null;
   }

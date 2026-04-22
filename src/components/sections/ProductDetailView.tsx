@@ -12,6 +12,7 @@ import type {
   ProductVariation,
   ProductDetailAttribute,
   ProductDetailAttributeValue,
+  ProductDetailVariation,
 } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
 
@@ -19,7 +20,17 @@ interface Props {
   product: WCProductDetail;
   batteryAttributes?: ProductDetailAttribute[];
   warrantyText?: string;
+  detailVariations?: ProductDetailVariation[];
 }
+
+// WordPress slugifies "Lithium: 60V 34Ah SMART" → "lithium-60v-34ah-smart"
+const slugify = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
 
 const fadeUp = (delay = 0) => ({
   initial:     { opacity: 0, y: 20 },
@@ -28,7 +39,12 @@ const fadeUp = (delay = 0) => ({
   transition:  { duration: 0.55, ease: "easeOut" as const, delay },
 });
 
-export default function ProductDetailView({ product, batteryAttributes, warrantyText }: Props) {
+export default function ProductDetailView({
+  product,
+  batteryAttributes,
+  warrantyText,
+  detailVariations = [],
+}: Props) {
   const [selected, setSelected]       = useState<ProductVariation | null>(null);
   const [cartStatus, setCartStatus]   = useState<"idle" | "added">("idle");
   const [activeImage, setActiveImage] = useState(product.image || "/images/hero-scooty.png");
@@ -62,19 +78,56 @@ export default function ProductDetailView({ product, batteryAttributes, warranty
     );
   }, [product.desc]);
 
+  // For the currently picked battery, find any variation that uses it. The new
+  // product-details endpoint puts the per-battery range (e.g. "85-90 Kms") on
+  // variations[].description, not on the attribute value. Match by slug.
+  const variationForBattery = useMemo<ProductDetailVariation | null>(() => {
+    if (!selectedBattery || detailVariations.length === 0) return null;
+    const targetSlug = slugify(selectedBattery.name);
+    // Prefer one matching the currently selected color, else the first match.
+    const colorSlug =
+      selected && Object.values(selected.attributes)[0]
+        ? slugify(Object.values(selected.attributes)[0]!)
+        : null;
+    const matches = detailVariations.filter((v) =>
+      Object.entries(v.attributes).some(
+        ([k, val]) => k.includes("battery-selection") && val === targetSlug
+      )
+    );
+    if (matches.length === 0) return null;
+    if (colorSlug) {
+      const colored = matches.find((v) =>
+        Object.entries(v.attributes).some(
+          ([k, val]) => k.includes("color") && val === colorSlug
+        )
+      );
+      if (colored) return colored;
+    }
+    return matches[0];
+  }, [selectedBattery, detailVariations, selected]);
+
   // Pills shown under the title — swap Kms / Volts based on selected battery
   const displayPills = useMemo<string[]>(() => {
     if (!selectedBattery) return basePills;
     const voltsMatch = selectedBattery.name.match(/(\d+)\s*V\b/i);
     const voltsPill = voltsMatch ? `${voltsMatch[1]} Volts` : null;
-    const kmsPill = selectedBattery.description?.trim() || null;
+    const kmsPill =
+      variationForBattery?.description?.trim() ||
+      selectedBattery.description?.trim() ||
+      null;
     return basePills.map((pill) => {
       if (/kmph/i.test(pill)) return pill;
       if (/\bkms?\b/i.test(pill) && kmsPill) return kmsPill;
       if (/volts?\b/i.test(pill) && voltsPill) return voltsPill;
       return pill;
     });
-  }, [basePills, selectedBattery]);
+  }, [basePills, selectedBattery, variationForBattery]);
+
+  // Per-battery price (falls back to colour-variation or product price)
+  const displayPrice = useMemo(() => {
+    if (variationForBattery?.price) return String(variationForBattery.price);
+    return selected?.price ?? product.price;
+  }, [variationForBattery, selected, product.price]);
 
   const handleSelectBattery = (opt: ProductDetailAttributeValue, tab: "standard" | "smart") => {
     setSelectedBattery(opt);
@@ -235,7 +288,7 @@ export default function ProductDetailView({ product, batteryAttributes, warranty
                     className="text-xl md:text-2xl font-bold leading-none"
                     style={{ color: colors.primary, fontFamily: fonts.body }}
                   >
-                    {formatPrice(selected?.price ?? product.price)}
+                    {formatPrice(displayPrice)}
                   </div>
                   <div
                     className="text-[10px] text-gray-400 mt-0.5 uppercase tracking-wider"
