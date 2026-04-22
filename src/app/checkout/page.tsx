@@ -853,31 +853,6 @@ export default function CheckoutPage() {
                       </p>
                     </div>
                   </label>
-                  <label
-                    className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer border transition-colors ${
-                      paymentMethod === "cod"
-                        ? "border-[#AB2323] bg-[#AB2323]/5"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                    style={{ fontFamily: fonts.body }}
-                  >
-                    <input
-                      type="radio"
-                      name="payment"
-                      value="cod"
-                      checked={paymentMethod === "cod"}
-                      onChange={() => setPaymentMethod("cod")}
-                      className="accent-[#AB2323]"
-                    />
-                    <div>
-                      <p className="text-sm font-semibold text-gray-800">
-                        Cash on Delivery
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        Pay when your order arrives
-                      </p>
-                    </div>
-                  </label>
                 </div>
               </div>
             </div>

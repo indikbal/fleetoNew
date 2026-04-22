@@ -1309,6 +1309,9 @@ export interface ProductDetailVariation {
   attributes: Record<string, string>;
   image: string;
   description?: string;
+  // Per-battery top speed value, e.g. "65 kmph". Field name is `weight` on the
+  // backend for legacy reasons — it is actually the kmph value.
+  weight?: string;
 }
 
 export interface ProductDetailsNew {

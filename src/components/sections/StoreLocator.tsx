@@ -38,6 +38,13 @@ interface DealerResult {
 const stripHtml = (html?: string) =>
   (html ?? "").replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();
 
+// Backend sometimes returns district names in lowercase (e.g. "north dinajpur")
+// even though admin entered them as "North Dinajpur". Normalise for display.
+const toTitleCase = (s?: string) =>
+  (s ?? "")
+    .toLowerCase()
+    .replace(/\b([a-z])/g, (_, c: string) => c.toUpperCase());
+
 const INDIAN_STATES = [
   "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
   "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka",
@@ -228,7 +235,7 @@ export default function StoreLocator() {
             onChange={handleDistrictChange}
             disabled={!state || districts.length === 0}
             placeholder="Select District"
-            options={districts.map((d) => ({ value: d, label: d }))}
+            options={districts.map((d) => ({ value: d, label: toTitleCase(d) }))}
           />
           <StyledSelect
             label="Dealer"
@@ -306,7 +313,7 @@ export default function StoreLocator() {
                       className="text-xs text-gray-500 font-medium"
                       style={{ fontFamily: fonts.body }}
                     >
-                      {district}, {state}
+                      {toTitleCase(district)}, {state}
                     </span>
                   )}
                 </div>

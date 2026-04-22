@@ -1,10 +1,16 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link"; // used for Book Test Ride
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUpRight, ShoppingCart, CheckCircle, ShieldCheck, X } from "lucide-react";
+import { ArrowUpRight, ShoppingCart, CheckCircle, ShieldCheck, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, FreeMode } from "swiper/modules";
+import type { Swiper as SwiperClass } from "swiper";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/free-mode";
 import { colors, fonts, styles } from "@/config/theme";
 import { colorNameToHex, formatPrice } from "@/lib/api";
 import type {
@@ -106,7 +112,7 @@ export default function ProductDetailView({
     return matches[0];
   }, [selectedBattery, detailVariations, selected]);
 
-  // Pills shown under the title — swap Kms / Volts based on selected battery
+  // Pills shown under the title — swap Kms / Volts / Kmph based on selected battery
   const displayPills = useMemo<string[]>(() => {
     if (!selectedBattery) return basePills;
     const voltsMatch = selectedBattery.name.match(/(\d+)\s*V\b/i);
@@ -115,8 +121,15 @@ export default function ProductDetailView({
       variationForBattery?.description?.trim() ||
       selectedBattery.description?.trim() ||
       null;
+    // Backend returns per-battery top speed on `weight` (legacy field name).
+    const rawWeight = variationForBattery?.weight?.trim();
+    const kmphPill = rawWeight
+      ? /kmph/i.test(rawWeight)
+        ? rawWeight
+        : `${rawWeight} kmph`
+      : null;
     return basePills.map((pill) => {
-      if (/kmph/i.test(pill)) return pill;
+      if (/kmph/i.test(pill) && kmphPill) return kmphPill;
       if (/\bkms?\b/i.test(pill) && kmsPill) return kmsPill;
       if (/volts?\b/i.test(pill) && voltsPill) return voltsPill;
       return pill;
@@ -228,7 +241,7 @@ export default function ProductDetailView({
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="lg:sticky lg:top-24"
+              className="lg:sticky lg:top-24 min-w-0"
             >
               <div
                 className="relative w-full rounded-2xl overflow-hidden"
@@ -245,27 +258,12 @@ export default function ProductDetailView({
 
               {/* Colour-image thumbnails if variations have distinct images */}
               {product.variations?.length > 0 && (
-                <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
-                  {product.variations.map((v) => (
-                    <button
-                      key={v.variation_id}
-                      onClick={() => handleSelect(v)}
-                      className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all"
-                      style={{
-                        borderColor:     selected?.variation_id === v.variation_id ? colors.primary : "#E6E6E6",
-                        backgroundColor: "#FFF5F5",
-                      }}
-                    >
-                      <Image
-                        src={v.image || product.image}
-                        alt={Object.values(v.attributes)[0] || "variant"}
-                        width={48}
-                        height={48}
-                        className="object-contain w-full h-full p-1"
-                      />
-                    </button>
-                  ))}
-                </div>
+                <ThumbnailSlider
+                  variations={product.variations}
+                  fallbackImage={product.image}
+                  selectedId={selected?.variation_id ?? null}
+                  onSelect={handleSelect}
+                />
               )}
             </motion.div>
 
@@ -614,5 +612,123 @@ export default function ProductDetailView({
         )}
       </AnimatePresence>
     </section>
+  );
+}
+
+/* ─── Thumbnail slider (Swiper) ────────────────────────────────────────── */
+function ThumbnailSlider({
+  variations,
+  fallbackImage,
+  selectedId,
+  onSelect,
+}: {
+  variations: ProductVariation[];
+  fallbackImage: string;
+  selectedId: number | null;
+  onSelect: (v: ProductVariation) => void;
+}) {
+  const swiperRef = useRef<SwiperClass | null>(null);
+  const [isBeginning, setIsBeginning] = useState(true);
+  const [isEnd, setIsEnd] = useState(false);
+  const [needsNav, setNeedsNav] = useState(false);
+
+  // Keep active thumbnail in view when colour is changed from the swatches
+  useEffect(() => {
+    if (selectedId == null || !swiperRef.current) return;
+    const idx = variations.findIndex((v) => v.variation_id === selectedId);
+    if (idx >= 0) {
+      swiperRef.current.slideTo(idx, 400);
+    }
+  }, [selectedId, variations]);
+
+  const refreshState = useCallback((sw: SwiperClass) => {
+    setIsBeginning(sw.isBeginning);
+    setIsEnd(sw.isEnd);
+    // needsNav is true when slides don't all fit the visible area.
+    const container = sw.el;
+    const wrapper = sw.wrapperEl;
+    if (container && wrapper) {
+      setNeedsNav(wrapper.scrollWidth > container.clientWidth + 2);
+    }
+  }, []);
+
+  return (
+    <div className="relative mt-3 w-full min-w-0 overflow-hidden">
+      <Swiper
+        modules={[Navigation, FreeMode]}
+        slidesPerView="auto"
+        spaceBetween={8}
+        freeMode={{ enabled: true, momentum: true }}
+        onSwiper={(sw) => {
+          swiperRef.current = sw;
+          refreshState(sw);
+          // Re-measure after images load so needsNav reflects final layout.
+          requestAnimationFrame(() => refreshState(sw));
+          setTimeout(() => refreshState(sw), 300);
+        }}
+        onSlideChange={refreshState}
+        onReachBeginning={refreshState}
+        onReachEnd={refreshState}
+        onFromEdge={refreshState}
+        onResize={refreshState}
+        className="thumbnail-swiper"
+      >
+        {variations.map((v) => (
+          <SwiperSlide key={v.variation_id} style={{ width: 48 }}>
+            <button
+              onClick={() => onSelect(v)}
+              className="w-12 h-12 rounded-lg overflow-hidden border-2 transition-all block"
+              style={{
+                borderColor: selectedId === v.variation_id ? colors.primary : "#E6E6E6",
+                backgroundColor: "#FFF5F5",
+              }}
+            >
+              <Image
+                src={v.image || fallbackImage}
+                alt={Object.values(v.attributes)[0] || "variant"}
+                width={48}
+                height={48}
+                className="object-contain w-full h-full p-1"
+              />
+            </button>
+          </SwiperSlide>
+        ))}
+      </Swiper>
+
+      {needsNav && !isBeginning && (
+        <button
+          type="button"
+          aria-label="Scroll thumbnails left"
+          onClick={() => swiperRef.current?.slidePrev()}
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white shadow-md border border-gray-200 flex items-center justify-center text-gray-700 hover:text-gray-900 hover:shadow-lg transition-all"
+        >
+          <ChevronLeft size={16} />
+        </button>
+      )}
+      {needsNav && !isEnd && (
+        <button
+          type="button"
+          aria-label="Scroll thumbnails right"
+          onClick={() => swiperRef.current?.slideNext()}
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white shadow-md border border-gray-200 flex items-center justify-center text-gray-700 hover:text-gray-900 hover:shadow-lg transition-all"
+        >
+          <ChevronRight size={16} />
+        </button>
+      )}
+
+      {/* Fade edges */}
+      {needsNav && !isBeginning && (
+        <div
+          className="absolute left-0 top-0 bottom-0 w-10 pointer-events-none z-[1]"
+          style={{ background: "linear-gradient(to right, #ffffff, rgba(255,255,255,0))" }}
+        />
+      )}
+      {needsNav && !isEnd && (
+        <div
+          className="absolute right-0 top-0 bottom-0 w-10 pointer-events-none z-[1]"
+          style={{ background: "linear-gradient(to left, #ffffff, rgba(255,255,255,0))" }}
+        />
+      )}
+    </div>
   );
 }

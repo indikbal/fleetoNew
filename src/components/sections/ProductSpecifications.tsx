@@ -285,17 +285,19 @@ function PerformanceTab({
                       : "0 1px 3px rgba(0,0,0,0.04)",
                   }}
                 >
-                  <div
-                    className="relative shrink-0 rounded-lg overflow-hidden"
-                    style={{ width: 80, height: 64 }}
-                  >
-                    <Image
-                      src={item.image}
-                      alt={item.title}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
+                  {item.image ? (
+                    <div
+                      className="relative shrink-0 rounded-lg overflow-hidden"
+                      style={{ width: 80, height: 64 }}
+                    >
+                      <Image
+                        src={item.image}
+                        alt={item.title}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  ) : null}
                   <div className="min-w-0 flex-1">
                     <h4
                       className="text-sm md:text-base font-semibold"
@@ -354,14 +356,16 @@ function DesignTab({
               border: "1px solid rgba(0,0,0,0.06)",
             }}
           >
-            <div className="relative w-full overflow-hidden" style={{ aspectRatio: "4/3" }}>
-              <Image
-                src={item.image}
-                alt={item.title}
-                fill
-                className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
-              />
-            </div>
+            {item.image ? (
+              <div className="relative w-full overflow-hidden" style={{ aspectRatio: "4/3" }}>
+                <Image
+                  src={item.image}
+                  alt={item.title}
+                  fill
+                  className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                />
+              </div>
+            ) : null}
             <div className="p-4 md:p-5 flex-1">
               <h3
                 className="text-base md:text-lg font-semibold mb-1"
@@ -417,17 +421,19 @@ function TechnologyTab({
               border: "1px solid rgba(0,0,0,0.06)",
             }}
           >
-            <div
-              className="relative shrink-0 w-full sm:w-32 md:w-40 rounded-xl overflow-hidden"
-              style={{ aspectRatio: "4/3" }}
-            >
-              <Image
-                src={item.image}
-                alt={item.title}
-                fill
-                className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
-              />
-            </div>
+            {item.image ? (
+              <div
+                className="relative shrink-0 w-full sm:w-32 md:w-40 rounded-xl overflow-hidden"
+                style={{ aspectRatio: "4/3" }}
+              >
+                <Image
+                  src={item.image}
+                  alt={item.title}
+                  fill
+                  className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                />
+              </div>
+            ) : null}
             <div className="flex-1 min-w-0">
               <h3
                 className="text-base md:text-lg font-semibold mb-1.5"
