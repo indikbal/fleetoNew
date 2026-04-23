@@ -148,8 +148,10 @@ export async function fetchHomePage(): Promise<HomePageData> {
 }
 
 export async function fetchProducts(): Promise<WCProduct[]> {
+  // Woo REST defaults to per_page=10. Bump to 100 so the listing shows the
+  // full catalog instead of just the first page.
   const res = await fetch(
-    `${WC_BASE}/products?consumer_key=${WC_KEY}&consumer_secret=${WC_SECRET}`,
+    `${WC_BASE}/products?consumer_key=${WC_KEY}&consumer_secret=${WC_SECRET}&per_page=100`,
     { next: { revalidate: CACHE_TTL } }
   );
   if (!res.ok) throw new Error("Failed to fetch products");
@@ -163,20 +165,24 @@ export async function fetchProducts(): Promise<WCProduct[]> {
         { next: { revalidate: CACHE_TTL } }
       )
         .then((r) => (r.ok ? r.json() : []))
-        .then((vars: WCVariation[]) =>
-          vars
-            .map(
-              (v) =>
-                v.attributes.find(
-                  (a) =>
-                    a.name.toLowerCase() === "color" ||
-                    a.name.toLowerCase() === "colour"
-                )?.option ??
-                v.attributes[0]?.option ??
-                ""
-            )
-            .filter(Boolean)
-        )
+        .then((vars: WCVariation[]) => {
+          const seen = new Set<string>();
+          const out: string[] = [];
+          for (const v of vars) {
+            const name =
+              v.attributes.find(
+                (a) =>
+                  a.name.toLowerCase() === "color" ||
+                  a.name.toLowerCase() === "colour"
+              )?.option ?? "";
+            if (!name) continue;
+            const key = name.toLowerCase().trim();
+            if (seen.has(key)) continue;
+            seen.add(key);
+            out.push(name);
+          }
+          return out;
+        })
         .catch(() => [] as string[])
     )
   );
@@ -1177,6 +1183,32 @@ export function colorNameToHex(name: string): string {
     if (COLOR_HEX[word]) return COLOR_HEX[word];
   }
   return "#CCCCCC";
+}
+
+// Pull the color value out of a variation's attributes map. WooCommerce keys
+// vary across products ("Color", "Colour", "pa_color", "pa_colour") and the
+// color is NOT always the first entry — products with battery attributes list
+// "Battery Selection" first, which is why positional access painted swatches
+// with the battery slug and fell back to grey.
+export function getVariationColor(
+  attributes: Record<string, string> | undefined
+): string {
+  if (!attributes) return "";
+  for (const [key, value] of Object.entries(attributes)) {
+    const k = key.toLowerCase().replace(/^pa_/, "");
+    if (k === "color" || k === "colour") return value ?? "";
+  }
+  return "";
+}
+
+// Slug → display name: "metallic-midnight-black" → "Metallic Midnight Black"
+export function prettifyColorName(slug: string): string {
+  if (!slug) return "";
+  return slug
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 // ─── Blog / Posts ─────────────────────────────────────────────────────────────

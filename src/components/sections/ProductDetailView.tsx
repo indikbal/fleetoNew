@@ -12,7 +12,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/free-mode";
 import { colors, fonts, styles } from "@/config/theme";
-import { colorNameToHex, formatPrice } from "@/lib/api";
+import { colorNameToHex, formatPrice, getVariationColor, prettifyColorName } from "@/lib/api";
 import type {
   WCProductDetail,
   ProductVariation,
@@ -91,10 +91,8 @@ export default function ProductDetailView({
     if (!selectedBattery || detailVariations.length === 0) return null;
     const targetSlug = slugify(selectedBattery.name);
     // Prefer one matching the currently selected color, else the first match.
-    const colorSlug =
-      selected && Object.values(selected.attributes)[0]
-        ? slugify(Object.values(selected.attributes)[0]!)
-        : null;
+    const selectedColor = selected ? getVariationColor(selected.attributes) : "";
+    const colorSlug = selectedColor ? slugify(selectedColor) : null;
     const matches = detailVariations.filter((v) =>
       Object.entries(v.attributes).some(
         ([k, val]) => k.includes("battery-selection") && val === targetSlug
@@ -171,7 +169,7 @@ export default function ProductDetailView({
 
   const handleAddToCart = useCallback(() => {
     if (!selected) return;
-    const colorName = Object.values(selected.attributes)[0] ?? "";
+    const colorName = prettifyColorName(getVariationColor(selected.attributes));
     addItem({
       product_id:   product.id,
       variation_id: selected.variation_id,
@@ -342,21 +340,22 @@ export default function ProductDetailView({
                         className="text-[11px] text-gray-500 font-medium capitalize"
                         style={{ fontFamily: fonts.body }}
                       >
-                        {Object.values(selected.attributes)[0]}
+                        {prettifyColorName(getVariationColor(selected.attributes))}
                       </p>
                     )}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {product.variations.map((v) => {
-                      const colorName = Object.values(v.attributes)[0] ?? "";
+                      const colorName = getVariationColor(v.attributes);
+                      const label     = prettifyColorName(colorName);
                       const hex       = colorNameToHex(colorName);
                       const isActive  = selected?.variation_id === v.variation_id;
                       return (
                         <button
                           key={v.variation_id}
                           onClick={() => handleSelect(v)}
-                          title={colorName}
-                          aria-label={colorName}
+                          title={label}
+                          aria-label={label}
                           className="w-8 h-8 rounded-full flex items-center justify-center transition-all"
                           style={{
                             boxShadow: isActive
@@ -685,7 +684,7 @@ function ThumbnailSlider({
             >
               <Image
                 src={v.image || fallbackImage}
-                alt={Object.values(v.attributes)[0] || "variant"}
+                alt={prettifyColorName(getVariationColor(v.attributes)) || "variant"}
                 width={48}
                 height={48}
                 className="object-contain w-full h-full p-1"

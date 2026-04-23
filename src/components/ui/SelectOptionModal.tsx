@@ -210,7 +210,9 @@ export default function SelectOptionModal({ product, onClose }: Props) {
                       Choose Colour
                       {selected && (
                         <span className="ml-2 normal-case text-gray-400">
-                          — {selected.attributes[0]?.option}
+                          — {selected.attributes.find(
+                              (a) => a.name.toLowerCase() === "color" || a.name.toLowerCase() === "colour"
+                            )?.option ?? selected.attributes[0]?.option}
                         </span>
                       )}
                     </p>
