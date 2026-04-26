@@ -27,6 +27,8 @@ interface Props {
   batteryAttributes?: ProductDetailAttribute[];
   warrantyText?: string;
   detailVariations?: ProductDetailVariation[];
+  // slug → hex from the new product-details endpoint
+  colorHexMap?: Record<string, string>;
 }
 
 // WordPress slugifies "Lithium: 60V 34Ah SMART" → "lithium-60v-34ah-smart"
@@ -50,6 +52,7 @@ export default function ProductDetailView({
   batteryAttributes,
   warrantyText,
   detailVariations = [],
+  colorHexMap = {},
 }: Props) {
   const [selected, setSelected]       = useState<ProductVariation | null>(null);
   const [cartStatus, setCartStatus]   = useState<"idle" | "added">("idle");
@@ -75,6 +78,23 @@ export default function ProductDetailView({
 
   const isLithium = (opt: ProductDetailAttributeValue) =>
     /lithium/i.test(opt.name);
+
+  // The variations list is the colour×battery cross-product, so the same
+  // colour appears once per battery. Collapse to one button per distinct colour.
+  const colorVariations = useMemo<ProductVariation[]>(() => {
+    const seen = new Set<string>();
+    const out: ProductVariation[] = [];
+    for (const v of product.variations ?? []) {
+      const slug = getVariationColor(v.attributes);
+      if (!slug || seen.has(slug)) continue;
+      seen.add(slug);
+      out.push(v);
+    }
+    return out;
+  }, [product.variations]);
+
+  const colorMatchesSelected = (v: ProductVariation) =>
+    !!selected && getVariationColor(v.attributes) === getVariationColor(selected.attributes);
 
   // Parse product.desc (<ul><li>…</li></ul>) into plain-text pills
   const basePills = useMemo<string[]>(() => {
@@ -255,9 +275,9 @@ export default function ProductDetailView({
               </div>
 
               {/* Colour-image thumbnails if variations have distinct images */}
-              {product.variations?.length > 0 && (
+              {colorVariations.length > 0 && (
                 <ThumbnailSlider
-                  variations={product.variations}
+                  variations={colorVariations}
                   fallbackImage={product.image}
                   selectedId={selected?.variation_id ?? null}
                   onSelect={handleSelect}
@@ -326,7 +346,7 @@ export default function ProductDetailView({
               <div className="h-px bg-gray-100" />
 
               {/* Colour picker — compact swatches with shared label */}
-              {product.variations?.length > 0 && (
+              {colorVariations.length > 0 && (
                 <motion.div {...fadeUp(0.24)}>
                   <div className="flex items-center justify-between mb-2">
                     <p
@@ -345,14 +365,14 @@ export default function ProductDetailView({
                     )}
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {product.variations.map((v) => {
+                    {colorVariations.map((v) => {
                       const colorName = getVariationColor(v.attributes);
                       const label     = prettifyColorName(colorName);
-                      const hex       = colorNameToHex(colorName);
-                      const isActive  = selected?.variation_id === v.variation_id;
+                      const hex       = colorHexMap[colorName] || colorNameToHex(colorName);
+                      const isActive  = colorMatchesSelected(v);
                       return (
                         <button
-                          key={v.variation_id}
+                          key={colorName}
                           onClick={() => handleSelect(v)}
                           title={label}
                           aria-label={label}

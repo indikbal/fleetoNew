@@ -6,21 +6,23 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { colors, fonts, styles } from "@/config/theme";
-import { formatPrice, colorNameToHex } from "@/lib/api";
-import type { ShopPageData, WCProduct } from "@/lib/api";
+import { formatPrice, colorNameToHex, parseColorOption } from "@/lib/api";
+import type { ShopPageData, WCProduct, ProductColor } from "@/lib/api";
 
 // ─── Product card ─────────────────────────────────────────────────────────────
 function ProductCard({ product, index }: { product: WCProduct; index: number }) {
   const [hovered, setHovered] = useState(false);
 
   const imageUrl     = product.images[0]?.src ?? "/images/hero-scooty.png";
-  // Use actual variation colors (accurate) — fall back to attribute options
-  const colorOptions =
+  const colorOptions: ProductColor[] =
     product.variation_colors.length > 0
       ? product.variation_colors
-      : product.attributes.find(
+      : (product.attributes.find(
           (a) => a.name.toLowerCase() === "color" || a.name.toLowerCase() === "colour"
-        )?.options ?? [];
+        )?.options ?? []).map((opt) => {
+          const { name, hex } = parseColorOption(opt);
+          return { name, hex: hex || colorNameToHex(name) };
+        });
   const hasSale      = !!product.sale_price && product.sale_price !== product.price;
 
   return (
@@ -99,8 +101,9 @@ function ProductCard({ product, index }: { product: WCProduct; index: number }) 
               {colorOptions.map((c, i) => (
                 <span
                   key={i}
+                  title={c.name}
                   className="w-4 h-4 rounded-full border border-white shadow-sm inline-block flex-shrink-0"
-                  style={{ backgroundColor: colorNameToHex(c) }}
+                  style={{ backgroundColor: c.hex }}
                 />
               ))}
             </div>

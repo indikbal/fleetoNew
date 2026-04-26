@@ -16,6 +16,7 @@ import {
   fetchProductSpecs,
   fetchProductDetailsNew,
   fetchTechnicalInformation,
+  extractColorHexMap,
 } from "@/lib/api";
 import ProductSpecifications from "@/components/sections/ProductSpecifications";
 
@@ -56,6 +57,7 @@ export default async function ProductDetailPage({ params }: Props) {
   // Variations from the new endpoint carry a per-battery range description
   // (e.g. "85-90 Kms") that the spec pills swap in when a battery is selected.
   const detailVariations = productDetailsNew?.variations ?? [];
+  const colorHexMap = extractColorHexMap(productDetailsNew);
 
   return (
     <>
@@ -75,6 +77,7 @@ export default async function ProductDetailPage({ params }: Props) {
           batteryAttributes={batteryAttributes}
           warrantyText={warrantyText}
           detailVariations={detailVariations}
+          colorHexMap={colorHexMap}
         />
 
         {/* 3. Explore sections from acf */}

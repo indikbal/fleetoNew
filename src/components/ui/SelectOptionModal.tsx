@@ -5,7 +5,7 @@ import Image from "next/image";
 import { X, ArrowUpRight, CheckCircle, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { colors, fonts, styles } from "@/config/theme";
-import { colorNameToHex, formatPrice } from "@/lib/api";
+import { colorNameToHex, formatPrice, parseColorOption } from "@/lib/api";
 import type { WCProduct, WCVariation } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
 import Link from "next/link";
@@ -46,7 +46,11 @@ export default function SelectOptionModal({ product, onClose }: Props) {
 
   const handleAddToCart = useCallback(() => {
     if (!selected) return;
-    const colorName = selected.attributes[0]?.option ?? "";
+    const rawColor =
+      selected.attributes.find(
+        (a) => a.name.toLowerCase() === "color" || a.name.toLowerCase() === "colour"
+      )?.option ?? selected.attributes[0]?.option ?? "";
+    const { name: colorName } = parseColorOption(rawColor);
     addItem({
       product_id:   product.id,
       variation_id: selected.id,
@@ -58,6 +62,15 @@ export default function SelectOptionModal({ product, onClose }: Props) {
     });
     setStatus("success");
   }, [product, selected, addItem]);
+
+  const selectedColorName = (() => {
+    if (!selected) return "";
+    const raw =
+      selected.attributes.find(
+        (a) => a.name.toLowerCase() === "color" || a.name.toLowerCase() === "colour"
+      )?.option ?? selected.attributes[0]?.option ?? "";
+    return parseColorOption(raw).name;
+  })();
 
   const imageUrl  = product.images[0]?.src ?? "/images/hero-scooty.png";
   const isLoading = status === "loading-vars" || status === "submitting";
@@ -102,7 +115,7 @@ export default function SelectOptionModal({ product, onClose }: Props) {
                 Added to Cart!
               </h3>
               <p className="text-gray-500 text-sm" style={{ fontFamily: fonts.body }}>
-                {product.name} ({selected?.attributes[0]?.option}) has been added to your cart.
+                {product.name} ({selectedColorName}) has been added to your cart.
               </p>
               <button
                 onClick={onClose}
@@ -130,7 +143,7 @@ export default function SelectOptionModal({ product, onClose }: Props) {
                 <p className="text-gray-500 text-sm leading-relaxed" style={{ fontFamily: fonts.body }}>
                   Complete your purchase for the{" "}
                   <span style={{ color: colors.primary, fontWeight: 600 }}>
-                    {selected?.attributes[0]?.option} {product.name}
+                    {selectedColorName} {product.name}
                   </span>{" "}
                   on our store.
                 </p>
@@ -208,21 +221,20 @@ export default function SelectOptionModal({ product, onClose }: Props) {
                       style={{ fontFamily: fonts.body }}
                     >
                       Choose Colour
-                      {selected && (
+                      {selectedColorName && (
                         <span className="ml-2 normal-case text-gray-400">
-                          — {selected.attributes.find(
-                              (a) => a.name.toLowerCase() === "color" || a.name.toLowerCase() === "colour"
-                            )?.option ?? selected.attributes[0]?.option}
+                          — {selectedColorName}
                         </span>
                       )}
                     </p>
                     <div className="flex flex-wrap gap-3">
                       {variations.map((v) => {
-                        const colorName =
+                        const rawColor =
                           v.attributes.find(
                             (a) => a.name.toLowerCase() === "color" || a.name.toLowerCase() === "colour"
                           )?.option ?? v.attributes[0]?.option ?? "";
-                        const hex      = colorNameToHex(colorName);
+                        const { name: colorName, hex: parsedHex } = parseColorOption(rawColor);
+                        const hex      = parsedHex || colorNameToHex(colorName);
                         const isActive = selected?.id === v.id;
                         return (
                           <button

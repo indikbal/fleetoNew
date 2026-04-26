@@ -12,7 +12,7 @@ import {
   Gauge,
 } from "lucide-react";
 import { colors, fonts } from "@/config/theme";
-import { formatPrice, colorNameToHex, type WCProduct } from "@/lib/api";
+import { formatPrice, type WCProduct, type ProductColor } from "@/lib/api";
 
 interface CompareTableProps {
   products: WCProduct[];
@@ -354,7 +354,7 @@ function SpecItem({
 }
 
 /* ─── Color swatches ────────────────────────────────────────────────────── */
-function ColorSwatches({ colors: list }: { colors: string[] }) {
+function ColorSwatches({ colors: list }: { colors: ProductColor[] }) {
   if (list.length === 0) {
     return <span className="text-gray-400 text-xs">—</span>;
   }
@@ -363,9 +363,9 @@ function ColorSwatches({ colors: list }: { colors: string[] }) {
       {list.slice(0, 4).map((c, i) => (
         <span
           key={i}
-          title={c}
+          title={c.name}
           className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-white ring-1 ring-gray-200"
-          style={{ backgroundColor: colorNameToHex(c) }}
+          style={{ backgroundColor: c.hex }}
         />
       ))}
       {list.length > 4 && (

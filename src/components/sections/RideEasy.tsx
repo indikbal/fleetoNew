@@ -70,12 +70,14 @@ export default function RideEasy({ title, mainImage, features }: Props) {
             style={{ paddingTop: "14%" }}
           >
             <div className="relative w-full overflow-hidden rounded-2xl" style={{ aspectRatio: "16/7" }}>
-              <Image
-                src={mainImage}
-                alt={`${title} — Fleeto Electric Scooter`}
-                fill
-                className="object-cover object-center"
-              />
+              {mainImage && (
+                <Image
+                  src={mainImage}
+                  alt={`${title} — Fleeto Electric Scooter`}
+                  fill
+                  className="object-cover object-center"
+                />
+              )}
             </div>
           </motion.div>
 
@@ -86,12 +88,14 @@ export default function RideEasy({ title, mainImage, features }: Props) {
           {features.map((f, i) => (
             <motion.div key={i} {...fadeUp(0.1 + i * 0.08)}>
               <div className="relative w-full overflow-hidden rounded-2xl mb-4" style={{ aspectRatio: "4/3" }}>
-                <Image
-                  src={f.image}
-                  alt={f.title}
-                  fill
-                  className="object-cover object-center"
-                />
+                {f.image && (
+                  <Image
+                    src={f.image}
+                    alt={f.title}
+                    fill
+                    className="object-cover object-center"
+                  />
+                )}
               </div>
               <h3
                 className="font-bold mb-1.5"

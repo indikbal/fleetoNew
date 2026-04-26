@@ -6,8 +6,8 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 import { colors, styles } from "@/config/theme";
-import { formatPrice, colorNameToHex } from "@/lib/api";
-import type { WCProduct } from "@/lib/api";
+import { formatPrice, colorNameToHex, parseColorOption } from "@/lib/api";
+import type { WCProduct, ProductColor } from "@/lib/api";
 import Link from "next/link";
 
 // @ts-ignore — Swiper CSS
@@ -15,10 +15,13 @@ import "swiper/css";
 
 // ─── Card component ───────────────────────────────────────────────────────────
 function ProductCard({ product }: { product: WCProduct }) {
-  const colorOptions =
+  const colorOptions: ProductColor[] =
     product.variation_colors.length > 0
       ? product.variation_colors
-      : (product.attributes.find((a) => a.name === "Color")?.options ?? []);
+      : (product.attributes.find((a) => a.name === "Color")?.options ?? []).map((opt) => {
+          const { name, hex } = parseColorOption(opt);
+          return { name, hex: hex || colorNameToHex(name) };
+        });
   const imageUrl     = product.images[0]?.src ?? "/images/hero-scooty.png";
   const hasSale      = !!product.sale_price && product.sale_price !== product.price;
 
@@ -87,8 +90,9 @@ function ProductCard({ product }: { product: WCProduct }) {
               {colorOptions.map((c, i) => (
                 <span
                   key={i}
+                  title={c.name}
                   className="w-5 h-5 rounded-full border border-white shadow-sm inline-block flex-shrink-0"
-                  style={{ backgroundColor: colorNameToHex(c) }}
+                  style={{ backgroundColor: c.hex }}
                 />
               ))}
             </div>

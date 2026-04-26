@@ -86,8 +86,13 @@ export interface WCProduct {
   sale_price: string;
   images: { src: string }[];
   attributes: { name: string; options: string[] }[];
-  /** Colours extracted from active variations — populated by fetchProducts() */
-  variation_colors: string[];
+  /** Colours parsed from the Color attribute — populated by fetchProducts() */
+  variation_colors: ProductColor[];
+}
+
+export interface ProductColor {
+  name: string;
+  hex: string;
 }
 
 export interface ProductVariation {
@@ -96,7 +101,9 @@ export interface ProductVariation {
   regular_price: string;
   sale_price: string;
   stock: string;
-  attributes: Record<string, string>; // e.g. { Color: "black" }
+  // WooCommerce keys vary ("Color", "pa_color"). May also include a literal
+  // `color_code` from the new product-details endpoint.
+  attributes: Record<string, string>;
   image: string;
 }
 
@@ -157,37 +164,36 @@ export async function fetchProducts(): Promise<WCProduct[]> {
   if (!res.ok) throw new Error("Failed to fetch products");
   const products: Omit<WCProduct, "variation_colors">[] = await res.json();
 
-  // Fetch each product's variations in parallel to get accurate active colors
-  const variationColors = await Promise.all(
-    products.map((p) =>
-      fetch(
-        `${WC_BASE}/products/${p.id}/variations?consumer_key=${WC_KEY}&consumer_secret=${WC_SECRET}`,
-        { next: { revalidate: CACHE_TTL } }
-      )
-        .then((r) => (r.ok ? r.json() : []))
-        .then((vars: WCVariation[]) => {
-          const seen = new Set<string>();
-          const out: string[] = [];
-          for (const v of vars) {
-            const name =
-              v.attributes.find(
-                (a) =>
-                  a.name.toLowerCase() === "color" ||
-                  a.name.toLowerCase() === "colour"
-              )?.option ?? "";
-            if (!name) continue;
-            const key = name.toLowerCase().trim();
-            if (seen.has(key)) continue;
-            seen.add(key);
-            out.push(name);
-          }
-          return out;
-        })
-        .catch(() => [] as string[])
-    )
-  );
+  // Each product's Color attribute options carry the hex inline as
+  // "Display Name | #HEX" (term name in WP). Parse it here so list/grid views
+  // can render swatches without an extra round-trip per product.
+  return products.map((p) => ({
+    ...p,
+    variation_colors: extractVariationColors(p.attributes),
+  }));
+}
 
-  return products.map((p, i) => ({ ...p, variation_colors: variationColors[i] }));
+function extractVariationColors(
+  attributes: { name: string; options: string[] }[]
+): ProductColor[] {
+  const colorAttr = attributes.find(
+    (a) => a.name.toLowerCase() === "color" || a.name.toLowerCase() === "colour"
+  );
+  if (!colorAttr) return [];
+  const seen = new Set<string>();
+  const out: ProductColor[] = [];
+  for (const opt of colorAttr.options) {
+    const parsed = parseColorOption(opt);
+    if (!parsed.name) continue;
+    const key = parsed.name.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({
+      name: parsed.name,
+      hex: parsed.hex || colorNameToHex(parsed.name),
+    });
+  }
+  return out;
 }
 
 // ─── About Page ───────────────────────────────────────────────────────────────
@@ -519,6 +525,11 @@ const pickFirst = (v: unknown): string => {
   return "";
 };
 
+const pickFirstUrl = (v: unknown): string => {
+  const value = pickFirst(v).trim();
+  return value === "#" ? "" : value;
+};
+
 const stripHtmlBasic = (s: string) =>
   s.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
 
@@ -559,10 +570,10 @@ export async function fetchCommonData(): Promise<CommonData> {
     return {
       headerLogo: pickFirst(json.Header_logo) || commonFallback.headerLogo,
       headerTestRideUrl:
-        pickFirst(json.Book_an_test_ride_url) || commonFallback.headerTestRideUrl,
+        pickFirstUrl(json.Book_an_test_ride_url) || commonFallback.headerTestRideUrl,
       footerContent: pickFirst(json.Footer_content),
       footerTestRideUrl:
-        pickFirst(json.Footer_book_your_test_ride_url) ||
+        pickFirstUrl(json.Footer_book_your_test_ride_url) ||
         commonFallback.footerTestRideUrl,
       columnTitles: {
         ourProducts:
@@ -1185,6 +1196,22 @@ export function colorNameToHex(name: string): string {
   return "#CCCCCC";
 }
 
+// Backend color terms now embed the hex inline ("Metallic Black | #1A1A1A")
+// so the actual color code flows through every Woo/custom endpoint that
+// returns the attribute as a string. Split it into a clean { name, hex }.
+export function parseColorOption(opt: string): { name: string; hex: string } {
+  if (!opt) return { name: "", hex: "" };
+  const idx = opt.lastIndexOf("|");
+  if (idx === -1) return { name: opt.trim(), hex: "" };
+  const hex = opt.slice(idx + 1).trim();
+  return {
+    name: opt.slice(0, idx).trim(),
+    hex: /^#?[0-9a-f]{3,8}$/i.test(hex)
+      ? hex.startsWith("#") ? hex : `#${hex}`
+      : "",
+  };
+}
+
 // Pull the color value out of a variation's attributes map. WooCommerce keys
 // vary across products ("Color", "Colour", "pa_color", "pa_colour") and the
 // color is NOT always the first entry — products with battery attributes list
@@ -1327,6 +1354,10 @@ export interface ProductDetailAttributeValue {
   name: string;
   description: string;
   warranty: string | null;
+  // Present on Color attribute values; backend keys colours by slug and
+  // ships the hex alongside.
+  color_code?: string;
+  color_slug?: string;
 }
 
 export interface ProductDetailAttribute {
@@ -1356,6 +1387,35 @@ export interface ProductDetailsNew {
   attributes: ProductDetailAttribute[];
   variations: ProductDetailVariation[];
   "4_years_warranty"?: string;
+}
+
+// Build a slug → hex map from the new product-details payload. Uses the
+// per-variation `color_code` first (always tied to a specific slug), then
+// falls back to the top-level Color attribute values.
+export function extractColorHexMap(
+  details: ProductDetailsNew | null | undefined
+): Record<string, string> {
+  const map: Record<string, string> = {};
+  if (!details) return map;
+  for (const v of details.variations ?? []) {
+    const hex = v.attributes?.color_code;
+    if (!hex) continue;
+    for (const [k, val] of Object.entries(v.attributes)) {
+      if (k === "color_code") continue;
+      const key = k.toLowerCase().replace(/^attribute_pa_/, "").replace(/^pa_/, "");
+      if (key === "color" || key === "colour") map[val] = hex;
+    }
+  }
+  const colorAttr = details.attributes?.find(
+    (a) => a.attribute_name.toLowerCase() === "color" ||
+           a.attribute_name.toLowerCase() === "colour"
+  );
+  for (const v of colorAttr?.values ?? []) {
+    if (v.color_slug && v.color_code && !map[v.color_slug]) {
+      map[v.color_slug] = v.color_code;
+    }
+  }
+  return map;
 }
 
 export async function fetchProductDetailsNew(productId: number): Promise<ProductDetailsNew | null> {

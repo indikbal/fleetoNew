@@ -35,8 +35,19 @@ interface DealerResult {
   [key: string]: unknown;
 }
 
+const decodeEntities = (s: string) =>
+  s
+    .replace(/&#(\d+);/g, (_, d) => String.fromCharCode(Number(d)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;|&apos;/g, "'")
+    .replace(/&nbsp;/g, " ");
+
 const stripHtml = (html?: string) =>
-  (html ?? "").replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();
+  decodeEntities((html ?? "").replace(/<[^>]*>/g, "")).trim();
 
 // Backend sometimes returns district names in lowercase (e.g. "north dinajpur")
 // even though admin entered them as "North Dinajpur". Normalise for display.
