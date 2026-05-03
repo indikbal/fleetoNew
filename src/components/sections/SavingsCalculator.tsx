@@ -42,6 +42,9 @@ interface Props {
   shortTitle: string;
   longTitle: string;
   longDescription: string;
+  // Fixed annual amount added on top of (savings * 12). Backend-managed.
+  miscellaneousAmount?: string | number;
+  miscellaneousLabel?: string;
 }
 
 export default function SavingsCalculator({
@@ -53,9 +56,20 @@ export default function SavingsCalculator({
   shortTitle,
   longTitle,
   longDescription,
+  miscellaneousAmount,
+  miscellaneousLabel,
 }: Props) {
   const [km, setKm] = useState(60);
-  const { petrol, electric, savings, annual } = calc(km);
+  const { petrol, electric, savings, annual: baseAnnual } = calc(km);
+
+  // Backend may ship the misc amount as a string; coerce and clamp negatives.
+  const miscRaw =
+    typeof miscellaneousAmount === "number"
+      ? miscellaneousAmount
+      : parseInt(String(miscellaneousAmount ?? "").replace(/[^\d-]/g, ""), 10);
+  const misc = Number.isFinite(miscRaw) && miscRaw > 0 ? miscRaw : 0;
+  const miscTitle = miscellaneousLabel?.trim() || "Miscellaneous";
+  const annual = baseAnnual + misc;
 
   const MIN = 10;
   const MAX = 150;
@@ -221,6 +235,17 @@ export default function SavingsCalculator({
                 {fmt(savings)}
               </p>
             </div>
+
+            {misc > 0 && (
+              <div className="flex items-center justify-between">
+                <p className="text-white font-semibold" style={{ fontFamily: fonts.body }}>
+                  {miscTitle}
+                </p>
+                <p className="text-white text-xl font-bold tabular-nums" style={{ fontFamily: fonts.body }}>
+                  {fmt(misc)}
+                </p>
+              </div>
+            )}
 
             <div
               className="flex items-center justify-between rounded-xl px-5 py-4 mb-5"

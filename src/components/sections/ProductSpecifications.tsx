@@ -64,6 +64,9 @@ export interface ProductSpecificationsData {
 interface Props {
   data?: ProductSpecificationsData | null;
   technicalInfo?: Record<string, string>;
+  // Disclaimer pulled from product-details variations[].mileage_note. Rendered
+  // under the Vehicle Mileage section when present.
+  mileageNote?: string;
 }
 
 /* ── Animation helpers ────────────────────────────────────────────────────── */
@@ -78,7 +81,7 @@ const allTabs = ["Performance", "Design", "Technology", "Technical Specification
 type TabKey = (typeof allTabs)[number];
 
 /* ══════════════════════════════════════════════════════════════════════════ */
-export default function ProductSpecifications({ data, technicalInfo }: Props) {
+export default function ProductSpecifications({ data, technicalInfo, mileageNote }: Props) {
   const hasTechInfo = !!technicalInfo && Object.keys(technicalInfo).length > 0;
 
   // Only include tabs we actually have data for, so a missing endpoint never
@@ -192,6 +195,7 @@ export default function ProductSpecifications({ data, technicalInfo }: Props) {
             <TechnicalSpecificationTab
               key="techspec"
               info={technicalInfo}
+              mileageNote={mileageNote}
             />
           )}
         </AnimatePresence>
@@ -492,10 +496,29 @@ interface TechGroup {
   rows: TechRow[];
 }
 
+// Title/description pairs the backend appends to every product's technical_info
+// payload. They render as a separate "Specifications Overview" group with the
+// description shown as HTML, instead of the YES/NA value rows used elsewhere.
+const DESCRIPTION_PAIRS: { titleKey: string; descKey: string }[] = [
+  { titleKey: "motor_title", descKey: "motor_description" },
+  { titleKey: "ground_clearance_title", descKey: "ground_clearance_description" },
+  { titleKey: "boot_space_title", descKey: "boot_space_description" },
+];
+
+const DESCRIPTION_KEYS = new Set(
+  DESCRIPTION_PAIRS.flatMap((p) => [p.titleKey, p.descKey])
+);
+
+interface TechDescriptionItem {
+  title: string;
+  description: string;
+}
+
 function groupTechnicalInfo(info: Record<string, string>): TechGroup[] {
   const groups: TechGroup[] = [];
   let current: TechGroup = { title: "", rows: [] };
   for (const [key, value] of Object.entries(info)) {
+    if (DESCRIPTION_KEYS.has(key)) continue;
     const headerLabel = TECH_SECTION_HEADERS[key];
     if (headerLabel) {
       if (current.title || current.rows.length > 0) groups.push(current);
@@ -508,8 +531,28 @@ function groupTechnicalInfo(info: Record<string, string>): TechGroup[] {
   return groups;
 }
 
-function TechnicalSpecificationTab({ info }: { info: Record<string, string> }) {
+function extractDescriptionItems(
+  info: Record<string, string>
+): TechDescriptionItem[] {
+  const items: TechDescriptionItem[] = [];
+  for (const { titleKey, descKey } of DESCRIPTION_PAIRS) {
+    const title = (info[titleKey] ?? "").trim();
+    const description = (info[descKey] ?? "").trim();
+    if (!title && !description) continue;
+    items.push({ title, description });
+  }
+  return items;
+}
+
+function TechnicalSpecificationTab({
+  info,
+  mileageNote,
+}: {
+  info: Record<string, string>;
+  mileageNote?: string;
+}) {
   const groups = groupTechnicalInfo(info);
+  const descriptionItems = extractDescriptionItems(info);
 
   // Open the first group by default so the user sees content without clicking;
   // the rest stay collapsed to keep the section short.
@@ -651,12 +694,53 @@ function TechnicalSpecificationTab({ info }: { info: Record<string, string> }) {
                         </div>
                       ))}
                     </dl>
+                    {group.title === TECH_SECTION_HEADERS.vehicle_mileage &&
+                      mileageNote && (
+                        <p
+                          className="px-5 md:px-6 py-3 text-xs italic"
+                          style={{
+                            backgroundColor: "rgba(171,35,35,0.04)",
+                            color: colors.primaryDark,
+                            fontFamily: fonts.body,
+                            borderTop: "1px solid rgba(0,0,0,0.06)",
+                          }}
+                        >
+                          * {mileageNote}
+                        </p>
+                      )}
                   </motion.div>
                 )}
               </AnimatePresence>
             </motion.div>
           );
         })}
+
+        {descriptionItems.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mt-2">
+            {descriptionItems.map((item, i) => (
+              <motion.div
+                key={`${item.title}-${i}`}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: i * 0.05 }}
+                className="rounded-2xl bg-white overflow-hidden shadow-sm p-5 md:p-6 flex flex-col gap-2"
+                style={{ border: "1px solid rgba(0,0,0,0.06)" }}
+              >
+                <h4
+                  className="text-sm md:text-base font-semibold uppercase tracking-wide"
+                  style={{ color: colors.primary, fontFamily: fonts.body }}
+                >
+                  {item.title}
+                </h4>
+                <RichText
+                  html={item.description}
+                  className="prose-spec text-gray-600 text-sm leading-relaxed"
+                  style={{ fontFamily: fonts.body }}
+                />
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
     </motion.div>
   );

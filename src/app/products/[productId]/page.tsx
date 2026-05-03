@@ -16,9 +16,11 @@ import {
   fetchProductSpecs,
   fetchProductDetailsNew,
   fetchTechnicalInformation,
+  fetchInsuranceSection,
   extractColorHexMap,
 } from "@/lib/api";
 import ProductSpecifications from "@/components/sections/ProductSpecifications";
+import ProductInsurance from "@/components/sections/ProductInsurance";
 
 interface Props {
   params: Promise<{ productId: string }>;
@@ -39,11 +41,12 @@ export default async function ProductDetailPage({ params }: Props) {
   const id = parseInt(productId, 10);
   if (isNaN(id)) notFound();
 
-  const [product, specs, productDetailsNew, technicalInfo] = await Promise.all([
+  const [product, specs, productDetailsNew, technicalInfo, insuranceSection] = await Promise.all([
     fetchProductDetails(id),
     fetchProductSpecs(id),
     fetchProductDetailsNew(id),
     fetchTechnicalInformation(id),
+    fetchInsuranceSection(id),
   ]);
   if (!product) notFound();
 
@@ -58,6 +61,8 @@ export default async function ProductDetailPage({ params }: Props) {
   // (e.g. "85-90 Kms") that the spec pills swap in when a battery is selected.
   const detailVariations = productDetailsNew?.variations ?? [];
   const colorHexMap = extractColorHexMap(productDetailsNew);
+  // Same disclaimer is mirrored on every variation; pull from any one.
+  const mileageNote = detailVariations.find((v) => v.mileage_note?.trim())?.mileage_note?.trim() ?? "";
 
   return (
     <>
@@ -78,6 +83,7 @@ export default async function ProductDetailPage({ params }: Props) {
           warrantyText={warrantyText}
           detailVariations={detailVariations}
           colorHexMap={colorHexMap}
+          mileageNote={mileageNote}
         />
 
         {/* 3. Explore sections from acf */}
@@ -98,8 +104,15 @@ export default async function ProductDetailPage({ params }: Props) {
 
         {/* 4. Performance / Design / Technology / Technical Specification */}
         {(specs || technicalInfo) && (
-          <ProductSpecifications data={specs} technicalInfo={technicalInfo?.technical_info} />
+          <ProductSpecifications
+            data={specs}
+            technicalInfo={technicalInfo?.technical_info}
+            mileageNote={mileageNote}
+          />
         )}
+
+        {/* 4b. Insurance — title, description and downloadable docs */}
+        {insuranceSection && <ProductInsurance data={insuranceSection} />}
 
         <div className="relative">
           <SavingsCalculator
@@ -111,6 +124,8 @@ export default async function ProductDetailPage({ params }: Props) {
             shortTitle={acf.calculator_section_short_title}
             longTitle={acf.calculator_section_long_title}
             longDescription={acf.calculator_section_long_description}
+            miscellaneousAmount={acf.miscellaneous_amount}
+            miscellaneousLabel={acf.miscellaneous_label}
           />
           <FinanceYourWay
             sectionTitle={acf.finance_section_title}

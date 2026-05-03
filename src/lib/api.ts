@@ -336,6 +336,11 @@ export interface ExplorePageData {
   accessories_your_fleeto_section_details: string;
   accessories_your_fleeto_section_button_url: string;
   accessories_your_fleeto_section_image: string;
+  // Optional fixed annual amount that gets added on top of (savings * 12) in
+  // the Save More, Ride Smarter calculator. Backend may also send a custom
+  // label; both are managed from WP.
+  miscellaneous_amount?: string | number;
+  miscellaneous_label?: string;
 }
 
 export async function fetchExplorePage(): Promise<ExplorePageData> {
@@ -1375,6 +1380,9 @@ export interface ProductDetailVariation {
   // Per-battery top speed value, e.g. "65 kmph". Field name is `weight` on the
   // backend for legacy reasons — it is actually the kmph value.
   weight?: string;
+  // Disclaimer paragraph shown next to the mileage range, e.g.
+  // "Mileage measured under standard test conditions of 60 kg load…".
+  mileage_note?: string;
 }
 
 export interface ProductDetailsNew {
@@ -1516,6 +1524,42 @@ export async function submitRegisterFleeto(body: {
     body: JSON.stringify(body),
   });
   return res.json();
+}
+
+// ─── Insurance Section (per-product) ────────────────────────────────────────
+// GET /custom-api/v1/insurance_section returns insurance copy + downloadable
+// docs for every product. Filter to the current product on the call site.
+export interface InsuranceDocument {
+  upload: string;
+}
+
+export interface InsuranceSection {
+  insurance_section_title: string | null;
+  insurance_section_description: string | null;
+  insurance_section_document: InsuranceDocument[];
+}
+
+export interface InsuranceSectionItem {
+  product_id: number;
+  product_name: string;
+  insurance_section: InsuranceSection;
+}
+
+export async function fetchInsuranceSection(
+  productId: number
+): Promise<InsuranceSection | null> {
+  try {
+    const res = await fetch(
+      "https://fleetowebapi.codingcloud.in/wp-json/custom-api/v1/insurance_section",
+      { next: { revalidate: CACHE_TTL } }
+    );
+    if (!res.ok) return null;
+    const json = await res.json();
+    const list: InsuranceSectionItem[] = json?.data ?? [];
+    return list.find((p) => p.product_id === productId)?.insurance_section ?? null;
+  } catch {
+    return null;
+  }
 }
 
 // ─── Raise Service Issue ────────────────────────────────────────────────────

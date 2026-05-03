@@ -213,10 +213,20 @@ function ProductHeroCard({
             {product.name}
           </h3>
           <div
-            className="text-sm sm:text-lg font-bold"
-            style={{ color: colors.primary, fontFamily: fonts.body }}
+            className="flex flex-col items-center"
+            style={{ fontFamily: fonts.body }}
           >
-            {formatPrice(product.price)}
+            <span
+              className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-gray-500"
+            >
+              Price Starts From
+            </span>
+            <span
+              className="text-sm sm:text-lg font-bold"
+              style={{ color: colors.primary }}
+            >
+              {formatPrice(product.price)}
+            </span>
           </div>
         </div>
 
@@ -231,7 +241,7 @@ function ProductHeroCard({
 
           <ul className="divide-y divide-gray-100">
             <SpecItem
-              label="Price"
+              label="Price Starts From"
               icon={<IndianRupee size={12} />}
               value={
                 <span

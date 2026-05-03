@@ -29,6 +29,9 @@ interface Props {
   detailVariations?: ProductDetailVariation[];
   // slug → hex from the new product-details endpoint
   colorHexMap?: Record<string, string>;
+  // Disclaimer about how mileage is measured. Same text is mirrored on each
+  // variation; passed in from the page so we don't reach back into the API.
+  mileageNote?: string;
 }
 
 // WordPress slugifies "Lithium: 60V 34Ah SMART" → "lithium-60v-34ah-smart"
@@ -53,6 +56,7 @@ export default function ProductDetailView({
   warrantyText,
   detailVariations = [],
   colorHexMap = {},
+  mileageNote = "",
 }: Props) {
   const [selected, setSelected]       = useState<ProductVariation | null>(null);
   const [cartStatus, setCartStatus]   = useState<"idle" | "added">("idle");
@@ -159,6 +163,21 @@ export default function ProductDetailView({
     if (variationForBattery?.price) return String(variationForBattery.price);
     return selected?.price ?? product.price;
   }, [variationForBattery, selected, product.price]);
+
+  // Mileage disclaimer — prefer the per-battery value, fall back to page-level.
+  const displayMileageNote = useMemo<string>(() => {
+    return (
+      variationForBattery?.mileage_note?.trim() ||
+      mileageNote.trim() ||
+      ""
+    );
+  }, [variationForBattery, mileageNote]);
+
+  // Show the note only when a mileage value is actually visible to the user.
+  const hasKmsPill = useMemo(
+    () => displayPills.some((p) => /\bkms?\b/i.test(p)),
+    [displayPills]
+  );
 
   const handleSelectBattery = (opt: ProductDetailAttributeValue, tab: "standard" | "smart") => {
     setSelectedBattery(opt);
@@ -340,6 +359,14 @@ export default function ProductDetailView({
                       </motion.li>
                     ))}
                   </ul>
+                  {hasKmsPill && displayMileageNote && (
+                    <p
+                      className="mt-2 text-[11px] italic leading-snug"
+                      style={{ color: colors.primaryDark, fontFamily: fonts.body }}
+                    >
+                      * {displayMileageNote}
+                    </p>
+                  )}
                 </motion.div>
               )}
 

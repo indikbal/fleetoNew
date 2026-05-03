@@ -25,6 +25,8 @@ interface DealerItem {
   postcode?: string;
   direction?: string;
   test_ride?: string;
+  // Backend ships dealer email under `email_id`; older payloads used `email`.
+  email_id?: string;
   email?: string;
   [key: string]: unknown;
 }
@@ -441,17 +443,21 @@ function DealerCard({ item, index }: { item: DealerItem; index: number }) {
             </a>
           </DealerRow>
         )}
-        {item.email && (
-          <DealerRow icon={<Mail size={14} />}>
-            <a
-              href={`mailto:${item.email}`}
-              className="text-xs sm:text-sm text-gray-700 hover:underline break-all"
-              style={{ fontFamily: fonts.body }}
-            >
-              {item.email}
-            </a>
-          </DealerRow>
-        )}
+        {(() => {
+          const dealerEmail = (item.email_id ?? item.email)?.toString().trim();
+          if (!dealerEmail) return null;
+          return (
+            <DealerRow icon={<Mail size={14} />}>
+              <a
+                href={`mailto:${dealerEmail}`}
+                className="text-xs sm:text-sm text-gray-700 hover:underline break-all"
+                style={{ fontFamily: fonts.body }}
+              >
+                {dealerEmail}
+              </a>
+            </DealerRow>
+          );
+        })()}
         {item.postcode && (
           <DealerRow icon={<MapPin size={14} />}>
             <span

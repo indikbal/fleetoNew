@@ -55,6 +55,8 @@ export default async function ExplorePage() {
             shortTitle={data.calculator_section_short_title}
             longTitle={data.calculator_section_long_title}
             longDescription={data.calculator_section_long_description}
+            miscellaneousAmount={data.miscellaneous_amount}
+            miscellaneousLabel={data.miscellaneous_label}
           />
           <FinanceYourWay
             sectionTitle={data.finance_section_title}
