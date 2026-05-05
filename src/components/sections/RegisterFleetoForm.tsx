@@ -13,6 +13,8 @@ import {
   Cog,
   BatteryCharging,
   Loader2,
+  Upload,
+  FileCheck2,
 } from "lucide-react";
 import { colors, fonts, styles } from "@/config/theme";
 
@@ -30,6 +32,7 @@ export default function RegisterFleetoForm() {
     chassis_number: "",
   });
   const [batteryNumbers, setBatteryNumbers] = useState<string[]>([""]);
+  const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -52,16 +55,21 @@ export default function RegisterFleetoForm() {
       setError("Please add at least one battery number.");
       return;
     }
+    if (!invoiceFile) {
+      setError("Please upload the invoice file.");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
+      const fd = new FormData();
+      Object.entries(form).forEach(([key, value]) => fd.append(key, value));
+      validBatteries.forEach((bat) => fd.append("battery_numbers[]", bat));
+      fd.append("invoice_file", invoiceFile);
+
       const res = await fetch("/api/register-your-fleeto", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          battery_numbers: validBatteries,
-        }),
+        body: fd,
       });
       const data = await res.json();
       if (data?.error) {
@@ -166,6 +174,58 @@ export default function RegisterFleetoForm() {
             />
           </Field>
         </div>
+        <Field label="Invoice File">
+          <label
+            className="group flex items-center gap-3 border-2 border-dashed rounded-xl px-4 py-3 cursor-pointer bg-white transition-colors hover:border-[#AB2323]"
+            style={{
+              borderColor: invoiceFile ? colors.primary : "#E5E7EB",
+              fontFamily: fonts.body,
+            }}
+          >
+            <div
+              className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+              style={{
+                backgroundColor: `${colors.primary}15`,
+                color: colors.primary,
+              }}
+            >
+              {invoiceFile ? <FileCheck2 size={16} /> : <Upload size={16} />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p
+                className="text-sm font-semibold truncate"
+                style={{ color: invoiceFile ? colors.black : "#9CA3AF" }}
+              >
+                {invoiceFile ? invoiceFile.name : "Upload invoice (PDF, JPG, PNG)"}
+              </p>
+              {invoiceFile && (
+                <p className="text-[11px] text-gray-500">
+                  {(invoiceFile.size / 1024).toFixed(1)} KB
+                </p>
+              )}
+            </div>
+            {invoiceFile && (
+              <button
+                type="button"
+                onClick={(ev) => {
+                  ev.preventDefault();
+                  setInvoiceFile(null);
+                }}
+                className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                aria-label="Remove invoice file"
+              >
+                <X size={14} />
+              </button>
+            )}
+            <input
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={(e) => setInvoiceFile(e.target.files?.[0] ?? null)}
+              required={!invoiceFile}
+              className="sr-only"
+            />
+          </label>
+        </Field>
       </Section>
 
       {/* ─── Dealer Info ────────────────────────────────────────────── */}

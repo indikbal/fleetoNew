@@ -124,7 +124,7 @@ export default async function ProductDetailPage({ params }: Props) {
             shortTitle={acf.calculator_section_short_title}
             longTitle={acf.calculator_section_long_title}
             longDescription={acf.calculator_section_long_description}
-            miscellaneousAmount={acf.miscellaneous_amount}
+            miscellaneousAmount={acf.miscellaneous_amount ?? 10000}
             miscellaneousLabel={acf.miscellaneous_label}
           />
           <FinanceYourWay
