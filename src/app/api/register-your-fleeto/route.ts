@@ -2,14 +2,21 @@ import { NextResponse } from "next/server";
 
 const REGISTER_FLEETO_URL = `${process.env.WP_CUSTOM_API_URL}/register-your-fleeto`;
 
+// The upstream WP endpoint expects multipart/form-data so it can receive the
+// invoice file. We forward whatever multipart body the client sent — including
+// repeated battery_numbers[] entries and the invoice_file blob.
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const incoming = await req.formData();
+
+    const forwarded = new FormData();
+    for (const [key, value] of incoming.entries()) {
+      forwarded.append(key, value);
+    }
 
     const res = await fetch(REGISTER_FLEETO_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: forwarded,
     });
 
     let data: unknown;
