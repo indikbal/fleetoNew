@@ -16,6 +16,7 @@ export interface CartItem {
   variation_id: number;
   name: string;
   color: string;
+  battery?: string; // Selected battery/variant option
   price: string;
   image: string;
   quantity: number;

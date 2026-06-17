@@ -91,11 +91,10 @@ export default function CartPage() {
                     <p className="text-sm font-semibold text-gray-900 truncate" style={{ fontFamily: fonts.body }}>
                       {item.name}
                     </p>
-                    {item.color && (
-                      <p className="text-xs text-gray-400 mt-0.5 capitalize" style={{ fontFamily: fonts.body }}>
-                        {item.color}
-                      </p>
-                    )}
+                    <div className="text-xs text-gray-400 mt-0.5 capitalize space-y-0.5" style={{ fontFamily: fonts.body }}>
+                      {item.color && <p>{item.color}</p>}
+                      {item.battery && <p>{item.battery}</p>}
+                    </div>
                     <p className="text-sm font-bold mt-1" style={{ color: colors.primary, fontFamily: fonts.body }}>
                       {formatPrice(String(parseInt(item.price, 10) * item.quantity))}
                     </p>

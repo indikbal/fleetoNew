@@ -209,18 +209,21 @@ export default function ProductDetailView({
   const handleAddToCart = useCallback(() => {
     if (!selected) return;
     const colorName = prettifyColorName(getVariationColor(selected.attributes));
+    // Use battery-based price if available, otherwise fall back to selected or product price
+    const cartPrice = variationForBattery?.price ? String(variationForBattery.price) : (selected.price || product.price);
     addItem({
       product_id:   product.id,
       variation_id: selected.variation_id,
       name:         product.title,
       color:        colorName,
-      price:        selected.price || product.price,
+      battery:      selectedBattery?.name,
+      price:        cartPrice,
       image:        selected.image || product.image || "",
       permalink:    "",
     });
     setCartStatus("added");
     setTimeout(() => setCartStatus("idle"), 3000);
-  }, [product, selected, addItem]);
+  }, [product, selected, variationForBattery, selectedBattery, addItem]);
 
   return (
     <section

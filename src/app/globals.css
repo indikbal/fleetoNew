@@ -1,17 +1,6 @@
-@import "tailwindcss";
-
-@theme inline {
-  --color-background: #ffffff;
-  --color-foreground: #010101;
-  --color-fleeto-red: #AB2323;
-  --color-fleeto-red-dark: #8A1C1C;
-  --color-fleeto-red-light: #D42D2D;
-  --color-fleeto-black: #010101;
-  --color-fleeto-gray: #F5F5F5;
-  --color-fleeto-gray-dark: #1A1A1A;
-  --font-sans: var(--font-inter);
-  --font-display: var(--font-anton);
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   html {
